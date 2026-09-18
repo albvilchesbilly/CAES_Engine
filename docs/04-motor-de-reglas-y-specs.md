@@ -42,7 +42,7 @@ Patrón que rige todo el documento: **la regla detecta y decide; el agente expli
 
 ## 2. Spec Registry (N1)
 
-`engine/spec_registry.py` (`F0`, ampliado en `S3`) carga y valida las specs, resuelve qué versión aplica y garantiza invariantes antes de que ninguna regla se evalúe.
+`engine/spec_registry.py` (`EXISTE` desde F0.4, 18/09/2026; ampliado en `S3`) carga y valida las specs, resuelve qué versión aplica y garantiza invariantes antes de que ninguna regla se evalúe.
 
 ### 2.1 Tres tipos de spec
 
@@ -50,9 +50,9 @@ Todos YAML, todos versionados.
 
 | Tipo | Fichero | Contenido | Estado |
 |---|---|---|---|
-| Ficha | `spec/IND240_v1.1.yaml` | Ámbito, exclusiones, variables, tablas, cálculo, documentación, reglas, estados, interpretaciones | `F0` (única ficha cargable) |
+| Ficha | `spec/IND240_v1.1.yaml` | Ámbito, exclusiones, variables, tablas, cálculo, documentación, reglas, estados, interpretaciones | `EXISTE` (única ficha cargable; F0.4) |
 | Cabecera transversal | `spec/propuestas/cabecera_v1.yaml` | Variables comunes a todas las fichas, sus fuentes documentales, tipo de evidencia y reglas `R-CAB-*` | `NUEVO`; pendiente de aprobación de Billy |
-| Tablas y coeficientes | `data/*.csv` + `spec/coeficientes_*.yaml` | Tablas de referencia con fuente y **vigencia** (`desde`, `hasta`) | `F0` cuadro 6 (`data/reg_2019_1781_cuadro6.csv`); coeficientes no existen (§14) |
+| Tablas y coeficientes | `data/*.csv` + `.meta.yaml` + `spec/coeficientes_*.yaml` | Tablas de referencia con fuente y **vigencia** (`desde`, `hasta`); esquema, `clave`, `valor` y `restricciones` en el `.meta.yaml` | `EXISTE` cuadro 6 (`data/reg_2019_1781_cuadro6.csv`, F0.2; 38 filas pendientes de verificación humana); coeficientes no existen (§14) |
 
 Lo de composición (`R-GRP-*`, `R-EXP-*`, `R-REQ-*`) vive en `spec/propuestas/composicion_v1.yaml` (`NUEVO`, Sprint 4).
 
@@ -131,7 +131,7 @@ Se añaden a la anatomía. **Si faltan se aplican valores por defecto**; una spe
 
 | Campo | Valor por defecto si falta | Efecto en la evaluación |
 |---|---|---|
-| `fase` | La que fija la tabla de §5.2 por `id` (decisión de Fase 0); para una regla desconocida, `resto` | Orden de evaluación y parada |
+| `fase` | La de la tabla de §5.2, obtenida **por derivación** (no por `id`): `BLOQUEANTE_AMBITO` → `ambito`; referencia a una salida del cálculo o a un control físico → `post_calculo`; `BLOQUEANTE_DATOS` o referencia a una tabla → `consistencia`; resto → `resto` (F0.4; `tests/test_spec_registry.py` comprueba las 26) | Orden de evaluación y parada |
 | `nivel` | `actuacion` | Sobre qué objeto se evalúa; `unidad` se evalúa una vez por motor |
 | `diferencial` | `true` | Ninguno; informe y discurso comercial |
 | `equivalente_plataforma` | `null` | Ninguno; qué comparar con el sandbox (`R-XCK`) |
@@ -261,7 +261,7 @@ Notas de asignación:
 - **Decisión de Fase 0: la `logica` del YAML es la ejecutable.** El motor evalúa el texto de `logica` con el parser. Lo que no se pueda expresar con el vocabulario cerrado se implementa en Python **registrada por `id`** (un registro `id → callable` en `engine/reglas.py`), y cada regla así registrada lleva un test que verifica que hace lo que dice su `logica`. El parser debe saber que el `id` está registrado; si no, error de carga. Que una regla esté en código no la exime de aparecer completa en el YAML: el YAML sigue siendo la única fuente de `descripcion`, `severidad`, `fase` y `subsanacion`.
 - Toda aritmética sobre magnitudes del ahorro se hace con `Decimal`. El parser no produce `float`.
 
-### 6.2 Vocabulario cerrado actual (`F0`)
+### 6.2 Vocabulario cerrado actual (`EXISTE`, F0.1)
 
 Funciones y construcciones que ya aparecen en la spec activa:
 
@@ -284,7 +284,8 @@ Construcciones que aparecen en la spec activa y que el parser debe aceptar (o la
 - Filtro `coleccion where <condicion>` (`R-AMB-02`).
 - Predicado como atributo, sin función (`factura.campos_minimos_presentes`, `ficha_cumplimentada.firmada`, `R-DOC-03`, `R-DOC-05`): el consolidador lo entrega como booleano; ausente → `NO_EVALUABLE`.
 - Referencia a identificadores de la spec como booleanos (`FIS-01 and FIS-02`, `R-CAL-03`): cada `controles_fisicos[].id` se evalúa con su propio campo `regla` y expone su resultado con ese nombre.
-- Literales de enumeración sin comillas (`constante_sin_modulacion`, `derivado`, `motor`).
+- Literales de enumeración sin comillas (`constante_sin_modulacion`, `derivado`, `motor`): el Spec Registry pasa al parser el conjunto de enumerados de la spec (`compilar(..., enumerados=…)`); un nombre del conjunto es siempre literal y no cuenta como identificador. Sin conjunto, se aplica una heurística (lado derecho de `==`/`!=` con lado izquierdo de texto).
+- Códigos con guion (`FIS-01`, `R-CON-01`) son identificadores si no llevan espacios; la resta se escribe con espacios. `for each` sobre colección vacía es `NO_EVALUABLE`. Profundidad máxima de anidamiento: 64. Fuera del vocabulario (F0.1): comparación encadenada (`0 < h <= 8760`, precondición de la spec: `calculo.py` la reescribe como `(0 < h) and (h <= 8760)` hasta que el parser la soporte, ADR-002 §3), orden `<` entre cadenas, `datetime`.
 
 ### 6.3 Funciones nuevas (`NUEVO`)
 
@@ -322,7 +323,7 @@ Solo las funciones que aparecen en las 26 reglas activas.
 
 ---
 
-## 7. Motor de cálculo (N3, `engine/calculo.py`) — `F0`
+## 7. Motor de cálculo (N3, `engine/calculo.py`) — `EXISTE` (F0.3, 18/09/2026)
 
 - **Fórmula leída del YAML**, nunca escrita en código: `PM * (1 - (N2 / N1) ** 3) * (1 - p) * h` por unidad (`AEM`); `sum(AEM)` para el total (`AETOTAL`). Se interpreta con el mismo parser de §6.
 - **`Decimal` de extremo a extremo**; sin redondeo interno. `AETOTAL_cae` = `AETOTAL` **truncado a kWh entero** (criterio conservador, INT-06). Un `float` en `calculo.py` es un defecto.

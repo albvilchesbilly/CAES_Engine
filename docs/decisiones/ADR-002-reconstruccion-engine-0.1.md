@@ -235,7 +235,19 @@ Se rellena paso a paso. Formato: paso · decisión · por qué · alternativa de
 | F0.3 | Redondeo: se lee `calculo.redondeo_salida.<salida>_cae` y su `interpretacion` (INT-06); el código solo implementa "truncar" hacia cero y exige que el criterio contenga esa palabra; truncado sobre el total, no por unidad; `calculo.aritmetica` ≠ `decimal_exacta` → error de carga | El texto del criterio no es parseable; el INT se cita desde la spec | Redondear por unidad |
 | F0.3 | Precondición `0 < h <= 8760` (comparación encadenada) reescrita textualmente en `calculo.py` como `(0 < h) and (h <= 8760)` hasta que el parser la soporte; la precondición en prosa ("ninguna regla bloqueante fallida") queda en `precondiciones_delegadas` y la aplica `reglas.py` | El parser de F0.1 no admite encadenado; silenciarla habría dejado `h = 0` sin bloquear | **Pendiente F0.9**: soporte nativo en `expresiones.py` y retirada de la reescritura |
 | F0.3 | Control físico `FALLA` retira el resultado (`total=None`, traza conservada); `NO_EVALUABLE` (falta `P_prom`) no retira; tabla no vigente → aviso, no bloqueo (criterio de vigencia abierto, `docs/04` §2.4) | `docs/04` §7 | Bloquear por vigencia (decisión de Billy) |
+| F0.4 | `fase` y `nivel` por defecto **derivados** (sin lista de ids en código) y verificados contra la tabla de `docs/04` §5.2 (26/26; 3/10/2/11) y contra §2.4 (15 reglas de unidad) | `docs/03` §14.c y regla de oro 4 | Tabla `id → fase` en código |
+| F0.4 | Garantía NO_EVALUABLE → SUBSANABLE estática: raíz de cada identificador de una regla bloqueante cubierta si (a) una SUBSANABLE la referencia, (b) es variable con alguna fuente obligatoria y existe regla de presencia (`presente`), (c) es prefijo de documento obligatorio, (d) derivada de tabla o por `metodo` con entradas cubiertas, (e) salida de cálculo o control físico con entradas cubiertas, (f) constante de la spec; no cubierta → error de carga; no mapeable → aviso (`n_motores` de R-CON-07, `categoria` de R-AMB-02) | `docs/04` §2.5.3 pedía fijar la forma en este ADR | Declaración explícita en la spec (cambio de spec) |
+| F0.4 | `derivacion.metodo` se compila solo si la derivación no declara `fuente`; precondición que no compila → `Spec.precondiciones_texto` + aviso (no error); `hash_reglas` sobre el bloque `reglas` crudo (JSON canónico); toda cadena `INT-nn` debe existir en `interpretaciones`; versiones: con varias y solo fecha, se aplica `spec.vigencia` si todas la declaran, si no la más alta con aviso | Criterios deterministas; no inventar el criterio de vigencia (`docs/04` §2.4) | Error de carga por precondición en prosa (bloquearía la fase) |
 | plan | Caso G sin OCR debe dar el mismo resultado que A: el escaneo girado es `ficha_tecnica_variador` (EVD-04, no obligatorio) y las fotos sueltas se clasifican por EXIF | `docs/05` §8.2 exige 7/7 en un clon sin tesseract | Escanear un documento obligatorio (rompería 7/7 sin OCR) |
+
+## 3 bis. Estado al cierre de la sesión del 18/09/2026
+
+Hecho y verificado: F0.0–F0.4 (commits 8ebb723, 4f26284/4d715d5, 79956a0/62df530, 0c97217, 7700ba2); 321 tests en verde;
+`ruff` limpio; sin `eval`/`compile` ni importaciones prohibidas en `engine/`; caso A = 305.829,6 en memoria. QA de la oleada 1
+ejecutada y sus hallazgos cerrados. **Pendiente**: QA de F0.3/F0.4, F0.5 y F0.8 (oleada 3, lanzada y abortada por límite de
+sesión de la API), F0.6–F0.7, F0.9–F0.12. Al reanudar: relanzar la oleada 3 tal como la define §1 (los tres briefs no dependen
+de nada nuevo). Pendiente técnico para F0.9: soporte nativo de comparación encadenada en `expresiones.py` y retirada de la
+reescritura de `calculo.py`.
 
 ## 4. Parámetros de los casos E y F y ground truth recalculado
 
