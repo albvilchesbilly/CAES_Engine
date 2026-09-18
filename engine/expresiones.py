@@ -11,7 +11,9 @@ Gramatica (BNF breve; la precedencia crece hacia abajo):
     disyuncion   := conjuncion ( "or" conjuncion )*
     conjuncion   := negacion ( "and" negacion )*
     negacion     := "not" negacion | comparacion
-    comparacion  := suma ( ( "==" | "!=" | "<" | "<=" | ">" | ">=" | "in" ) suma )?
+    comparacion  := suma "in" suma
+                  | suma ( ( "==" | "!=" ) suma )?
+                  | suma ( ( "<" | "<=" | ">" | ">=" ) suma )*        # encadenada: a < b <= c
     suma         := producto ( ( "+" | "-" ) producto )*
     producto     := unario ( ( "*" | "/" ) unario )*
     unario       := ( "-" | "+" ) unario | potencia
@@ -102,6 +104,14 @@ Semantica:
   dentro de la lista es error de contexto (se comparan todos los elementos, sin cortocircuito).
 - Aritmetica solo con `Decimal` (los `int` del contexto se convierten). `date + duracion` suma años, meses
   o dias; salir del rango de `date` es error de contexto. Comparacion con `NO_EVALUABLE` → `NO_EVALUABLE`.
+- Comparacion encadenada (`0 < h <= 8760`, `a < b < c`, mezcla libre de `< <= > >=`): semantica de
+  Python, conjuncion de las comparaciones adyacentes con cada operando evaluado una sola vez. La cadena es
+  un unico nodo de comparacion por debajo de `not`/`and`/`or`/`->`: `not 8760 < h <= 100000` niega toda la
+  cadena y `0 < h <= 8760 or PM > 100` es `(0 < h and h <= 8760) or PM > 100`. Trivaluada: algun par
+  `False` → `False`; si no, algun operando `NO_EVALUABLE` → `NO_EVALUABLE`; si no → `True`. Se comparan
+  todos los pares (sin cortocircuito: un tipo incomparable es error aunque otro par sea `False`). Solo se
+  encadenan los comparadores de orden; `==`, `!=` e `in` en una cadena (`a < b == c`, `a == b == c`,
+  `x in l < y`) son `ErrorCargaExpresion`.
 - `sha256(x)`: `x` es `str` (UTF-8) o `bytes`; devuelve el hexdigest.
 - `presente(doc)`: llama a la funcion `presente` del contexto sobre el elemento; si el contexto no la
   ofrece y el elemento tiene el atributo `presente`, se usa; si no, `NO_EVALUABLE`. Si la funcion lanza,
@@ -180,6 +190,7 @@ _PALABRAS = frozenset({"and", "or", "not", "in", "where", "for", "each", "true",
 # Nombres que parecen literales de otros lenguajes; se rechazan al compilar (comparados en minusculas).
 _NOMBRES_PROHIBIDOS = frozenset({"true", "false", "none", "null"})
 _COMPARADORES = frozenset({"==", "!=", "<", "<=", ">", ">="})
+_ORDEN = frozenset({"<", "<=", ">", ">="})
 _ORDENABLES = frozenset({"numero", "fecha"})
 
 
@@ -562,6 +573,28 @@ class _Comparacion(_Nodo):
 
     def nombres(self) -> list[str]:
         return self.izq.nombres() + self.der.nombres()
+
+
+@dataclass(frozen=True)
+class _Cadena(_Nodo):
+    """Comparacion encadenada `a < b <= c`: conjuncion trivaluada de los pares adyacentes."""
+
+    ops: tuple[str, ...]  # solo comparadores de orden, uno menos que operandos
+    operandos: tuple[_Nodo, ...]
+    es_predicado = True
+
+    def evaluar(self, ctx: Contexto) -> object:
+        valores = [o.evaluar(ctx) for o in self.operandos]  # cada operando, una sola vez
+        resultados: list[object] = []
+        for op, a, b in zip(self.ops, valores, valores[1:], strict=False):
+            if a is NO_EVALUABLE or b is NO_EVALUABLE:
+                resultados.append(NO_EVALUABLE)
+            else:
+                resultados.append(_comparar(op, a, b))  # sin cortocircuito: error determinista
+        return _y(resultados)
+
+    def nombres(self) -> list[str]:
+        return [n for o in self.operandos for n in o.nombres()]
 
 
 @dataclass(frozen=True)
@@ -954,15 +987,31 @@ class _Parser:
                 self._salir()
         return self.comparacion()
 
+    def _sigue_comparador(self) -> bool:
+        return self._es("PALABRA", "in") or (self._es("OP") and self.actual.valor in _COMPARADORES)
+
     def comparacion(self) -> _Nodo:
         izq = self.suma()
         if self._es("PALABRA", "in"):
             self._avanzar()
-            return _Pertenencia(izq, self.suma())
-        if self._es("OP") and self.actual.valor in _COMPARADORES:
-            op = self._avanzar().valor
-            return _Comparacion(op, izq, self.suma(), heuristica=self.enumerados is None)
-        return izq
+            nodo = _Pertenencia(izq, self.suma())
+            if self._sigue_comparador():
+                raise self._error("`in` no se encadena con otra comparacion")
+            return nodo
+        operandos = [izq]
+        ops: list[str] = []
+        while self._es("OP") and self.actual.valor in _COMPARADORES:
+            ops.append(self._avanzar().valor)
+            operandos.append(self.suma())
+        if self._es("PALABRA", "in"):
+            raise self._error("`in` no se encadena con otra comparacion")
+        if not ops:
+            return izq
+        if len(ops) == 1:
+            return _Comparacion(ops[0], operandos[0], operandos[1], heuristica=self.enumerados is None)
+        if any(op not in _ORDEN for op in ops):
+            raise self._error("solo se encadenan los comparadores de orden (`<`, `<=`, `>`, `>=`)")
+        return _Cadena(tuple(ops), tuple(operandos))
 
     def suma(self) -> _Nodo:
         izq = self.producto()

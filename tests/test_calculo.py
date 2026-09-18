@@ -96,7 +96,7 @@ def test_caso_a_derivadas(spec: dict, tablas: dict, unidad_a: dict) -> None:
     assert u.derivadas["perdidas_ref_kw"] == Decimal("5.55")
     assert u.derivadas["p"] == P_A
     assert u.salida == TOTAL_A
-    assert u.p_fuente == ORIGEN_TABLA
+    assert u.fuentes["p"] == ORIGEN_TABLA  # R-CAL-04 lo lee de `fuentes`, no de un campo por ficha
     assert u.fuentes["perdidas_ref_kw"] == ORIGEN_TABLA
     assert u.fuentes["h"] == "derivado"
     assert u.entradas == CASO_A
@@ -109,7 +109,10 @@ def test_caso_a_interpretaciones(spec: dict, tablas: dict, unidad_a: dict) -> No
     assert "INT-01" in r.interpretaciones
     assert "INT-06" in r.interpretaciones
     assert "INT-02" not in r.interpretaciones
-    assert r.por_unidad[0].interpretaciones == ["INT-01"]
+    # INT-03 y INT-04 son las `derivacion.interpretacion` de N2 y h_despues,
+    # entradas que consume la formula
+    assert r.por_unidad[0].interpretaciones == ["INT-03", "INT-04", "INT-01"]
+    assert "INT-03" in r.interpretaciones and "INT-04" in r.interpretaciones
     assert r.avisos == []
 
 
@@ -129,7 +132,7 @@ def test_caso_a_traza(spec: dict, tablas: dict, unidad_a: dict) -> None:
         "precondicion 'N2 < N1' = True",
         "AETOTAL = sum(AEM) = 305829.6",
         "AETOTAL_cae = 305829 (truncar a kWh entero (criterio conservador); INT-06)",
-        "interpretaciones aplicadas: INT-01, INT-06",
+        "interpretaciones aplicadas: INT-03, INT-04, INT-01, INT-06",
     ):
         assert esperado in traza, esperado
     assert "1E+" not in traza and "e+" not in traza  # Decimal como cadena legible, sin exponente
@@ -266,7 +269,8 @@ def test_precondicion_de_reglas_se_delega_con_nota(spec: dict, tablas: dict, uni
     assert r.precondiciones_delegadas == ["ninguna regla con severidad BLOQUEANTE fallida"]
     assert "ninguna regla con severidad BLOQUEANTE fallida" not in r.por_unidad[0].precondiciones
     assert any("la aplica reglas.py" in linea for linea in r.traza)
-    assert any("reescrita como '(0 < h) and (h <= 8760)'" in linea for linea in r.traza)
+    # la comparacion encadenada la evalua el parser de forma nativa; ya no se reescribe el texto
+    assert r.por_unidad[0].precondiciones["0 < h <= 8760"] is True
 
 
 # --- varias unidades y truncado del total -----------------------------------------------------------
@@ -343,7 +347,7 @@ def test_pm_fuera_de_rango_no_calcula(spec: dict, tablas: dict) -> None:
     r = calcular(spec, {"M1": _variante(PM=5000)}, tablas)
     u = r.por_unidad[0]
     assert "perdidas_ref_kw" not in u.derivadas and "p" not in u.derivadas
-    assert u.p_fuente is None
+    assert "p" not in u.fuentes
     assert u.salida is None
     assert u.motivo_no_calculo is not None and "fuera del rango" in u.motivo_no_calculo
     assert r.total is None and r.total_cae is None
@@ -374,7 +378,7 @@ def test_valor_derivable_suministrado_se_ignora(spec: dict, tablas: dict, nombre
     assert r.total == TOTAL_A
     assert nombre not in u.entradas
     assert u.derivadas["p"] == P_A
-    assert u.p_fuente == ORIGEN_TABLA
+    assert u.fuentes["p"] == ORIGEN_TABLA
     assert any(f"valor de {nombre} suministrado externamente ignorado" in aviso for aviso in r.avisos)
 
 
@@ -484,7 +488,7 @@ def test_orden_topologico_independiente_del_orden_de_la_spec(
     spec_mod["variables"] = reordenadas
     r = calcular(spec_mod, unidad_a, tablas)
     assert r.total == TOTAL_A
-    assert r.por_unidad[0].p_fuente == ORIGEN_TABLA
+    assert r.por_unidad[0].fuentes["p"] == ORIGEN_TABLA
 
 
 # --- serializacion ----------------------------------------------------------------------------------
@@ -500,7 +504,7 @@ def test_a_dict_serializa_decimal_como_cadena(spec: dict, tablas: dict, unidad_a
     assert d["total_cae"] == 305829
     assert d["por_unidad"][0]["derivadas"]["perdidas_ref_kw"] == "5.55"
     assert d["por_unidad"][0]["entradas"]["PM"] == "110"
-    assert d["por_unidad"][0]["p_fuente"] == ORIGEN_TABLA
+    assert d["por_unidad"][0]["fuentes"]["p"] == ORIGEN_TABLA
     assert d["por_unidad"][0]["controles"]["FIS-02"] == "NO_EVALUABLE"
     assert d["controles_ok"] == "NO_EVALUABLE"
     assert d["precondiciones_delegadas"] == ["ninguna regla con severidad BLOQUEANTE fallida"]

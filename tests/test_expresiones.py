@@ -99,7 +99,12 @@ def test_identificadores_referenciados(spec):
         "unique_in_tenant(x)",
         "x +",
         "(a and b",
-        "a < b < c",
+        "a < b == c",  # `==`/`!=` no se encadenan con orden
+        "a == b == c",
+        "a < b != c",
+        "x in [1] < y",  # `in` no se encadena
+        "a < b in [1, 2]",
+        "N2 << N1",
         "x in",
         "for each motor",
         "[a, b] where c",
@@ -113,6 +118,98 @@ def test_identificadores_referenciados(spec):
 def test_construccion_desconocida_es_error_de_carga(texto):
     with pytest.raises(ErrorCargaExpresion):
         compilar(texto)
+
+
+# ---------------------------------------------------------------------------
+# 2 bis. Comparacion encadenada (precondicion `0 < h <= 8760` de la spec)
+# ---------------------------------------------------------------------------
+
+
+def test_precondiciones_reales_de_la_spec_compilan_y_evaluan(spec):
+    textos = [t for t in spec["calculo"]["precondiciones"] if "<" in t]
+    assert "0 < h <= 8760" in textos
+    for texto in textos:
+        expr = compilar(texto)
+        assert expr.identificadores <= {"N2", "N1", "h"}
+    encadenada = compilar("0 < h <= 8760")
+    assert encadenada.identificadores == {"h"}
+    assert encadenada.evaluar(ContextoDict({"h": Decimal("6000")})) is True
+    assert encadenada.evaluar(ContextoDict({})) is NO_EVALUABLE
+
+
+@pytest.mark.parametrize(
+    ("texto", "datos", "esperado"),
+    [
+        ("0 < h <= 8760", {"h": 0}, False),
+        ("0 < h <= 8760", {"h": 5000}, True),
+        ("0 < h <= 8760", {"h": 8760}, True),  # limite inclusivo
+        ("0 < h <= 8760", {"h": 8761}, False),
+        ("0 < h < 8760", {"h": 8760}, False),
+        ("a < b < c", {"a": 1, "b": 2, "c": 3}, True),
+        ("a < b < c", {"a": 1, "b": 3, "c": 2}, False),
+        ("a <= b >= c", {"a": 2, "b": 2, "c": 1}, True),  # mezcla de sentidos, como en Python
+        ("a < b > c", {"a": 1, "b": 5, "c": 4}, True),
+        ("a < b < c < d", {"a": 1, "b": 2, "c": 3, "d": 4}, True),
+        ("a < b < c < d", {"a": 1, "b": 2, "c": 3, "d": 3}, False),
+        # `not` niega toda la cadena; `or`/`and` la toman como un unico operando
+        ("not 8760 < h <= 100000", {"h": 200000}, True),  # not (True and False)
+        ("not 8760 < h <= 100000", {"h": 9000}, False),
+        ("0 < h <= 8760 or PM > 100", {"h": 0, "PM": 110}, True),  # False or True
+        ("0 < h <= 8760 or PM > 100", {"h": 0, "PM": 90}, False),
+        ("0 < h <= 8760 and PM > 100", {"h": 5000, "PM": 90}, False),
+        ("0 < h <= 8760 -> PM > 100", {"h": 5000, "PM": 90}, False),
+        ("0 < h <= 8760 -> PM > 100", {"h": 0, "PM": 90}, True),
+        # trivaluada: un operando ausente no decide salvo que otro par ya sea falso
+        ("0 < h <= 8760", {}, NO_EVALUABLE),
+        ("a < b <= c", {"a": 1, "b": 2}, NO_EVALUABLE),
+        ("a < b <= c", {"a": 5, "b": 2}, False),  # 5 < 2 ya es falso aunque falte c
+        ("not a < b <= c", {"a": 1, "b": 2}, NO_EVALUABLE),
+        ("a < b <= c or d", {"a": 1, "b": 2, "d": True}, True),
+    ],
+)
+def test_comparacion_encadenada_semantica_python_trivaluada(texto, datos, esperado):
+    valores = {
+        k: (Decimal(v) if isinstance(v, int) and not isinstance(v, bool) else v) for k, v in datos.items()
+    }
+    assert ev(texto, valores) is esperado
+
+
+def test_comparacion_encadenada_es_un_nodo_bajo_not_y_or():
+    """`not 8760 < h <= 100000` y `not (8760 < h <= 100000)` son la misma expresion; idem con `or`."""
+    for h in (Decimal(9000), Decimal(200000), Decimal(100)):
+        datos = {"h": h, "PM": Decimal(110)}
+        assert ev("not 8760 < h <= 100000", datos) is ev("not (8760 < h <= 100000)", datos)
+        assert ev("0 < h <= 8760 or PM > 100", datos) is ev("(0 < h <= 8760) or (PM > 100)", datos)
+        assert ev("0 < h <= 8760 or PM > 100", datos) is ev("(0 < h and h <= 8760) or PM > 100", datos)
+
+
+def test_comparacion_encadenada_evalua_cada_operando_una_vez():
+    lecturas: list[str] = []
+
+    class Contador:
+        def resolver(self, nombre: str) -> object:
+            lecturas.append(nombre)
+            return Decimal(5)
+
+    assert compilar("0 < h <= 8760").evaluar(Contador()) is True
+    assert lecturas == ["h"]
+
+
+def test_comparacion_encadenada_con_fechas_y_aritmetica(spec):
+    inicio, fin = date(2026, 1, 10), date(2026, 3, 1)
+    datos = {
+        "fecha_inicio_actuacion": inicio,
+        "fecha_fin_actuacion": fin,
+        "solicitud.fecha": date(2026, 6, 1),
+    }
+    assert ev("fecha_inicio_actuacion <= fecha_fin_actuacion <= solicitud.fecha", datos) is True
+    assert ev("fecha_inicio_actuacion <= fecha_fin_actuacion + 3 años <= solicitud.fecha", datos) is False
+    assert ev("0 < a + 1 < 3 * b", {"a": Decimal(1), "b": Decimal(1)}) is True
+
+
+def test_comparacion_encadenada_sin_cortocircuito_en_tipos():
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("a < b < c", {"a": Decimal(5), "b": Decimal(2), "c": "texto"})  # 5 < 2 es falso, pero c es texto
 
 
 def test_modo_desconocido_es_error_de_carga():

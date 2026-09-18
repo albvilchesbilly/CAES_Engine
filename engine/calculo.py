@@ -1,33 +1,56 @@
 """Motor de calculo (N3): evalua la formula de la ficha con `Decimal` a partir de la spec, sin cablear nada.
 
-Todo lo que se calcula se lee del YAML de la ficha (`docs/04` §7, regla de oro 4):
+Dos funciones publicas:
 
-- `calculo.motor.formula` / `calculo.motor.salida`: la formula por unidad y el nombre de su salida.
-- `calculo.total.formula` / `calculo.total.salida`: la formula del total sobre la lista de salidas por unidad.
-- `variables.<nombre>.derivacion` de las variables `evidencia: derivado`: se derivan aqui las que salen de una
-  tabla (`fuente: tabla:<ID>`, `clave`, `si_no_existe_fila`) y las cuyo `metodo` es una expresion del
-  vocabulario cerrado cuyos identificadores son variables de la spec (`min(h_antes, h_despues)`,
-  `perdidas_ref_kw / PM`). Las demas (`metodo` en prosa: registro de funcionamiento) las deriva el
-  consolidador y llegan como entrada. Se evaluan en orden topologico de dependencias.
-- `calculo.precondiciones`: cadenas en modo `logica`. Las que no compilan en el contexto de calculo (la que
-  habla de reglas bloqueantes) se delegan a `reglas.py` con una nota en la traza. Una comparacion encadenada
-  (`0 < h <= 8760`) se reescribe como conjuncion antes de compilar porque el parser no la admite.
-- `calculo.controles_fisicos[]`: `id` y `regla`; si alguno falla, el resultado se **retira**.
-- `calculo.redondeo_salida.<salida_total>_cae` + `interpretacion`: el codigo solo implementa "truncar" (hacia
-  cero, a kWh entero); otro criterio es error de carga.
+- `planificar(spec_datos, tablas) -> Plan`: lee y **valida** todo lo que el calculo necesita de la spec y lo
+  compila una vez. Es la unica puerta de validacion del bloque `calculo` y de las derivaciones: el Spec
+  Registry (`engine/spec_registry.py`, `cargar_spec`) la invoca al cargar una ficha, de modo que una spec que
+  el registro activa es, por construccion, calculable (dependencia `spec_registry → calculo`, hacia dentro).
+  Toda incoherencia de la spec es `ErrorCalculo` aqui, nunca en `calcular`.
+- `calcular(spec_datos, unidades, tablas, *, provisional, fecha, plan=None) -> ResultadoCalculo`: ejecuta el
+  plan sobre las entradas consolidadas de cada unidad. Acepta un `Plan` ya construido; si no, lo construye.
+
+Lo que `planificar` lee del YAML de la ficha (`docs/04` §7, regla de oro 4) y el criterio que aplica:
+
+- `calculo.aritmetica`: obligatoria e igual a `decimal_exacta`; otra cosa es error (solo hay un motor).
+- `calculo.motor` y `calculo.total`: obligatorios, con `salida` y `formula`. La formula por unidad compila en
+  modo `formula` y sus identificadores son variables de la spec (entradas o derivadas); la del total compila y
+  referencia exactamente la salida por unidad (se evalua sobre la lista de salidas).
+- `variables.<nombre>` con `evidencia: derivado` y bloque `derivacion`; criterio unico (ADR-002 §3, QA-2):
+  (a) `fuente` documental (no empieza por `tabla:`) → `metodo` es prosa y **nunca** se compila: la variable es
+      entrada del consolidador (`entradas_requeridas`) y su `interpretacion` va a
+      `interpretaciones_por_entrada`;
+  (b) `fuente: tabla:<ID>` → `<ID>` debe estar en `tablas` y `clave` (variable de la spec) es obligatoria;
+  (c) sin `fuente` → `metodo` debe compilar en modo `formula` y sus identificadores ser variables de la spec
+      distintas de si misma. Ciclos entre derivadas → error. Se evaluan en orden topologico.
+- `calculo.precondiciones[]`: modo `logica`. Una precondicion es **prosa** si no contiene ningun caracter de
+  operador ni parentesis (`< > = ! + - * / ( ) [ ]`), es decir, solo palabras: entonces se delega a
+  `reglas.py` (`precondiciones_delegadas`) con nota en la traza. Todo lo demas debe compilar y referenciar
+  variables de la spec; una errata o funcion desconocida es error de planificacion, nunca una delegacion.
+- `calculo.controles_fisicos[]`: `id` y `regla` (modo `logica`, identificadores = variables o salida por
+  unidad); si alguno falla, el resultado de la unidad se **retira**.
+- `calculo.redondeo_salida.<salida_total>_cae` + `interpretacion`: el codigo solo implementa "truncar"
+  (hacia cero, a kWh entero). El criterio, normalizado (minusculas, sin tildes, espacios simples), debe ser
+  exactamente `truncar a kwh entero` o empezar por la palabra `truncar`; otro criterio es error.
 
 Reglas de implementacion que este modulo garantiza:
 
 - `Decimal` de extremo a extremo con precision fija `PRECISION_DECIMAL` en un `localcontext`, independiente
-  del contexto global. Ninguna entrada puede ser `float` (`ErrorCalculo`).
-- Una variable derivable por la spec que llegue en `unidades` (p. ej. `p` tomada de la ficha del variador)
-  se **ignora** con aviso: el valor sale siempre de la derivacion declarada (R-CAL-04).
-- Nada de `eval`; toda cadena de la spec pasa por `engine.expresiones.compilar`.
+  del contexto global. Ninguna entrada puede ser `float` ni texto (`ErrorCalculo`: contexto mal construido).
+- Una variable derivable por la spec que llegue en `unidades` (p. ej. la fraccion de perdidas tomada de la
+  ficha del variador) se **ignora** con aviso: el valor sale siempre de la derivacion declarada.
+- Los errores de una unidad son de esa unidad: una entrada `None` (valor consumido nulo por conflicto o
+  ausencia) o un error de evaluacion (division por cero) dejan `motivo_no_calculo` en la unidad y el total sin
+  publicar; nunca una excepcion global.
+- Nada de `eval`; toda cadena de la spec pasa por `engine.expresiones.compilar`. Ningun nombre de variable de
+  la ficha aparece en este modulo: `ResultadoUnidad.fuentes[<variable>]` es la API de origen de cada derivada.
 - No importa nada de agentes/, salida/, generator/ ni tests/.
 """
 
 from __future__ import annotations
 
+import re
+import unicodedata
 from collections.abc import Mapping
 from dataclasses import dataclass, field, fields, is_dataclass
 from datetime import date
@@ -49,7 +72,9 @@ EVIDENCIA_DERIVADA = "derivado"
 ARITMETICA_SOPORTADA = "decimal_exacta"
 SUFIJO_CAE = "_cae"
 CRITERIO_TRUNCAR = "truncar"
+CRITERIO_TRUNCAR_CANONICO = "truncar a kwh entero"
 ORIGEN_DERIVADO = "derivado"
+CARACTERES_EXPRESION = frozenset("<>=!+-*/()[]")
 
 
 class ErrorCalculo(Exception):
@@ -76,11 +101,6 @@ class ResultadoUnidad:
     motivo_no_calculo: str | None
     fuentes: dict[str, str]  # variable derivada -> "tabla:<ID>" | "derivado" | "derivado(tabla:A,tabla:B)"
 
-    @property
-    def p_fuente(self) -> str | None:
-        """Origen de `p` para R-CAL-04 (`p.fuente == tabla:<ID>`). Azucar sobre `fuentes` (lo generico)."""
-        return self.fuentes.get("p")
-
 
 @dataclass
 class ResultadoCalculo:
@@ -100,58 +120,76 @@ class ResultadoCalculo:
 
 
 # ---------------------------------------------------------------------------
-# Plan de calculo: lo que la spec declara, compilado una vez
+# Plan de calculo: lo que la spec declara, validado y compilado una vez
 # ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True)
-class _Derivacion:
+class Derivada:
+    """Variable que este modulo deriva. `fuente` es `tabla:<ID>` (busqueda por `clave`) o `None` (formula)."""
+
     nombre: str
-    tipo: str  # "tabla" | "expresion"
+    fuente: str | None
+    clave: str | None
+    expresion: Expresion | None
+    metodo: str
     dependencias: frozenset[str]
-    origen: str
-    id_tabla: str | None = None
-    clave: str | None = None
-    si_no_existe_fila: str | None = None
-    expresion: Expresion | None = None
-    texto: str | None = None
-    interpretacion: str | None = None
+    origen: str  # trazabilidad para `fuentes`: "tabla:<ID>" | "derivado" | "derivado(tabla:A,tabla:B)"
+    interpretacion: str | None
+    si_no_existe_fila: str | None
+
+    @property
+    def es_tabla(self) -> bool:
+        return self.fuente is not None
 
 
 @dataclass(frozen=True)
-class _Control:
+class Control:
     id: str
-    texto: str
     expresion: Expresion
     mensaje: str | None
 
 
 @dataclass(frozen=True)
-class _Redondeo:
-    clave: str
-    criterio: str
+class Redondeo:
+    clave: str  # "<salida_total>_cae"
+    criterio: str  # texto original de la spec
     interpretacion: str | None
 
 
 @dataclass(frozen=True)
-class _Plan:
+class Plan:
+    """Todo lo que `calcular` necesita, ya validado. Lo construye `planificar`; lo consume `calcular`.
+
+    - `derivadas`: en orden topologico; cada una con su expresion (o tabla y clave), origen e interpretacion.
+    - `entradas_requeridas`: variables que deben llegar del consolidador (las referencian la formula, las
+      precondiciones, los controles o las derivadas y la spec no las deriva aqui).
+    - `precondiciones`: compiladas (`Expresion.texto` conserva el texto); `precondiciones_delegadas`: prosa.
+    - `controles`: id → `Control` (expresion compilada y mensaje).
+    - `criterio_redondeo`: `None` si la spec no declara `redondeo_salida.<salida_total>_cae`.
+    - `interpretaciones_estaticas`: las que aplica siempre que calcula (derivaciones por formula, redondeo).
+    - `interpretaciones_por_entrada`: variable de entrada → INT de su `derivacion.interpretacion`; se aplican
+      cuando la entrada se consume.
+    """
+
     salida_unidad: str
-    texto_formula_unidad: str
     formula_unidad: Expresion
     salida_total: str
-    texto_formula_total: str
     formula_total: Expresion
-    derivaciones: tuple[_Derivacion, ...]
-    precondiciones: tuple[tuple[str, Expresion], ...]
+    derivadas: tuple[Derivada, ...]
+    entradas_requeridas: frozenset[str]
+    precondiciones: tuple[Expresion, ...]
     precondiciones_delegadas: tuple[str, ...]
-    controles: tuple[_Control, ...]
-    redondeo: _Redondeo | None
-    subexpresiones: tuple[tuple[str, Expresion], ...]
+    controles: Mapping[str, Control]
+    criterio_redondeo: Redondeo | None
+    interpretaciones_estaticas: tuple[str, ...]
+    interpretaciones_por_entrada: Mapping[str, str]
+    subexpresiones: tuple[Expresion, ...]
     notas: tuple[str, ...]
 
     @property
     def derivables(self) -> frozenset[str]:
-        return frozenset(d.nombre for d in self.derivaciones)
+        return frozenset(d.nombre for d in self.derivadas)
 
 
 def _leer(datos: object, ruta: str, contexto: str = "spec") -> object:
@@ -174,141 +212,108 @@ def _compilar(texto: str, modo: str, que: str) -> Expresion:
     try:
         return compilar(texto, modo=modo)
     except ErrorCargaExpresion as exc:
-        raise ErrorCalculo(f"spec: {que} no compila ({exc})") from exc
+        raise ErrorCalculo(f"spec: {que} {texto!r} no compila ({exc})") from exc
 
 
-def _desencadenar(texto: str) -> str | None:
-    """`a < b <= c` → `(a < b) and (b <= c)`. Solo comparadores de orden en el nivel superior; si no hay
-    al menos dos, devuelve `None`. Es una reescritura textual previa a `compilar`, no una evaluacion."""
-    partes: list[str] = []
-    ops: list[str] = []
-    profundidad = 0
-    comillas: str | None = None
-    inicio = 0
-    i = 0
-    while i < len(texto):
-        c = texto[i]
-        if comillas is not None:
-            if c == comillas:
-                comillas = None
-        elif c in "\"'":
-            comillas = c
-        elif c in "([":
-            profundidad += 1
-        elif c in ")]":
-            profundidad -= 1
-        elif profundidad == 0 and c in "<>" and not (c == ">" and i > 0 and texto[i - 1] == "-"):
-            op = c + "=" if texto[i + 1 : i + 2] == "=" else c
-            partes.append(texto[inicio:i])
-            ops.append(op)
-            i += len(op)
-            inicio = i
-            continue
-        i += 1
-    partes.append(texto[inicio:])
-    if len(ops) < 2:
-        return None
-    limpias = [p.strip() for p in partes]
-    if any(not p for p in limpias):
-        return None
-    return " and ".join(f"({a} {op} {b})" for a, op, b in zip(limpias, ops, limpias[1:], strict=False))
-
-
-def _compilar_logica(texto: str, que: str) -> tuple[Expresion, str | None]:
-    """Compila en modo logica; si falla por comparacion encadenada, la reescribe y devuelve la nota."""
-    try:
-        return compilar(texto, modo="logica"), None
-    except ErrorCargaExpresion as exc:
-        alternativa = _desencadenar(texto)
-        if alternativa is None:
-            raise ErrorCalculo(f"spec: {que} {texto!r} no compila ({exc})") from exc
-        try:
-            expresion = compilar(alternativa, modo="logica")
-        except ErrorCargaExpresion as exc2:
-            raise ErrorCalculo(f"spec: {que} {texto!r} no compila ({exc2})") from exc2
-        nota = (
-            f"{que} {texto!r} reescrita como {alternativa!r} (el parser no admite comparaciones encadenadas)"
+def _exigir_identificadores(expresion: Expresion, permitidos: frozenset[str], que: str) -> None:
+    ajenos = sorted(expresion.identificadores - permitidos)
+    if ajenos:
+        raise ErrorCalculo(
+            f"spec: {que} {expresion.texto!r} referencia nombres que la spec no declara: {', '.join(ajenos)}"
         )
-        return expresion, nota
 
 
-def _derivaciones(variables: Mapping, tablas: Mapping[str, Tabla]) -> tuple[_Derivacion, ...]:
-    """Variables `evidencia: derivado` que este modulo puede derivar, en orden topologico de dependencias."""
+def es_prosa(texto: str) -> bool:
+    """Precondicion de procedimiento: solo palabras, sin ningun caracter de operador ni parentesis."""
+    return not any(c in CARACTERES_EXPRESION for c in texto)
+
+
+def normalizar_criterio(criterio: str) -> str:
+    """Minusculas, sin tildes, espacios simples: para comparar el criterio de redondeo de la spec."""
+    sin_tildes = "".join(c for c in unicodedata.normalize("NFKD", criterio) if not unicodedata.combining(c))
+    return " ".join(sin_tildes.lower().split())
+
+
+def _derivadas(variables: Mapping, tablas: Mapping[str, Tabla]) -> tuple[Derivada, ...]:
+    """Variables `evidencia: derivado` que este modulo deriva (criterio (b) y (c)), en orden topologico."""
     nombres = frozenset(str(n) for n in variables)
-    candidatas: dict[str, _Derivacion] = {}
+    candidatas: dict[str, Derivada] = {}
     for nombre, declaracion in variables.items():
         nombre = str(nombre)
         if not isinstance(declaracion, Mapping) or declaracion.get("evidencia") != EVIDENCIA_DERIVADA:
             continue
+        ctx = f"spec: variables.{nombre}.derivacion"
         derivacion = declaracion.get("derivacion")
         if not isinstance(derivacion, Mapping):
-            continue
+            raise ErrorCalculo(f"{ctx}: una variable 'derivado' debe declarar `derivacion`")
         fuente = derivacion.get("fuente")
-        if isinstance(fuente, str) and fuente.startswith(PREFIJO_TABLA):
+        if fuente is not None and not isinstance(fuente, str):
+            raise ErrorCalculo(f"{ctx}.fuente: debe ser una cadena")
+        metodo = derivacion.get("metodo")
+        interpretacion = derivacion.get("interpretacion")
+        if isinstance(fuente, str) and not fuente.startswith(PREFIJO_TABLA):
+            continue  # (a) fuente documental: el metodo es prosa; la deriva el consolidador
+        if isinstance(fuente, str):  # (b) tabla
             id_tabla = fuente[len(PREFIJO_TABLA) :]
             if id_tabla not in tablas:
-                raise ErrorCalculo(
-                    f"spec: variables.{nombre}.derivacion.fuente cita la tabla {id_tabla!r} y no esta cargada"
-                )
+                raise ErrorCalculo(f"{ctx}.fuente cita la tabla {id_tabla!r} y no esta cargada")
             clave = derivacion.get("clave")
             if not isinstance(clave, str) or not clave:
-                raise ErrorCalculo(f"spec: variables.{nombre}.derivacion.clave es obligatoria para una tabla")
+                raise ErrorCalculo(f"{ctx}.clave es obligatoria para una fuente de tabla")
+            if clave not in nombres or clave == nombre:
+                raise ErrorCalculo(f"{ctx}.clave {clave!r} no es otra variable de la spec")
             sin_fila = derivacion.get("si_no_existe_fila")
-            candidatas[nombre] = _Derivacion(
+            candidatas[nombre] = Derivada(
                 nombre=nombre,
-                tipo="tabla",
+                fuente=fuente,
+                clave=clave,
+                expresion=None,
+                metodo=str(metodo or ""),
                 dependencias=frozenset({clave}),
                 origen=fuente,
-                id_tabla=id_tabla,
-                clave=clave,
+                interpretacion=str(interpretacion) if interpretacion else None,
                 si_no_existe_fila=str(sin_fila) if sin_fila else None,
-                texto=str(derivacion.get("metodo") or ""),
             )
             continue
-        metodo = derivacion.get("metodo")
+        # (c) sin fuente: el metodo es una formula sobre otras variables de la spec
         if not isinstance(metodo, str) or not metodo.strip():
-            continue
-        try:
-            expresion = compilar(metodo, modo="formula")
-        except ErrorCargaExpresion:
-            continue  # metodo en prosa: lo deriva el consolidador y llega como entrada
-        if not expresion.identificadores or not expresion.identificadores <= nombres:
-            continue
-        interpretacion = derivacion.get("interpretacion")
-        candidatas[nombre] = _Derivacion(
+            raise ErrorCalculo(f"{ctx}: sin `fuente` debe declarar `metodo` (formula)")
+        expresion = _compilar(metodo, "formula", f"variables.{nombre}.derivacion.metodo")
+        if nombre in expresion.identificadores:
+            raise ErrorCalculo(f"{ctx}.metodo {metodo!r} es autorreferente")
+        if not expresion.identificadores:
+            raise ErrorCalculo(f"{ctx}.metodo {metodo!r} no depende de ninguna variable")
+        _exigir_identificadores(expresion, nombres, f"variables.{nombre}.derivacion.metodo")
+        candidatas[nombre] = Derivada(
             nombre=nombre,
-            tipo="expresion",
+            fuente=None,
+            clave=None,
+            expresion=expresion,
+            metodo=metodo,
             dependencias=expresion.identificadores,
             origen=ORIGEN_DERIVADO,
-            expresion=expresion,
-            texto=metodo,
             interpretacion=str(interpretacion) if interpretacion else None,
+            si_no_existe_fila=None,
         )
     return _ordenar(candidatas)
 
 
-def _ordenar(candidatas: dict[str, _Derivacion]) -> tuple[_Derivacion, ...]:
-    """Orden topologico (Kahn) con el orden de la spec como desempate; ciclo → error de carga."""
+def _ordenar(candidatas: dict[str, Derivada]) -> tuple[Derivada, ...]:
+    """Orden topologico (Kahn) con el orden de la spec como desempate; ciclo → error de planificacion."""
     pendientes = dict(candidatas)
-    resueltas: dict[str, _Derivacion] = {}
-    orden: list[_Derivacion] = []
+    resueltas: dict[str, Derivada] = {}
+    orden: list[Derivada] = []
     while pendientes:
-        listas = [
-            n
-            for n, d in pendientes.items()
-            if not any(dep in pendientes for dep in d.dependencias if dep != n)
-        ]
-        if not listas or any(n in candidatas[n].dependencias for n in listas):
+        listas = [n for n, d in pendientes.items() if not any(dep in pendientes for dep in d.dependencias)]
+        if not listas:
             raise ErrorCalculo(
                 f"spec: dependencias circulares entre variables derivadas: {sorted(pendientes)}"
             )
         nombre = listas[0]
-        derivacion = pendientes.pop(nombre)
-        tablas_origen: set[str] = set()
-        if derivacion.tipo == "tabla":
-            tablas_origen.add(derivacion.origen)
-        else:
-            for dep in derivacion.dependencias:
+        derivada = pendientes.pop(nombre)
+        if not derivada.es_tabla:
+            tablas_origen: set[str] = set()
+            for dep in derivada.dependencias:
                 if dep in resueltas:
                     tablas_origen.update(_tablas_de(resueltas[dep].origen))
             if len(tablas_origen) == 1:
@@ -317,9 +322,9 @@ def _ordenar(candidatas: dict[str, _Derivacion]) -> tuple[_Derivacion, ...]:
                 origen = f"{ORIGEN_DERIVADO}({','.join(sorted(tablas_origen))})"
             else:
                 origen = ORIGEN_DERIVADO
-            derivacion = _Derivacion(**{**_campos(derivacion), "origen": origen})
-        resueltas[nombre] = derivacion
-        orden.append(derivacion)
+            derivada = Derivada(**{**_campos(derivada), "origen": origen})
+        resueltas[nombre] = derivada
+        orden.append(derivada)
     return tuple(orden)
 
 
@@ -335,7 +340,7 @@ def _campos(instancia: object) -> dict[str, object]:
     return {f.name: getattr(instancia, f.name) for f in fields(instancia)}  # type: ignore[arg-type]
 
 
-def _subexpresiones(texto: str) -> tuple[tuple[str, Expresion], ...]:
+def _subexpresiones(texto: str) -> tuple[Expresion, ...]:
     """Grupos entre parentesis de la formula que compilan por si solos, para trazar valores intermedios."""
     pilas: list[int] = []
     grupos: list[tuple[int, str]] = []
@@ -345,100 +350,174 @@ def _subexpresiones(texto: str) -> tuple[tuple[str, Expresion], ...]:
         elif c == ")" and pilas:
             inicio = pilas.pop()
             grupos.append((inicio, texto[inicio : i + 1]))
-    resultado: list[tuple[str, Expresion]] = []
+    resultado: list[Expresion] = []
     vistos: set[str] = set()
     for _, grupo in sorted(grupos):
         if grupo in vistos:
             continue
         vistos.add(grupo)
         try:
-            resultado.append((grupo, compilar(grupo, modo="formula")))
+            resultado.append(compilar(grupo, modo="formula"))
         except ErrorCargaExpresion:
             continue
     return tuple(resultado)
 
 
-def _planificar(spec_datos: Mapping, tablas: Mapping[str, Tabla]) -> _Plan:
+def _interpretaciones_por_entrada(variables: Mapping) -> dict[str, str]:
+    """Criterio (a): variable derivada por el consolidador (fuente documental) con `interpretacion`."""
+    resultado: dict[str, str] = {}
+    for nombre, declaracion in variables.items():
+        if not isinstance(declaracion, Mapping) or declaracion.get("evidencia") != EVIDENCIA_DERIVADA:
+            continue
+        derivacion = declaracion.get("derivacion")
+        if not isinstance(derivacion, Mapping):
+            continue
+        fuente = derivacion.get("fuente")
+        interpretacion = derivacion.get("interpretacion")
+        if isinstance(fuente, str) and not fuente.startswith(PREFIJO_TABLA) and interpretacion:
+            resultado[str(nombre)] = str(interpretacion)
+    return resultado
+
+
+def _redondeo(calculo: Mapping, salida_total: str, notas: list[str]) -> Redondeo | None:
+    bloque = calculo.get("redondeo_salida")
+    clave_cae = f"{salida_total}{SUFIJO_CAE}"
+    if bloque is None:
+        notas.append(f"spec sin calculo.redondeo_salida.{clave_cae}: no se publica valor CAE entero")
+        return None
+    if not isinstance(bloque, Mapping):
+        raise ErrorCalculo("spec: calculo.redondeo_salida debe ser un mapa")
+    criterio = bloque.get(clave_cae)
+    if criterio is None:
+        notas.append(f"spec sin calculo.redondeo_salida.{clave_cae}: no se publica valor CAE entero")
+        return None
+    if not isinstance(criterio, str) or not criterio.strip():
+        raise ErrorCalculo(f"spec: calculo.redondeo_salida.{clave_cae} debe ser una cadena no vacia")
+    normalizado = normalizar_criterio(criterio)
+    if normalizado != CRITERIO_TRUNCAR_CANONICO and not re.match(rf"{CRITERIO_TRUNCAR}\b", normalizado):
+        raise ErrorCalculo(
+            f"spec: calculo.redondeo_salida.{clave_cae} {criterio!r} no soportado "
+            f"(solo {CRITERIO_TRUNCAR_CANONICO!r} o un criterio que empiece por {CRITERIO_TRUNCAR!r})"
+        )
+    interpretacion = bloque.get("interpretacion")
+    return Redondeo(clave_cae, criterio, str(interpretacion) if interpretacion else None)
+
+
+def planificar(spec_datos: Mapping, tablas: Mapping[str, Tabla]) -> Plan:
+    """Valida el bloque `calculo` y las derivaciones de la spec y compila todo una vez.
+
+    Es la unica puerta de validacion del calculo: `spec_registry.cargar_spec` la invoca al cargar una ficha
+    (dependencia hacia dentro `spec_registry → calculo`) y envuelve `ErrorCalculo` como error de carga; asi
+    una spec activa es calculable por construccion y `calcular` no valida nada de la spec. Criterios en la
+    cabecera del modulo.
+    """
     if not isinstance(spec_datos, Mapping):
         raise ErrorCalculo("spec_datos debe ser el mapping de la spec cargada")
     if not isinstance(tablas, Mapping):
         raise ErrorCalculo("tablas debe ser un mapping id -> Tabla")
     calculo = _leer(spec_datos, "calculo")
-    aritmetica = calculo.get("aritmetica") if isinstance(calculo, Mapping) else None  # type: ignore[union-attr]
-    if aritmetica is not None and aritmetica != ARITMETICA_SOPORTADA:
+    if not isinstance(calculo, Mapping):
+        raise ErrorCalculo("spec: `calculo` debe ser un mapa")
+    aritmetica = calculo.get("aritmetica")
+    if aritmetica != ARITMETICA_SOPORTADA:
         raise ErrorCalculo(
-            f"spec: calculo.aritmetica {aritmetica!r} no soportada (solo {ARITMETICA_SOPORTADA!r})"
+            f"spec: calculo.aritmetica {aritmetica!r} no soportada (debe ser {ARITMETICA_SOPORTADA!r})"
         )
     variables = _leer(spec_datos, "variables")
     if not isinstance(variables, Mapping):
         raise ErrorCalculo("spec: `variables` debe ser un mapa")
+    nombres = frozenset(str(n) for n in variables)
 
     salida_unidad = _leer_texto(spec_datos, "calculo.motor.salida")
-    texto_unidad = _leer_texto(spec_datos, "calculo.motor.formula")
-    formula_unidad = _compilar(texto_unidad, "formula", "calculo.motor.formula")
     salida_total = _leer_texto(spec_datos, "calculo.total.salida")
-    texto_total = _leer_texto(spec_datos, "calculo.total.formula")
-    formula_total = _compilar(texto_total, "formula", "calculo.total.formula")
+    if salida_unidad == salida_total or salida_unidad in nombres or salida_total in nombres:
+        raise ErrorCalculo(
+            "spec: las salidas de calculo.motor y calculo.total deben ser nombres nuevos y distintos"
+        )
+    formula_unidad = _compilar(
+        _leer_texto(spec_datos, "calculo.motor.formula"), "formula", "calculo.motor.formula"
+    )
+    _exigir_identificadores(formula_unidad, nombres, "calculo.motor.formula")
+    formula_total = _compilar(
+        _leer_texto(spec_datos, "calculo.total.formula"), "formula", "calculo.total.formula"
+    )
     if salida_unidad not in formula_total.identificadores:
         raise ErrorCalculo(
-            f"spec: calculo.total.formula {texto_total!r} no usa la salida por unidad {salida_unidad!r}"
+            f"spec: calculo.total.formula {formula_total.texto!r} no usa la salida "
+            f"por unidad {salida_unidad!r}"
         )
+    _exigir_identificadores(formula_total, frozenset({salida_unidad}), "calculo.total.formula")
 
+    derivadas = _derivadas(variables, tablas)
     notas: list[str] = []
-    precondiciones: list[tuple[str, Expresion]] = []
+
+    precondiciones: list[Expresion] = []
     delegadas: list[str] = []
-    for texto in calculo.get("precondiciones") or []:  # type: ignore[union-attr]
-        texto = str(texto)
-        try:
-            expresion, nota = _compilar_logica(texto, "precondicion")
-        except ErrorCalculo:
+    lista_precondiciones = calculo.get("precondiciones") or []
+    if not isinstance(lista_precondiciones, list):
+        raise ErrorCalculo("spec: calculo.precondiciones debe ser una lista de cadenas")
+    for texto in lista_precondiciones:
+        if not isinstance(texto, str) or not texto.strip():
+            raise ErrorCalculo("spec: cada calculo.precondiciones[] debe ser una cadena no vacia")
+        if es_prosa(texto):
             delegadas.append(texto)
             notas.append(
-                f"precondicion {texto!r} no evaluable en el contexto de calculo; la aplica reglas.py"
+                f"precondicion {texto!r} es prosa (sin operadores): no se evalua en el calculo; "
+                "la aplica reglas.py"
             )
             continue
-        if nota:
-            notas.append(nota)
-        precondiciones.append((texto, expresion))
+        expresion = _compilar(texto, "logica", "precondicion")
+        _exigir_identificadores(expresion, nombres, "precondicion")
+        precondiciones.append(expresion)
 
-    controles: list[_Control] = []
-    for control in calculo.get("controles_fisicos") or []:  # type: ignore[union-attr]
+    controles: dict[str, Control] = {}
+    lista_controles = calculo.get("controles_fisicos") or []
+    if not isinstance(lista_controles, list):
+        raise ErrorCalculo("spec: calculo.controles_fisicos debe ser una lista")
+    for control in lista_controles:
         if not isinstance(control, Mapping) or not control.get("id") or not control.get("regla"):
             raise ErrorCalculo("spec: cada calculo.controles_fisicos[] necesita `id` y `regla`")
-        texto = str(control["regla"])
-        expresion, nota = _compilar_logica(texto, f"control {control['id']}")
-        if nota:
-            notas.append(nota)
+        id_control = str(control["id"])
+        if id_control in controles or id_control in nombres:
+            raise ErrorCalculo(f"spec: control fisico {id_control!r} repetido o con nombre de variable")
+        expresion = _compilar(str(control["regla"]), "logica", f"control {id_control}")
+        _exigir_identificadores(expresion, nombres | {salida_unidad}, f"control {id_control}")
         mensaje = control.get("mensaje")
-        controles.append(_Control(str(control["id"]), texto, expresion, str(mensaje) if mensaje else None))
+        controles[id_control] = Control(id_control, expresion, str(mensaje) if mensaje else None)
 
-    redondeo: _Redondeo | None = None
-    bloque = calculo.get("redondeo_salida") or {}  # type: ignore[union-attr]
-    clave_cae = f"{salida_total}{SUFIJO_CAE}"
-    if isinstance(bloque, Mapping) and bloque.get(clave_cae):
-        criterio = str(bloque[clave_cae])
-        if CRITERIO_TRUNCAR not in criterio.lower():
-            raise ErrorCalculo(
-                f"spec: calculo.redondeo_salida.{clave_cae} {criterio!r} no soportado (solo truncar)"
-            )
-        interpretacion = bloque.get("interpretacion")
-        redondeo = _Redondeo(clave_cae, criterio, str(interpretacion) if interpretacion else None)
-    else:
-        notas.append(f"spec sin calculo.redondeo_salida.{clave_cae}: no se publica valor CAE entero")
+    redondeo = _redondeo(calculo, salida_total, notas)
 
-    return _Plan(
+    derivables = frozenset(d.nombre for d in derivadas)
+    referenciadas: set[str] = set(formula_unidad.identificadores)
+    for expresion in precondiciones:
+        referenciadas.update(expresion.identificadores)
+    for control in controles.values():
+        referenciadas.update(control.expresion.identificadores)
+    for d in derivadas:
+        referenciadas.update(d.dependencias)
+    entradas_requeridas = frozenset(referenciadas - derivables - {salida_unidad})
+
+    estaticas: list[str] = []
+    for d in derivadas:
+        if d.interpretacion:
+            _unir_unicos(estaticas, [d.interpretacion])
+    if redondeo is not None and redondeo.interpretacion:
+        _unir_unicos(estaticas, [redondeo.interpretacion])
+
+    return Plan(
         salida_unidad=salida_unidad,
-        texto_formula_unidad=texto_unidad,
         formula_unidad=formula_unidad,
         salida_total=salida_total,
-        texto_formula_total=texto_total,
         formula_total=formula_total,
-        derivaciones=_derivaciones(variables, tablas),
+        derivadas=derivadas,
+        entradas_requeridas=entradas_requeridas,
         precondiciones=tuple(precondiciones),
         precondiciones_delegadas=tuple(delegadas),
-        controles=tuple(controles),
-        redondeo=redondeo,
-        subexpresiones=_subexpresiones(texto_unidad),
+        controles=controles,
+        criterio_redondeo=redondeo,
+        interpretaciones_estaticas=tuple(estaticas),
+        interpretaciones_por_entrada=_interpretaciones_por_entrada(variables),
+        subexpresiones=_subexpresiones(formula_unidad.texto),
         notas=tuple(notas),
     )
 
@@ -478,10 +557,30 @@ def _decimal_resultado(valor: object, que: str) -> Decimal:
 
 
 def _evaluar(expresion: Expresion, contexto: ContextoDict, que: str) -> object:
+    """Evaluacion fuera de una unidad (total): un error de evaluacion es un defecto del plan."""
     try:
         return expresion.evaluar(contexto)
     except ErrorEvaluacionExpresion as exc:
         raise ErrorCalculo(f"{que}: {exc}") from exc
+
+
+_ERROR = object()
+
+
+def _evaluar_unidad(
+    expresion: Expresion, contexto: ContextoDict, que: str, unidad: ResultadoUnidad, traza: list[str]
+) -> object:
+    """Evaluacion dentro de una unidad: un error de evaluacion (division por cero, tipos) es motivo de esa
+    unidad y devuelve `_ERROR`; nunca una excepcion global."""
+    try:
+        return expresion.evaluar(contexto)
+    except ErrorEvaluacionExpresion as exc:
+        mensaje = f"{que}: error de evaluacion ({exc})"
+        traza.append(f"unidad {unidad.num_serie_motor}: {mensaje}")
+        unidad.avisos.append(f"unidad {unidad.num_serie_motor}: {mensaje}")
+        if unidad.motivo_no_calculo is None:
+            unidad.motivo_no_calculo = mensaje
+        return _ERROR
 
 
 def _agregar(valores: list[object]) -> object:
@@ -498,30 +597,54 @@ def _unir_unicos(destino: list[str], nuevos: list[str] | tuple[str, ...]) -> Non
             destino.append(n)
 
 
-def _entradas(
-    plan: _Plan, num_serie: str, valores: Mapping, avisos: list[str], traza: list[str]
-) -> dict[str, Decimal]:
+def _entradas(plan: Plan, valores: Mapping, unidad: ResultadoUnidad, traza: list[str]) -> dict[str, Decimal]:
+    num_serie = unidad.num_serie_motor
     if not isinstance(valores, Mapping):
         raise ErrorCalculo(f"unidad {num_serie}: las variables deben ser un mapping nombre -> Decimal")
     entradas: dict[str, Decimal] = {}
+    nulas: list[str] = []
     for nombre, valor in valores.items():
         nombre = str(nombre)
         if nombre in plan.derivables:
-            avisos.append(
+            unidad.avisos.append(
                 f"unidad {num_serie}: valor de {nombre} suministrado externamente ignorado; "
                 f"se deriva segun la spec"
             )
+            continue
+        if valor is None:
+            nulas.append(nombre)
             continue
         entradas[nombre] = _decimal_entrada(valor, f"unidad {num_serie}: {nombre}")
     traza.append(
         f"unidad {num_serie}: entradas "
         + (" ".join(f"{k}={_texto(v)}" for k, v in entradas.items()) or "(ninguna)")
     )
+    if nulas:
+        plural = "s" if len(nulas) > 1 else ""
+        unidad.motivo_no_calculo = (
+            f"entrada{plural} {', '.join(nulas)} sin valor consumido (conflicto o ausente)"
+        )
+        traza.append(f"unidad {num_serie}: {unidad.motivo_no_calculo}")
+    consumidas = [
+        f"{nombre} ({interpretacion})"
+        for nombre, interpretacion in plan.interpretaciones_por_entrada.items()
+        if nombre in entradas and nombre in plan.entradas_requeridas
+    ]
+    if consumidas:
+        _unir_unicos(
+            unidad.interpretaciones,
+            [
+                interpretacion
+                for nombre, interpretacion in plan.interpretaciones_por_entrada.items()
+                if nombre in entradas and nombre in plan.entradas_requeridas
+            ],
+        )
+        traza.append(f"unidad {num_serie}: entradas con interpretacion: {', '.join(consumidas)}")
     return entradas
 
 
 def _derivar_tabla(
-    d: _Derivacion,
+    d: Derivada,
     datos: dict[str, Decimal],
     tablas: Mapping[str, Tabla],
     fecha: date | None,
@@ -533,7 +656,7 @@ def _derivar_tabla(
     if valor_clave is None:
         traza.append(f"{prefijo}: {d.nombre} no derivable: falta {d.clave}")
         return
-    tabla = tablas[d.id_tabla or ""]
+    tabla = tablas[(d.fuente or "")[len(PREFIJO_TABLA) :]]
     if fecha is not None and not tabla.vigente(fecha):
         unidad.avisos.append(
             f"{prefijo}: tabla {tabla.id} no vigente en {fecha.isoformat()} "
@@ -542,7 +665,11 @@ def _derivar_tabla(
     try:
         busqueda = tabla.buscar(valor_clave)
     except ErrorTabla as exc:
-        raise ErrorCalculo(f"{prefijo}: {exc}") from exc
+        mensaje = f"{d.nombre}: {exc}"
+        unidad.avisos.append(f"{prefijo}: {mensaje}")
+        unidad.motivo_no_calculo = unidad.motivo_no_calculo or mensaje
+        traza.append(f"{prefijo}: {mensaje}")
+        return
     if busqueda.aviso:
         unidad.avisos.append(f"{prefijo}: {d.nombre}: {busqueda.aviso}")
     if busqueda.valor is None:
@@ -564,6 +691,8 @@ def _derivar_tabla(
         )
         detalle = f"sin fila exacta, {tabla.valor} interpolado{entre} ({etiqueta})"
         _unir_unicos(unidad.interpretaciones, [etiqueta])
+    if d.interpretacion:
+        _unir_unicos(unidad.interpretaciones, [d.interpretacion])
     unidad.derivadas[d.nombre] = busqueda.valor
     unidad.fuentes[d.nombre] = d.origen
     datos[d.nombre] = busqueda.valor
@@ -571,10 +700,15 @@ def _derivar_tabla(
 
 
 def _derivar_expresion(
-    d: _Derivacion, datos: dict[str, Decimal], unidad: ResultadoUnidad, traza: list[str]
+    d: Derivada, datos: dict[str, Decimal], unidad: ResultadoUnidad, traza: list[str]
 ) -> None:
     prefijo = f"unidad {unidad.num_serie_motor}"
-    valor = _evaluar(d.expresion, ContextoDict(datos), f"{prefijo}: derivacion de {d.nombre}")  # type: ignore[arg-type]
+    expresion = d.expresion
+    if expresion is None:
+        raise ErrorCalculo(f"{prefijo}: la derivada {d.nombre} no tiene expresion (plan mal construido)")
+    valor = _evaluar_unidad(expresion, ContextoDict(datos), f"derivacion de {d.nombre}", unidad, traza)
+    if valor is _ERROR:
+        return
     if valor is NO_EVALUABLE:
         faltan = sorted(n for n in d.dependencias if n not in datos)
         traza.append(f"{prefijo}: {d.nombre} no derivable: faltan {', '.join(faltan) or 'datos'}")
@@ -586,11 +720,11 @@ def _derivar_expresion(
     etiqueta = f" ({d.interpretacion})" if d.interpretacion else ""
     if d.interpretacion:
         _unir_unicos(unidad.interpretaciones, [d.interpretacion])
-    traza.append(f"{prefijo}: {d.nombre} = {d.texto} = {_texto(numero)}{etiqueta}")
+    traza.append(f"{prefijo}: {d.nombre} = {d.metodo} = {_texto(numero)}{etiqueta}")
 
 
 def _calcular_unidad(
-    plan: _Plan,
+    plan: Plan,
     num_serie: str,
     valores: Mapping,
     tablas: Mapping[str, Tabla],
@@ -610,51 +744,59 @@ def _calcular_unidad(
         fuentes={},
     )
     prefijo = f"unidad {num_serie}"
-    unidad.entradas = _entradas(plan, num_serie, valores, unidad.avisos, traza)
+    unidad.entradas = _entradas(plan, valores, unidad, traza)
     datos: dict[str, Decimal] = dict(unidad.entradas)
 
-    for d in plan.derivaciones:
-        if d.tipo == "tabla":
+    for d in plan.derivadas:
+        if d.es_tabla:
             _derivar_tabla(d, datos, tablas, fecha, unidad, traza)
         else:
             _derivar_expresion(d, datos, unidad, traza)
 
     contexto = ContextoDict(datos)
-    for texto, expresion in plan.precondiciones:
-        resultado = _evaluar(expresion, contexto, f"{prefijo}: precondicion {texto!r}")
+    for expresion in plan.precondiciones:
+        texto = expresion.texto
+        resultado = _evaluar_unidad(expresion, contexto, f"precondicion {texto!r}", unidad, traza)
+        if resultado is _ERROR:
+            resultado = NO_EVALUABLE
         unidad.precondiciones[texto] = resultado
         traza.append(f"{prefijo}: precondicion {texto!r} = {resultado}")
         if resultado is False and unidad.motivo_no_calculo is None:
             unidad.motivo_no_calculo = f"precondicion {texto!r} no se cumple"
 
     if unidad.motivo_no_calculo is None:
-        for texto, expresion in plan.subexpresiones:
-            parcial = _evaluar(expresion, contexto, f"{prefijo}: {texto}")
+        for expresion in plan.subexpresiones:
+            parcial = _evaluar_unidad(expresion, contexto, expresion.texto, unidad, traza)
             if isinstance(parcial, Decimal):
-                traza.append(f"{prefijo}: {texto} = {_texto(parcial)}")
-        valor = _evaluar(plan.formula_unidad, contexto, f"{prefijo}: formula")
+                traza.append(f"{prefijo}: {expresion.texto} = {_texto(parcial)}")
+    if unidad.motivo_no_calculo is None:
+        valor = _evaluar_unidad(plan.formula_unidad, contexto, "formula", unidad, traza)
         if valor is NO_EVALUABLE:
             faltan = sorted(n for n in plan.formula_unidad.identificadores if n not in datos)
             unidad.motivo_no_calculo = f"faltan variables para la formula: {', '.join(faltan)}"
             traza.append(f"{prefijo}: {plan.salida_unidad} no calculable ({unidad.motivo_no_calculo})")
-        else:
+        elif valor is not _ERROR:
             unidad.salida = _decimal_resultado(valor, f"{prefijo}: formula")
             traza.append(
-                f"{prefijo}: {plan.salida_unidad} = {plan.texto_formula_unidad} = {_texto(unidad.salida)}"
+                f"{prefijo}: {plan.salida_unidad} = {plan.formula_unidad.texto} = {_texto(unidad.salida)}"
             )
-    else:
+    if unidad.salida is None:
         traza.append(f"{prefijo}: no se calcula ({unidad.motivo_no_calculo})")
 
     datos_control: dict[str, object] = dict(datos)
     if unidad.salida is not None:
         datos_control[plan.salida_unidad] = unidad.salida
     contexto_control = ContextoDict(datos_control)
-    fallidos: list[_Control] = []
-    for control in plan.controles:
-        resultado = _evaluar(control.expresion, contexto_control, f"{prefijo}: control {control.id}")
+    fallidos: list[Control] = []
+    for control in plan.controles.values():
+        resultado = _evaluar_unidad(
+            control.expresion, contexto_control, f"control {control.id}", unidad, traza
+        )
+        if resultado is _ERROR:
+            resultado = NO_EVALUABLE
         unidad.controles[control.id] = resultado
         sufijo = f" ({control.mensaje})" if resultado is False and control.mensaje else ""
-        traza.append(f"{prefijo}: control {control.id} {control.texto!r} = {resultado}{sufijo}")
+        traza.append(f"{prefijo}: control {control.id} {control.expresion.texto!r} = {resultado}{sufijo}")
         if resultado is False:
             fallidos.append(control)
     if fallidos:
@@ -670,23 +812,29 @@ def _calcular_unidad(
 
 def calcular(
     spec_datos: Mapping,
-    unidades: Mapping[str, Mapping[str, Decimal]],
+    unidades: Mapping[str, Mapping[str, Decimal | None]],
     tablas: Mapping[str, Tabla],
     *,
     provisional: bool = False,
     fecha: date | None = None,
+    plan: Plan | None = None,
 ) -> ResultadoCalculo:
-    """Calcula la salida por unidad y el total segun la spec. Ver la cabecera del modulo.
+    """Calcula la salida por unidad y el total segun el plan de la spec. Ver la cabecera del modulo.
 
-    `unidades`: `num_serie_motor -> {variable: Decimal}` con las variables de entrada consolidadas. Un `float`
-    es `ErrorCalculo`. Las variables que la spec deriva se ignoran si llegan aqui (aviso).
+    `unidades`: `num_serie_motor -> {variable: Decimal | None}` con las variables de entrada consolidadas.
+    `None` es un valor consumido nulo (conflicto o ausencia): esa unidad no calcula. Un `float` o un texto es
+    `ErrorCalculo` (contexto mal construido). Las variables que la spec deriva se ignoran si llegan (aviso).
     `fecha`: fecha de evaluacion para comprobar la vigencia de las tablas (solo aviso).
+    `plan`: `Plan` de `planificar`; si falta se construye aqui (misma validacion).
     """
     if not isinstance(unidades, Mapping):
         raise ErrorCalculo("unidades debe ser un mapping num_serie_motor -> {variable: Decimal}")
+    if plan is None:
+        plan = planificar(spec_datos, tablas)
+    elif not isinstance(plan, Plan):
+        raise ErrorCalculo("plan debe ser el Plan devuelto por planificar")
     with localcontext() as ctx:
         ctx.prec = PRECISION_DECIMAL
-        plan = _planificar(spec_datos, tablas)
         traza: list[str] = list(plan.notas)
         avisos: list[str] = []
         interpretaciones: list[str] = []
@@ -712,16 +860,15 @@ def calcular(
                 total = _decimal_resultado(valor, "total")
                 sumandos = f"{' + '.join(_texto(s) for s in salidas)} = " if len(salidas) > 1 else ""
                 traza.append(
-                    f"total: {plan.salida_total} = {plan.texto_formula_total} = {sumandos}{_texto(total)}"
+                    f"total: {plan.salida_total} = {plan.formula_total.texto} = {sumandos}{_texto(total)}"
                 )
-                if plan.redondeo is not None:
+                redondeo = plan.criterio_redondeo
+                if redondeo is not None:
                     total_cae = int(total.to_integral_value(rounding=ROUND_DOWN))
-                    etiqueta = f"; {plan.redondeo.interpretacion}" if plan.redondeo.interpretacion else ""
-                    traza.append(
-                        f"total: {plan.redondeo.clave} = {total_cae} ({plan.redondeo.criterio}{etiqueta})"
-                    )
-                    if plan.redondeo.interpretacion:
-                        _unir_unicos(interpretaciones, [plan.redondeo.interpretacion])
+                    etiqueta = f"; {redondeo.interpretacion}" if redondeo.interpretacion else ""
+                    traza.append(f"total: {redondeo.clave} = {total_cae} ({redondeo.criterio}{etiqueta})")
+                    if redondeo.interpretacion:
+                        _unir_unicos(interpretaciones, [redondeo.interpretacion])
         if motivo is not None:
             traza.append(f"total: no se publica ({motivo})")
 
@@ -759,10 +906,7 @@ def _serializar(valor: object) -> object:
     if isinstance(valor, date):
         return valor.isoformat()
     if is_dataclass(valor) and not isinstance(valor, type):
-        datos = {f.name: _serializar(getattr(valor, f.name)) for f in fields(valor)}
-        if isinstance(valor, ResultadoUnidad):
-            datos["p_fuente"] = valor.p_fuente
-        return datos
+        return {f.name: _serializar(getattr(valor, f.name)) for f in fields(valor)}
     if isinstance(valor, Mapping):
         return {str(k): _serializar(v) for k, v in valor.items()}
     if isinstance(valor, (list, tuple, frozenset, set)):
@@ -776,3 +920,25 @@ def a_dict(resultado: ResultadoCalculo) -> dict:
     if not isinstance(salida, dict):
         raise ErrorCalculo("a_dict espera un ResultadoCalculo")
     return salida
+
+
+__all__ = [
+    "ARITMETICA_SOPORTADA",
+    "CARACTERES_EXPRESION",
+    "CRITERIO_TRUNCAR",
+    "CRITERIO_TRUNCAR_CANONICO",
+    "PRECISION_DECIMAL",
+    "PREFIJO_TABLA",
+    "Control",
+    "Derivada",
+    "ErrorCalculo",
+    "Plan",
+    "Redondeo",
+    "ResultadoCalculo",
+    "ResultadoUnidad",
+    "a_dict",
+    "calcular",
+    "es_prosa",
+    "normalizar_criterio",
+    "planificar",
+]
