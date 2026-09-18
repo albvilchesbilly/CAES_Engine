@@ -260,6 +260,13 @@ Se rellena paso a paso. Formato: paso · decisión · por qué · alternativa de
 | F0.5 | Generación determinista: `Canvas(invariant=1)`, semilla fija, xlsx con fechas de propiedades fijas; dos ejecuciones dan los mismos bytes y un test lo comprueba contra lo commiteado | Regenerar no puede cambiar el ground truth en silencio | Aceptar diferencias de bytes |
 | F0.5 | Datos canónicos del registro (para `sha256(registro.datos_canonicos)` de `R-EVD-03`): líneas `fecha_hora ISO;estado;velocidad_rpm;potencia_kw` en el orden de la hoja, UTF-8, sin cabecera; el certificado declara esa huella | INT-05 exige una prueba de inalterabilidad reproducible | Hash del fichero xlsx (cambia al reabrirlo) |
 | F0.5 | El escaneo girado del caso G es la ficha técnica del variador (EVD-04, **no** obligatorio) y las fotos sueltas se clasifican por EXIF: sin OCR, G sigue dando el mismo veredicto y ahorro que A | `docs/05` §8.2 exige 7/7 en un clon sin tesseract | Escanear un documento obligatorio |
+| F0.9 | La fase `resto` se evalúa antes del cálculo y se informa en orden de fase: ninguna regla de `resto` puede referenciar salidas del cálculo (por derivación irían a `post_calculo`), y así se sabe si el veredicto será `SUBSANABLE` antes de decidir un cálculo provisional | `docs/04` §5.1 sin recalcular ni retirar resultados | Calcular y retirar después |
+| F0.9 | Cálculo provisional genérico (caso B): con veredicto `SUBSANABLE`, si a una unidad le falta una sola entrada del `Plan` que aparece en una derivada junto a otra presente, se sustituye por ella (`min(h_antes, h_despues)` → `h = h_antes`) con aviso y `provisional`. **Nunca** con `PREVALIDADO`: sin `h_despues` y sin fallos, el veredicto es `PREVALIDADO` y **no se publica ahorro** | `docs/05` §2.1 exige 305.829 provisional en B, sin cablear nombres de la ficha | Cablear `h`/`h_despues` |
+| F0.9 | `<variable>.fuente` de una derivada sale del `Plan` (`Derivada.origen`), no del resultado del cálculo, para que `R-CAL-04` se evalúe en consistencia (`docs/04` §5.2); si además llega un dato consolidado homónimo (alguien extrajo `p` de la ficha del variador), gana la `fuente_primaria` del documento y la regla **falla** | Sin esto `R-CAL-04` sería estructuralmente incapaz de fallar | Leerlo solo del cálculo |
+| F0.9 | Solo las reglas `BLOQUEANTE_*` detienen una fase (un `AVISO` fallido como `R-CAL-02` no impide calcular); una bloqueante de `cabecera` para igual que una de consistencia; una regla fuera de vigencia es `NO_EVALUABLE` con motivo, no se omite | `docs/04` §5.2; queda fijado para las futuras `R-CAB-*` | "Falla alguna" como criterio de parada |
+| F0.9 | `obligatorio: condicional` cuya condición no se puede evaluar → el documento **no** es obligatorio, con aviso (matiza la fila QA-1). Motivo: `instalacion_personal_propio` no lo produce ningún extractor, y dejarlo `NO_EVALUABLE` haría que `R-DOC-01` fuese `NO_EVALUABLE` siempre y no detectase ninguna carencia | Mantener `R-DOC-01` operativa; el aviso lo dice en el informe | Dejarlo `NO_EVALUABLE` (R-DOC-01 inútil) o declarar el dato en la spec v1.2 (**decisión de Billy**) |
+| F0.9 | `carencias[].documentos` se deriva cuando la spec no declara `subsanacion` (v1.1 no lo hace): tipos de las `fuentes` de las variables de la regla, documentos con esa raíz y, si usa `presente`, los obligatorios ausentes | Una petición de subsanación sin documentos concretos no sirve | Lista vacía |
+| F0.9 | Alias de contexto reducidos a **uno** (`solicitud.fecha` → fecha de evaluación, INT-10) con test que impide que la tabla crezca; `factura.linea` y `requisito … in convenio_cae` se resuelven por reglas genéricas (singular de una colección; requisitos declarados en la spec frente a hallados) | Regla de oro 4: nada de la ficha en `engine/` | Tabla de alias por ficha |
 | plan | Caso G sin OCR debe dar el mismo resultado que A: el escaneo girado es `ficha_tecnica_variador` (EVD-04, no obligatorio) y las fotos sueltas se clasifican por EXIF | `docs/05` §8.2 exige 7/7 en un clon sin tesseract | Escanear un documento obligatorio (rompería 7/7 sin OCR) |
 
 ## 3 bis. Estado al cierre de la sesión del 18/09/2026
@@ -320,6 +327,13 @@ Se rellena al cierre. Candidatos ya identificados:
    ADR nuevo, no parche). Hasta entonces la fila se mantiene `si` por precedencia de `data/README.md` y `CLAUDE.md` §5.
 2. Verificación fila a fila de las 38 filas `pendiente` (en especial 55 kW y 160 kW, que sostienen E y F).
 3. INT-10 (fecha de solicitud en prevalidación = fecha de evaluación).
+4. **`instalacion_personal_propio`** (condición de DOC-05B): ningún documento lo declara. Hoy, si no se puede
+   evaluar, el certificado de técnico competente se trata como **no obligatorio** con aviso (F0.9). Alternativa:
+   declararlo en la spec v1.2 como variable de cabecera. Decide Billy.
+5. **Interpretaciones citadas frente a aplicadas**: hoy `interpretaciones_aplicadas` incluye las de toda regla
+   evaluada, así que en el caso A aparece INT-02 aunque haya fila exacta y la interpolación no se haya usado.
+   Distinguir "regla que cita un INT" de "INT que influyó en el resultado" exige un campo nuevo en la spec.
+   Mientras tanto, `evaluar_casos.py` compara la lista del ground truth como **subconjunto**, no por igualdad.
 
 ## Verificación
 
