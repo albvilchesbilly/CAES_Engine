@@ -1,0 +1,29 @@
+# Salida generada
+informes/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+build/
+dist/
+
+# Entorno y editores
+.env
+.vscode/
+.idea/
+*.swp
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+~$*
+
+# Datos reales: nunca en el repo
+datos_reales/
+*.real.*

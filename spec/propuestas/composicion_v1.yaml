@@ -1,0 +1,107 @@
+# =====================================================================
+# CAE ENGINE — Spec de COMPOSICIÓN: grupos, expedientes y requerimientos
+# Estado: PROPUESTA — pendiente de aprobación de Billy (Sprint 4 / Sprint 3 R-REQ)
+# NO SE CARGA desde spec/propuestas/. Fuente: docs/04 §10 (R-GRP, R-EXP, R-REQ)
+# y docs/02 §3 (fases 2A, 3A, 3B de la plataforma oficial).
+# Grupo y expediente no tienen veredicto de calidad sino VALIDEZ DE COMPOSICIÓN
+# (severidad COMPOSICION → INVALIDO | AVISO_CONTAGIO). La calidad vive en cada actuación.
+# =====================================================================
+
+spec:
+  id: COMPOSICION
+  version_composicion: "1.0"
+  version_spec: "0.1.0-propuesta"
+  estado: propuesta
+  fecha_revision: "2026-09-18"
+
+clave_agrupacion_expediente: [ccaa, anio_finalizacion, sector, verificador_id]   # docs/02 §3, fase 2A
+
+reglas_grupo:
+  - id: R-GRP-01
+    descripcion: "Todas las actuaciones del grupo tienen el mismo verificador"
+    logica: "unique(actuaciones.verificador_id)"
+    severidad: COMPOSICION
+    efecto: INVALIDO
+  - id: R-GRP-02
+    descripcion: "Ninguna actuación del grupo está NO_ELEGIBLE ni BLOQUEADO"
+    logica: "all(a.veredicto in [PREVALIDADO, SUBSANABLE])"
+    severidad: COMPOSICION
+    efecto: INVALIDO
+  - id: R-GRP-03
+    descripcion: "No mezclar SUBSANABLE con PREVALIDADO (dictamen único)"
+    logica: "unique(actuaciones.veredicto)"
+    severidad: COMPOSICION
+    efecto: AVISO_CONTAGIO
+
+reglas_expediente:
+  - id: R-EXP-01
+    descripcion: "Misma CCAA, año de finalización, sector y verificador"
+    logica: "unique(ccaa) and unique(anio_finalizacion) and unique(sector) and unique(verificador_id)"
+    severidad: COMPOSICION
+    efecto: INVALIDO
+    hueco: API-07        # cómo se determina la CCAA
+  - id: R-EXP-02
+    descripcion: "Solo actuaciones VERIFICADA_FAVORABLE (o un grupo con dictamen favorable)"
+    logica: "all(a.estado_plataforma == VERIFICADA_FAVORABLE)"
+    severidad: COMPOSICION
+    efecto: INVALIDO
+  - id: R-EXP-03
+    descripcion: "Un grupo verificado junto va en expediente propio"
+    logica: "grupo_id == null or (count(grupos) == 1 and count(actuaciones_sueltas) == 0)"
+    severidad: COMPOSICION
+    efecto: INVALIDO
+  - id: R-EXP-04
+    descripcion: "Aviso de contagio: alguna actuación con observaciones de A8 o avisos abiertos"
+    logica: "count(a where a.observaciones_abiertas > 0) > 0"
+    severidad: COMPOSICION
+    efecto: AVISO_CONTAGIO
+  - id: R-EXP-05
+    descripcion: "Actuación huérfana: única en su clave de agrupación dentro del tenant"
+    logica: "count_in_tenant(clave_agrupacion) == 1"
+    severidad: AVISO
+    nivel: actuacion
+  - id: R-EXP-06
+    descripcion: "Capacidad de delegación disponible del tenant suficiente"
+    logica: "tenant.capacidad_disponible >= sum(ahorro)"
+    severidad: AVISO
+    hueco: API-11
+
+reglas_requerimiento:
+  - id: R-REQ-01
+    descripcion: "Toda subsanación con origen externo referencia un requerimiento con informe (PDF con hash)"
+    logica: "origen != interno -> exists(requerimiento_ref) and exists(informe_pdf_sha256)"
+    severidad: BLOQUEANTE_DATOS
+  - id: R-REQ-02
+    descripcion: "La interpretación de A9 ha sido confirmada por un humano antes de reabrir la subsanación"
+    logica: "requerimiento.interpretacion.confirmada_por_humano == true"
+    severidad: BLOQUEANTE_DATOS
+  - id: R-REQ-03
+    descripcion: "Tras la firma, ningún dato consolidado cambia fuera de un requerimiento abierto"
+    logica: "estado_ciclo >= EN_PLATAFORMA -> cambios_datos.only_within(requerimientos_abiertos)"
+    severidad: BLOQUEANTE_DATOS
+  - id: R-REQ-04
+    descripcion: "Un requerimiento de GA o CN marca como afectadas todas las actuaciones del expediente"
+    logica: "origen in [GA, CN] -> afectadas == expediente.actuaciones"
+    severidad: INVARIANTE     # se comprueba por test, no en evaluación
+
+reglas_control_cruzado:          # R-XCK: necesitan simulador o sandbox; docs/04 §10
+  - id: R-XCK-01
+    descripcion: "El ahorro calculado por la plataforma coincide con el nuestro"
+    logica: "abs(plataforma.ahorro_kwh - AETOTAL_cae) <= tolerancia_xck"
+    severidad: BLOQUEANTE_DATOS
+    fase: control_cruzado
+    efecto_si_falla: "evento DiscrepanciaCalculoPlataforma; no se envía hasta resolución humana"
+  - id: R-XCK-02
+    descripcion: "Las validaciones tratables de la plataforma pasan en el simulador antes del envío real"
+    logica: "simulador.validaciones_tratables == OK"
+    severidad: BLOQUEANTE_DATOS
+    fase: control_cruzado
+  - id: R-XCK-03
+    descripcion: "El manifiesto aceptado por la plataforma coincide con el nuestro (hashes)"
+    logica: "plataforma.manifiesto.hashes == manifiesto_interno.hashes"
+    severidad: BLOQUEANTE_DATOS
+    fase: control_cruzado
+    hueco: API-02
+
+parametros:
+  tolerancia_xck: 0      # aritmética exacta; cada discrepancia se clasifica a mano (bug / INT-xx / criterio oficial)

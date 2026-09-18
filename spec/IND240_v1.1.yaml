@@ -1,0 +1,552 @@
+# =====================================================================
+# CAE ENGINE — Especificación de ficha como configuración
+# Ficha: IND240 V1.1
+# Estado: BORRADOR PoC — no sustituye a la ficha oficial ni al BOE
+# =====================================================================
+
+spec:
+  id: IND240
+  version_ficha: "1.1"
+  version_spec: "0.1.0"
+  estado: borrador_poc
+  fecha_revision: "2026-09-17"
+  autor: "CAE Engine PoC #001"
+
+ficha:
+  codigo: IND240
+  titulo: >-
+    Implantación de un variador de velocidad en un motor eléctrico existente
+    para sistemas dinámicos sin modulación
+  sector: industrial
+  tipo_actuacion: estandarizada
+  fuentes:
+    - id: SRC-FICHA
+      nombre: "Ficha IND240 V1.1 (catálogo vigente MITECO)"
+      url: "https://www.miteco.gob.es/content/dam/miteco/es/energia/files-1/Eficiencia/CAE/cat%C3%A1logo-vigente/fichas-autocompletables/industrial/IND240%20V1.1.pdf"
+      naturaleza: "Recopilación MITECO. Referencia vinculante: BOE."
+    - id: SRC-REG1781
+      nombre: "Reglamento (UE) 2019/1781, anexo I, cuadro 6"
+      url: "https://www.boe.es/buscar/doc.php?id=DOUE-L-2019-81609"
+    - id: SRC-ORDEN815
+      nombre: "Orden TED/815/2023 (desarrollo del RD 36/2023)"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-16734"
+    - id: SRC-RD36
+      nombre: "Real Decreto 36/2023"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-2027"
+
+# ---------------------------------------------------------------------
+# 1. ÁMBITO Y EXCLUSIONES
+# ---------------------------------------------------------------------
+ambito:
+  descripcion: >-
+    Instalación y puesta en funcionamiento de un variador de velocidad en un
+    motor eléctrico existente que opera en régimen constante y sin mecanismos
+    de modulación.
+  tipos_equipo_incluidos:
+    - bomba_dinamica          # centrífuga / cinética
+    - ventilador_axial
+    - ventilador_radial
+    - compresor_centrifugo
+    - compresor_axial
+  tipos_equipo_excluidos:
+    - bomba_desplazamiento_positivo   # pistón, paletas, rotativa, tornillo
+    - compresor_desplazamiento_positivo
+
+exclusiones:
+  - id: EXC-01
+    texto: "Instalación o sustitución de equipos completos que lleven incorporado el variador de velocidad."
+    referencia: SRC-FICHA §1
+  - id: EXC-02
+    texto: "Actuaciones que supongan sustitución total o parcial del equipo existente."
+    referencia: SRC-FICHA §1
+  - id: EXC-03
+    texto: "Variadores en bombas o compresores de desplazamiento positivo o volumétrico."
+    referencia: SRC-FICHA §1
+
+# ---------------------------------------------------------------------
+# 2. VARIABLES
+#   nivel: expediente | motor
+#   evidencia: demostrado (requiere documento soporte) | declarado | derivado
+#   fuentes: tipos de documento donde el Engine debe buscar el dato
+#   cruce: el valor debe coincidir entre TODAS las fuentes presentes
+# ---------------------------------------------------------------------
+variables:
+
+  # --- Identificación -------------------------------------------------
+  titular_nif:
+    nivel: expediente
+    tipo: string
+    evidencia: demostrado
+    fuentes: [ficha_cumplimentada, factura, declaracion_responsable, convenio_cae]
+    cruce: exacto
+  titular_razon_social:
+    nivel: expediente
+    tipo: string
+    evidencia: demostrado
+    fuentes: [ficha_cumplimentada, factura, declaracion_responsable, convenio_cae]
+    cruce: normalizado        # ignora mayúsculas, puntos, "S.L." vs "SL"
+  fecha_inicio_actuacion:
+    nivel: expediente
+    tipo: date
+    evidencia: demostrado
+    definicion: "La más temprana entre inicio de trabajos y primer compromiso irrevocable (pedido firme)."
+    referencia: SRC-ORDEN815 art. 14.9.j
+    fuentes: [ficha_cumplimentada, pedido, factura]
+  fecha_fin_actuacion:
+    nivel: expediente
+    tipo: date
+    evidencia: demostrado
+    definicion: "Actuación completada y activa (puesta en marcha)."
+    referencia: SRC-ORDEN815 art. 14.9.j
+    fuentes: [ficha_cumplimentada, certificado_instalador]
+
+  # --- Por motor ------------------------------------------------------
+  num_serie_variador:
+    nivel: motor
+    tipo: string
+    evidencia: demostrado
+    fuentes: [factura, ficha_tecnica_variador, certificado_instalador, ficha_cumplimentada, informe_fotografico]
+    cruce: exacto
+    clave_union: true          # une documentos del mismo motor
+  num_serie_motor:
+    nivel: motor
+    tipo: string
+    evidencia: demostrado
+    fuentes: [ficha_tecnica_motor, certificado_instalador, informe_fotografico, registro_horas_previo]
+    cruce: exacto
+    clave_union: true
+  tipo_equipo_accionado:
+    nivel: motor
+    tipo: enum
+    valores_ref: ambito.tipos_equipo_incluidos + ambito.tipos_equipo_excluidos
+    evidencia: demostrado
+    fuentes: [ficha_tecnica_equipo_accionado, certificado_instalador]
+    cruce: exacto
+  regimen_previo:
+    nivel: motor
+    tipo: enum
+    valores: [constante_sin_modulacion, con_modulacion]
+    evidencia: demostrado
+    fuentes: [registro_horas_previo, certificado_instalador]
+
+  PM:
+    nivel: motor
+    simbolo: "PM"
+    descripcion: "Potencia nominal de salida del motor sin variador"
+    unidad: kW
+    tipo: decimal
+    evidencia: demostrado
+    fuentes: [ficha_tecnica_motor, placa_caracteristicas_foto, certificado_instalador, ficha_cumplimentada]
+    fuente_primaria: ficha_tecnica_motor
+    cruce: exacto
+    rango_plausible: [0.12, 1000]
+    referencia: SRC-FICHA §3; §5.5.a
+  N1:
+    nivel: motor
+    simbolo: "N1"
+    descripcion: "Velocidad de giro a régimen constante antes de la actuación (carga nominal, sin variador)"
+    unidad: rpm
+    tipo: decimal
+    evidencia: demostrado
+    fuentes: [ficha_tecnica_motor, placa_caracteristicas_foto, certificado_instalador, ficha_cumplimentada]
+    fuente_primaria: ficha_tecnica_motor
+    cruce: exacto
+    rango_plausible: [300, 3600]
+    referencia: SRC-FICHA §3; §5.5.a
+  N2:
+    nivel: motor
+    simbolo: "N2"
+    descripcion: "Velocidad media anual con variador de velocidad"
+    unidad: rpm
+    tipo: decimal
+    evidencia: derivado
+    derivacion:
+      fuente: registro_funcionamiento
+      metodo: "media aritmética de la velocidad en intervalos con estado = MARCHA"
+      periodo_minimo_dias: 30
+      interpretacion: INT-03
+    cruce_con: [certificado_instalador, ficha_cumplimentada]
+    tolerancia_cruce_rpm: 1
+    referencia: SRC-FICHA §3 nota 1; §5.5.b
+  P_prom:
+    nivel: motor
+    descripcion: "Potencia promedio del motor en el nuevo punto de funcionamiento (no entra en la fórmula; control de coherencia)"
+    unidad: kW
+    tipo: decimal
+    evidencia: derivado
+    derivacion:
+      fuente: registro_funcionamiento
+      metodo: "media de potencia en intervalos con estado = MARCHA"
+    cruce_con: [certificado_instalador]
+    tolerancia_cruce_kw: 0.5
+    referencia: SRC-FICHA §3 nota 1; §5.5.b
+  h_antes:
+    nivel: motor
+    descripcion: "Horas anuales de funcionamiento antes de la actuación"
+    unidad: h
+    tipo: decimal
+    evidencia: demostrado
+    fuentes: [registro_horas_previo]
+    rango_plausible: [0, 8760]
+    referencia: SRC-FICHA §3 nota 2
+  h_despues:
+    nivel: motor
+    descripcion: "Horas anuales de funcionamiento después de la actuación"
+    unidad: h
+    tipo: decimal
+    evidencia: derivado
+    derivacion:
+      fuente: registro_funcionamiento
+      metodo: "horas en MARCHA del periodo × 8760 / horas totales del periodo"
+      interpretacion: INT-04
+    rango_plausible: [0, 8760]
+    referencia: SRC-FICHA §3 nota 2
+  h:
+    nivel: motor
+    simbolo: "h"
+    unidad: h
+    tipo: decimal
+    evidencia: derivado
+    derivacion:
+      metodo: "min(h_antes, h_despues)"
+    referencia: SRC-FICHA §3 nota 2 ("se considerará el menor de los valores")
+  perdidas_ref_kw:
+    nivel: motor
+    unidad: kW
+    tipo: decimal
+    evidencia: derivado
+    derivacion:
+      fuente: tabla:REG1781_CUADRO6
+      clave: PM
+      metodo: "fila cuya potencia nominal de motor = PM"
+      si_no_existe_fila: INT-02
+    nota: "NO usar las pérdidas declaradas por el fabricante del variador. La ficha exige las de referencia."
+    referencia: SRC-FICHA §3 nota 3; SRC-REG1781
+  p:
+    nivel: motor
+    simbolo: "p"
+    unidad: fraccion
+    tipo: decimal
+    evidencia: derivado
+    derivacion:
+      metodo: "perdidas_ref_kw / PM"
+      interpretacion: INT-01
+    rango_plausible: [0.0, 0.9]
+
+# ---------------------------------------------------------------------
+# 3. TABLAS DE REFERENCIA
+# ---------------------------------------------------------------------
+tablas:
+  REG1781_CUADRO6:
+    fichero: data/reg_2019_1781_cuadro6.csv
+    columnas: [kva_salida, kw_motor, perdidas_ref_kw, cos_phi]
+    punto_funcionamiento: "90 % frecuencia estatórica nominal, 100 % corriente nominal generadora de par"
+    referencia: SRC-REG1781
+
+# ---------------------------------------------------------------------
+# 4. CÁLCULO (determinista — nunca lo ejecuta un LLM)
+# ---------------------------------------------------------------------
+calculo:
+  motor:
+    salida: AEM
+    unidad: kWh/año
+    formula: "PM * (1 - (N2 / N1) ** 3) * (1 - p) * h"
+  total:
+    salida: AETOTAL
+    unidad: kWh/año
+    formula: "sum(AEM)"
+  aritmetica: decimal_exacta
+  redondeo_salida:
+    AEM: "sin redondeo interno"
+    AETOTAL_cae: "truncar a kWh entero (criterio conservador)"
+    interpretacion: INT-06
+  precondiciones:
+    - "N2 < N1"
+    - "0 < h <= 8760"
+    - "ninguna regla con severidad BLOQUEANTE fallida"
+  controles_fisicos:
+    - id: FIS-01
+      regla: "AEM <= PM * h"
+      mensaje: "El ahorro no puede superar la energía máxima teórica del motor."
+    - id: FIS-02
+      regla: "P_prom <= PM"
+      mensaje: "La potencia promedio con variador no puede superar la nominal."
+
+# ---------------------------------------------------------------------
+# 5. DOCUMENTACIÓN
+# ---------------------------------------------------------------------
+documentacion:
+  - id: DOC-01
+    tipo: ficha_cumplimentada
+    nombre: "Ficha IND240 cumplimentada y firmada por el representante legal del solicitante"
+    obligatorio: true
+    firma: electronica
+    referencia: SRC-FICHA §5.1
+  - id: DOC-02
+    tipo: declaracion_responsable
+    nombre: "Declaración responsable (Anexo I) del propietario inicial del ahorro sobre ayudas públicas"
+    obligatorio: true
+    referencia: SRC-FICHA §5.2
+  - id: DOC-03
+    tipo: factura
+    nombre: "Facturas justificativas con descripción detallada de los elementos principales"
+    obligatorio: true
+    requisitos: ["datos mínimos AEAT", "identifica variador(es) y nº de serie"]
+    referencia: SRC-FICHA §5.3
+  - id: DOC-04
+    tipo: informe_fotografico
+    nombre: "Informe fotográfico del motor antes y después"
+    obligatorio: true
+    requisitos: ["foto ANTES", "foto DESPUÉS", "placa de características legible"]
+    referencia: SRC-FICHA §5.4
+  - id: DOC-05
+    tipo: certificado_instalador
+    nombre: "Certificado de la empresa instaladora (apartados a y b)"
+    obligatorio: true
+    requisitos:
+      - "a) PM y N1 según ficha técnica"
+      - "b) P_prom y N2 con variador, acreditados con registro ≥ 30 días de funcionamiento normal"
+    referencia: SRC-FICHA §5.5
+  - id: DOC-05B
+    tipo: certificado_tecnico_competente
+    nombre: "Certificado de técnico competente (si la instalación la realiza personal propio)"
+    obligatorio: condicional
+    condicion: "instalacion_personal_propio == true"
+    referencia: SRC-FICHA §5 nota
+  # --- Evidencias de soporte (no listadas como documento de la ficha, pero exigidas por sus notas)
+  - id: EVD-01
+    tipo: registro_funcionamiento
+    nombre: "Registro inalterable de parámetros de funcionamiento ≥ 30 días"
+    obligatorio: true
+    requisitos: ["periodo ≥ 30 días", "velocidad y potencia", "prueba de inalterabilidad"]
+    interpretacion: INT-05
+    referencia: SRC-FICHA §2; §3 nota 1
+  - id: EVD-02
+    tipo: registro_horas_previo
+    nombre: "Registro de horas de funcionamiento antes de la actuación (periodo representativo)"
+    obligatorio: true
+    referencia: SRC-FICHA §3 nota 2
+  - id: EVD-03
+    tipo: ficha_tecnica_motor
+    obligatorio: true
+    referencia: SRC-FICHA §5.5.a
+  - id: EVD-04
+    tipo: ficha_tecnica_variador
+    obligatorio: false
+  - id: EVD-05
+    tipo: ficha_tecnica_equipo_accionado
+    nombre: "Ficha técnica de la bomba/ventilador/compresor (acredita que es rotodinámico)"
+    obligatorio: true
+    referencia: SRC-FICHA §2
+  # --- Procedimiento general
+  - id: PRC-01
+    tipo: convenio_cae
+    nombre: "Convenio CAE firmado antes de la solicitud"
+    obligatorio: true
+    requisitos:
+      - "identificación de partes (NIF y razón social)"
+      - "título descriptivo"
+      - "localización (UTM y referencia catastral)"
+      - "ahorro anual (kWh)"
+      - "tipo de contraprestación"
+      - "vida útil de la actuación"
+      - "declaración de no suscribir otros convenios por la misma actuación"
+    referencia: SRC-ORDEN815 art. 11
+
+# ---------------------------------------------------------------------
+# 6. REGLAS
+#   severidad:
+#     BLOQUEANTE_AMBITO  -> 🔴 NO_ELEGIBLE
+#     BLOQUEANTE_DATOS   -> 🔴 BLOQUEADO (inconsistencia crítica; no se calcula)
+#     SUBSANABLE         -> 🟡 SUBSANABLE
+#     AVISO              -> no cambia estado; requiere revisión humana
+# ---------------------------------------------------------------------
+reglas:
+  # Ámbito
+  - id: R-AMB-01
+    descripcion: "El equipo accionado es rotodinámico e incluido en el ámbito"
+    logica: "tipo_equipo_accionado in ambito.tipos_equipo_incluidos"
+    severidad: BLOQUEANTE_AMBITO
+    referencia: EXC-03
+  - id: R-AMB-02
+    descripcion: "El motor es existente (no hay factura de motor ni de equipo nuevo)"
+    logica: "not exists(factura.linea where categoria in [motor, bomba, ventilador, compresor, equipo_completo])"
+    severidad: BLOQUEANTE_AMBITO
+    referencia: EXC-01, EXC-02
+  - id: R-AMB-03
+    descripcion: "El régimen previo era constante y sin modulación"
+    logica: "regimen_previo == constante_sin_modulacion"
+    severidad: BLOQUEANTE_AMBITO
+    referencia: SRC-FICHA §1
+
+  # Documental
+  - id: R-DOC-01
+    descripcion: "Están presentes todos los documentos obligatorios"
+    logica: "all(doc.obligatorio == true -> presente(doc))"
+    severidad: SUBSANABLE
+  - id: R-DOC-02
+    descripcion: "El informe fotográfico contiene fotos ANTES y DESPUÉS por motor"
+    logica: "for each motor: count(foto.antes) >= 1 and count(foto.despues) >= 1"
+    severidad: SUBSANABLE
+  - id: R-DOC-03
+    descripcion: "La factura contiene los datos mínimos (número, fecha, NIF emisor y receptor, base, IVA, total)"
+    logica: "factura.campos_minimos_presentes"
+    severidad: SUBSANABLE
+  - id: R-DOC-04
+    descripcion: "El convenio CAE contiene todos los campos del art. 11.2"
+    logica: "all(requisito in convenio_cae)"
+    severidad: SUBSANABLE
+  - id: R-DOC-05
+    descripcion: "Ficha firmada por el representante legal"
+    logica: "ficha_cumplimentada.firmada == true"
+    severidad: SUBSANABLE
+
+  # Evidencia temporal
+  - id: R-EVD-01
+    descripcion: "El registro de funcionamiento cubre al menos 30 días"
+    logica: "registro.dias >= 30"
+    severidad: SUBSANABLE
+    referencia: SRC-FICHA §3 nota 1
+  - id: R-EVD-02
+    descripcion: "El registro es posterior a la puesta en marcha"
+    logica: "registro.inicio >= fecha_fin_actuacion"
+    severidad: SUBSANABLE
+  - id: R-EVD-03
+    descripcion: "Existe prueba de inalterabilidad del registro y la huella coincide"
+    logica: "registro.hash_declarado == sha256(registro.datos_canonicos)"
+    severidad: SUBSANABLE
+    interpretacion: INT-05
+  - id: R-EVD-04
+    descripcion: "N2 es un dato demostrado (derivado del registro), no solo declarado"
+    logica: "N2.evidencia == derivado"
+    severidad: SUBSANABLE
+
+  # Consistencia
+  - id: R-CON-01
+    descripcion: "PM coincide en todas las fuentes"
+    logica: "unique(PM.valores_por_fuente)"
+    severidad: BLOQUEANTE_DATOS
+  - id: R-CON-02
+    descripcion: "N1 coincide en todas las fuentes"
+    logica: "unique(N1.valores_por_fuente)"
+    severidad: BLOQUEANTE_DATOS
+  - id: R-CON-03
+    descripcion: "N2 declarado coincide con N2 derivado del registro (±1 rpm)"
+    logica: "abs(N2.declarado - N2.derivado) <= 1"
+    severidad: BLOQUEANTE_DATOS
+  - id: R-CON-04
+    descripcion: "Nº de serie de variador y motor coinciden entre documentos"
+    logica: "unique(num_serie_variador) and unique(num_serie_motor)"
+    severidad: BLOQUEANTE_DATOS
+  - id: R-CON-05
+    descripcion: "Titular (NIF) coincide entre ficha, factura, declaración y convenio"
+    logica: "unique(titular_nif)"
+    severidad: BLOQUEANTE_DATOS
+  - id: R-CON-06
+    descripcion: "El ahorro anual del convenio coincide con AETOTAL calculado"
+    logica: "abs(convenio.ahorro_kwh - AETOTAL_cae) <= 1"
+    severidad: SUBSANABLE
+  - id: R-CON-07
+    descripcion: "Número de motores coherente entre factura, certificado, ficha y registro"
+    logica: "unique(n_motores_por_fuente)"
+    severidad: BLOQUEANTE_DATOS
+
+  # Temporal / procedimiento
+  - id: R-TMP-01
+    descripcion: "fecha_inicio <= fecha_fin"
+    logica: "fecha_inicio_actuacion <= fecha_fin_actuacion"
+    severidad: BLOQUEANTE_DATOS
+  - id: R-TMP-02
+    descripcion: "Convenio CAE firmado antes de la solicitud"
+    logica: "convenio.fecha_firma <= solicitud.fecha"
+    severidad: SUBSANABLE
+    referencia: SRC-ORDEN815 art. 11.3
+  - id: R-TMP-03
+    descripcion: "La solicitud se presenta dentro de la validez del CAE (3 años desde fin de actuación)"
+    logica: "solicitud.fecha <= fecha_fin_actuacion + 3 años"
+    severidad: AVISO
+    referencia: SRC-ORDEN815 art. 17.1
+
+  # Cálculo / física
+  - id: R-CAL-01
+    descripcion: "N2 < N1"
+    logica: "N2 < N1"
+    severidad: BLOQUEANTE_DATOS
+  - id: R-CAL-02
+    descripcion: "Existe fila exacta en cuadro 6 para PM"
+    logica: "exists(REG1781_CUADRO6.kw_motor == PM)"
+    severidad: AVISO
+    interpretacion: INT-02
+  - id: R-CAL-03
+    descripcion: "Controles físicos FIS-01 y FIS-02"
+    logica: "FIS-01 and FIS-02"
+    severidad: BLOQUEANTE_DATOS
+  - id: R-CAL-04
+    descripcion: "p no procede de la ficha técnica del variador"
+    logica: "p.fuente == tabla:REG1781_CUADRO6"
+    severidad: BLOQUEANTE_DATOS
+
+# ---------------------------------------------------------------------
+# 7. ESTADOS DE SALIDA
+# ---------------------------------------------------------------------
+estados:
+  orden_evaluacion: [NO_ELEGIBLE, BLOQUEADO, SUBSANABLE, PREVALIDADO]
+  NO_ELEGIBLE:
+    semaforo: "🔴"
+    condicion: "falla alguna regla BLOQUEANTE_AMBITO"
+    calcula: false
+  BLOQUEADO:
+    semaforo: "🔴"
+    condicion: "falla alguna regla BLOQUEANTE_DATOS"
+    calcula: false
+    mensaje: "Inconsistencia crítica: revisión documental antes de calcular."
+  SUBSANABLE:
+    semaforo: "🟡"
+    condicion: "falla alguna regla SUBSANABLE"
+    calcula: provisional     # se muestra como estimación NO acreditada
+  PREVALIDADO:
+    semaforo: "🟢"
+    condicion: "no falla ninguna regla salvo AVISO"
+    calcula: true
+  descargo: >-
+    Ningún estado implica CAE garantizado. La emisión requiere dictamen
+    favorable de verificador acreditado y solicitud por sujeto obligado o
+    delegado.
+
+# ---------------------------------------------------------------------
+# 8. PUNTOS INTERPRETATIVOS (a validar con verificador / experto CAE)
+# ---------------------------------------------------------------------
+interpretaciones:
+  - id: INT-01
+    tema: "Conversión de pérdidas de referencia (kW) a p (%)"
+    criterio_poc: "p = pérdidas_ref_kW / PM (kW del motor)"
+    alternativa: "p = pérdidas_ref_kW / kVA de salida del variador (≈1 % más de ahorro en 110 kW)"
+    impacto: medio
+  - id: INT-02
+    tema: "PM sin fila exacta en el cuadro 6"
+    criterio_poc: "Aviso + interpolación lineal entre filas adyacentes; revisión humana"
+    alternativa: "Tomar la fila inmediatamente superior"
+    impacto: bajo
+  - id: INT-03
+    tema: "N2 'media anual' acreditada con registro de 30 días"
+    criterio_poc: "Media en MARCHA del periodo registrado; aviso si el proceso es estacional"
+    impacto: alto
+  - id: INT-04
+    tema: "Extrapolación de h_despues a partir del periodo registrado"
+    criterio_poc: "Horas en MARCHA × 8760 / horas del periodo"
+    alternativa: "Plan de producción anual o registro de 12 meses"
+    impacto: alto
+  - id: INT-05
+    tema: "Qué constituye un 'registro inalterable'"
+    criterio_poc: "Exportación de SCADA/datalogger con huella SHA-256 declarada en metadatos y en el certificado"
+    alternativa: "Informe firmado electrónicamente por el sistema o por tercero"
+    impacto: alto
+  - id: INT-06
+    tema: "Redondeo de AETOTAL a CAE"
+    criterio_poc: "Truncar a kWh entero"
+    impacto: bajo
+  - id: INT-07
+    tema: "Di — duración indicativa (fines estadísticos)"
+    criterio_poc: "Dato informado por el técnico; el Engine no lo valida"
+    referencia: "Recomendación (UE) 2019/1658"
+    impacto: bajo

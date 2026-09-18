@@ -1,0 +1,274 @@
+# =====================================================================
+# CAE ENGINE — Spec transversal de CABECERA (común a todas las fichas)
+# Estado: PROPUESTA — pendiente de revisión y aprobación de Billy
+# NO SE CARGA desde spec/propuestas/. Cuando se apruebe, se mueve a spec/
+# y se registra un ADR. Regla de oro 9.
+# Fuente: formulario de cabecera de la plataforma oficial (presentación
+# OMIE/MIBGAS 30/06/2026) → docs/02 §4; reglas R-CAB → docs/04 §10.
+# Lo que la plataforma no ha documentado se marca NO DOCUMENTADO y su
+# regla solo puede ser AVISO hasta que llegue el diccionario.
+# =====================================================================
+
+spec:
+  id: CABECERA
+  version_cabecera: "1.0"
+  version_spec: "0.1.0-propuesta"
+  estado: propuesta
+  fecha_revision: "2026-09-18"
+  autor: "Consolidación documental 18/09/2026"
+
+# ---------------------------------------------------------------------
+# 1. VARIABLES DE CABECERA
+#   Toda ficha las hereda. Una ficha puede añadir fuentes, nunca quitar variables.
+#   evidencia: demostrado | declarado | derivado
+# ---------------------------------------------------------------------
+variables:
+
+  codigo_identificativo_propio:
+    nivel: actuacion
+    tipo: string
+    evidencia: derivado
+    derivacion:
+      metodo: "= Actuacion.id (generado por el Engine)"
+    nota: "Clave de reconciliación con la plataforma (código identificativo libre)."
+
+  fecha_inicio_ejecucion:
+    nivel: actuacion
+    tipo: date
+    evidencia: demostrado
+    definicion: "La más temprana entre inicio de trabajos y primer compromiso irrevocable (pedido firme)."
+    referencia: "Orden TED/815/2023 art. 14.9.j"
+    fuentes: [ficha_cumplimentada, pedido, factura]
+    alias_en_fichas: [fecha_inicio_actuacion]        # IND240 v1.1 usa este nombre; v1.2 hereda
+
+  fecha_fin_ejecucion:
+    nivel: actuacion
+    tipo: date
+    evidencia: demostrado
+    definicion: "Actuación completada y activa (puesta en marcha)."
+    referencia: "Orden TED/815/2023 art. 14.9.j"
+    fuentes: [ficha_cumplimentada, certificado_instalador]
+    alias_en_fichas: [fecha_fin_actuacion]
+
+  precio_contrato_cesion:
+    nivel: actuacion
+    tipo: decimal
+    unidad: EUR
+    evidencia: demostrado
+    fuentes: [convenio_cae]
+    nota: "Hoy IND240 solo captura 'tipo de contraprestación'; falta el importe."
+
+  inversion_realizada:
+    nivel: actuacion
+    tipo: decimal
+    unidad: EUR
+    evidencia: derivado
+    derivacion:
+      fuente: factura
+      metodo: "suma de la base imponible de las líneas elegibles"
+      interpretacion: INT-09
+
+  costes_operativos_anuales:
+    nivel: actuacion
+    tipo: decimal
+    unidad: EUR
+    evidencia: declarado
+    semantica: NO_DOCUMENTADO       # qué incluye la plataforma en este campo
+    hueco: API-08
+
+  tipologia_empresa:
+    nivel: actuacion
+    tipo: enum
+    valores: []                     # NO DOCUMENTADO: taxonomía de la plataforma → API-05
+    evidencia: declarado
+    fuentes: [declaracion_responsable]
+    hueco: API-05
+
+  localizacion:
+    nivel: actuacion
+    tipo: objeto
+    campos:
+      utm: { tipo: string, evidencia: demostrado, fuentes: [convenio_cae] }
+      ref_catastral: { tipo: string, evidencia: demostrado, fuentes: [convenio_cae] }
+      ccaa: { tipo: enum, evidencia: derivado, derivacion: { metodo: "derivada de ref_catastral", hueco: API-07 } }
+
+  propietario_inicial:
+    nivel: actuacion
+    tipo: objeto
+    campos:
+      nif: { tipo: string, evidencia: demostrado, fuentes: [ficha_cumplimentada, factura, declaracion_responsable, convenio_cae], cruce: exacto }
+      razon_social: { tipo: string, evidencia: demostrado, fuentes: [ficha_cumplimentada, factura, declaracion_responsable, convenio_cae], cruce: normalizado }
+    alias_en_fichas: [titular_nif, titular_razon_social]
+
+  participe_subvencion:
+    nivel: actuacion
+    tipo: bool
+    evidencia: demostrado
+    fuentes: [declaracion_responsable]
+    nota: "Valor, no solo presencia del documento (hoy DOC-02 comprueba presencia)."
+
+  participe_subasta:
+    nivel: actuacion
+    tipo: bool
+    evidencia: declarado
+    semantica: NO_DOCUMENTADO
+    hueco: API-06
+
+  verificador_id:
+    nivel: actuacion
+    tipo: string
+    evidencia: declarado
+    nota: "Asignado por el tenant; necesario para componer expediente."
+
+  sector:
+    nivel: actuacion
+    tipo: enum
+    valores: [industrial, transporte, residencial, terciario, otros]   # PROPUESTA; contrastar con catálogo
+    evidencia: derivado
+    derivacion:
+      metodo: "sector de la ficha asignada"
+
+  anio_finalizacion:
+    nivel: actuacion
+    tipo: int
+    evidencia: derivado
+    derivacion:
+      metodo: "anio(fecha_fin_ejecucion)"
+
+# ---------------------------------------------------------------------
+# 2. REGLAS TRANSVERSALES (R-CAB) — propuesta, docs/04 §10
+#   Los campos con semántica NO DOCUMENTADO solo pueden ser AVISO.
+# ---------------------------------------------------------------------
+reglas:
+  - id: R-CAB-01
+    descripcion: "Código identificativo propio único en el tenant"
+    logica: "unique_in_tenant(codigo_identificativo_propio)"
+    severidad: BLOQUEANTE_DATOS
+    fase: cabecera
+    nivel: actuacion
+    diferencial: false
+  - id: R-CAB-02
+    descripcion: "Fechas de ejecución presentes y coherentes"
+    logica: "exists(fecha_inicio_ejecucion) and exists(fecha_fin_ejecucion) and fecha_inicio_ejecucion <= fecha_fin_ejecucion"
+    severidad: BLOQUEANTE_DATOS
+    fase: cabecera
+    nivel: actuacion
+    diferencial: false
+    nota: "Absorbe R-TMP-01 de IND240."
+  - id: R-CAB-03
+    descripcion: "Precio del contrato de cesión presente en el convenio y con evidencia"
+    logica: "precio_contrato_cesion.evidencia == demostrado"
+    severidad: SUBSANABLE
+    fase: resto
+    nivel: actuacion
+    diferencial: true
+    subsanacion:
+      mensaje: "El convenio CAE no indica el precio del contrato de cesión o no se ha podido localizar."
+      documentos: [convenio_cae]
+  - id: R-CAB-04
+    descripcion: "Inversión realizada derivada de facturas (INT-09) y > 0"
+    logica: "inversion_realizada.evidencia == derivado and inversion_realizada > 0"
+    severidad: SUBSANABLE
+    fase: resto
+    nivel: actuacion
+    diferencial: true
+    interpretacion: INT-09
+    subsanacion:
+      mensaje: "No se ha podido derivar la inversión realizada de las facturas aportadas."
+      documentos: [factura]
+  - id: R-CAB-05
+    descripcion: "Costes operativos anuales informados"
+    logica: "exists(costes_operativos_anuales)"
+    severidad: AVISO
+    fase: resto
+    nivel: actuacion
+    diferencial: false
+    hueco: API-08
+  - id: R-CAB-06
+    descripcion: "Tipología de empresa informada"
+    logica: "exists(tipologia_empresa)"
+    severidad: AVISO
+    fase: resto
+    nivel: actuacion
+    diferencial: false
+    hueco: API-05
+  - id: R-CAB-07
+    descripcion: "Localización completa (UTM, referencia catastral) y CCAA derivable"
+    logica: "exists(localizacion.utm) and exists(localizacion.ref_catastral) and exists(localizacion.ccaa)"
+    severidad: SUBSANABLE
+    fase: resto
+    nivel: actuacion
+    diferencial: true
+    hueco: API-07
+    subsanacion:
+      mensaje: "El convenio CAE no contiene la localización completa (UTM y referencia catastral)."
+      documentos: [convenio_cae]
+  - id: R-CAB-08
+    descripcion: "Propietario inicial coincide con el titular del convenio y de la declaración"
+    logica: "unique(propietario_inicial.nif)"
+    severidad: BLOQUEANTE_DATOS
+    fase: cabecera
+    nivel: actuacion
+    diferencial: true
+    nota: "Absorbe R-CON-05 de IND240."
+  - id: R-CAB-09
+    descripcion: "Partícipe en subvención: valor declarado y coherente con la declaración responsable"
+    logica: "participe_subvencion in [true, false] and coherente(declaracion_responsable)"
+    severidad: SUBSANABLE
+    fase: resto
+    nivel: actuacion
+    diferencial: true
+    nota: "'coherente' se define por regla (docs/04 §6); si no es expresable, implementación en Python con test."
+  - id: R-CAB-10
+    descripcion: "Partícipe en subasta informado"
+    logica: "exists(participe_subasta)"
+    severidad: AVISO
+    fase: resto
+    nivel: actuacion
+    diferencial: false
+    hueco: API-06
+  - id: R-CAB-11
+    descripcion: "Verificador asignado"
+    logica: "exists(verificador_id)"
+    severidad: SUBSANABLE
+    fase: resto
+    nivel: actuacion
+    diferencial: false
+    nota: "Necesario para componer expediente (R-EXP-01)."
+  - id: R-CAB-12
+    descripcion: "Convenio CAE firmado antes de la solicitud"
+    logica: "convenio.fecha_firma <= solicitud.fecha"
+    severidad: SUBSANABLE
+    fase: resto
+    nivel: actuacion
+    diferencial: true
+    referencia: "Orden TED/815/2023 art. 11.3"
+    nota: "Era R-TMP-02 de IND240; la ficha la hereda."
+  - id: R-CAB-13
+    descripcion: "Solicitud dentro de la validez del CAE"
+    logica: "solicitud.fecha <= fecha(31, 12, anio(fecha_fin_ejecucion) + n_validez)"
+    severidad: AVISO
+    fase: resto
+    nivel: actuacion
+    diferencial: false
+    interpretacion: INT-08
+    referencia: "Orden TED/815/2023 art. 17"
+    nota: "Era R-TMP-03 de IND240. n_validez = 3 provisional (INT-08)."
+
+parametros:
+  n_validez: 3          # INT-08: confirmar con art. 17 Orden TED/815/2023 y con la plataforma
+
+# ---------------------------------------------------------------------
+# 3. INTERPRETACIONES nuevas que introduce la cabecera
+# ---------------------------------------------------------------------
+interpretaciones:
+  - id: INT-08
+    tema: "Regla de expiración del CAE"
+    criterio_poc: "solicitud <= 31/12/(año_fin + n), n = 3 provisional (la plataforma aplica '3 años desde el año de finalización, vencimiento el 31/12')"
+    alternativa: "fecha exacta de fin + 3 años (criterio de IND240 v1.1)"
+    impacto: medio
+  - id: INT-09
+    tema: "Qué líneas de factura suman en inversion_realizada"
+    criterio_poc: "base imponible de las líneas del equipo objeto de la ficha y su instalación"
+    alternativa: "total de la factura"
+    impacto: "bajo para el ahorro; medio para la cabecera"
