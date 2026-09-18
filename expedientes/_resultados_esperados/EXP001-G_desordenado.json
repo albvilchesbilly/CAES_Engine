@@ -1,0 +1,711 @@
+{
+  "caso": "EXP001-G_desordenado",
+  "id": "G",
+  "descripcion": "Mismos datos que A: nombres genéricos, PDF combinado, escaneo girado, fotos sueltas, irrelevante",
+  "marca": "DOCUMENTO SINTÉTICO – SOLO PRUEBAS",
+  "ficha": "IND240",
+  "version_ficha": "1.1",
+  "version_spec": "0.1.0",
+  "fecha_evaluacion": "2026-09-18",
+  "veredicto_esperado": "PREVALIDADO",
+  "reglas_falladas_esperadas": [],
+  "reglas_no_evaluables_esperadas": [],
+  "aetotal_esperado": {
+    "exacto": "305829.6",
+    "cae": 305829,
+    "provisional": false
+  },
+  "interpretaciones_esperadas": [
+    "INT-03",
+    "INT-04",
+    "INT-01",
+    "INT-06"
+  ],
+  "n_motores": 1,
+  "motores": [
+    {
+      "num_serie_motor": "MTR-SYN-0001",
+      "num_serie_variador": "VSD-SYN-0001",
+      "tipo_equipo_accionado": "bomba_dinamica",
+      "regimen_previo": "constante_sin_modulacion",
+      "PM": "110",
+      "N1": "1485",
+      "N2": "1188",
+      "h_antes": "6000",
+      "h_despues": "6570",
+      "P_prom": "60",
+      "h": "6000",
+      "perdidas_ref_kw": "5.55",
+      "p": "0.05045454545454545454545454545454545",
+      "AEM": "305829.6",
+      "controles": {
+        "FIS-01": true,
+        "FIS-02": true
+      },
+      "interpretaciones": [
+        "INT-03",
+        "INT-04",
+        "INT-01"
+      ],
+      "fuentes": {
+        "h": "derivado",
+        "perdidas_ref_kw": "tabla:REG1781_CUADRO6",
+        "p": "tabla:REG1781_CUADRO6"
+      }
+    }
+  ],
+  "variables_consolidadas": {
+    "actuacion": {
+      "titular_nif": {
+        "valor": "B99001018",
+        "evidencia": "demostrado",
+        "fuentes": [
+          {
+            "tipo": "ficha_cumplimentada",
+            "fichero": "doc1.pdf",
+            "pagina": 1,
+            "parte": {
+              "tipo": "ficha_cumplimentada",
+              "pagina_inicio": 1,
+              "pagina_fin": 1
+            }
+          },
+          {
+            "tipo": "factura",
+            "fichero": "doc2.pdf",
+            "pagina": 1
+          },
+          {
+            "tipo": "declaracion_responsable",
+            "fichero": "doc1.pdf",
+            "pagina": 2,
+            "parte": {
+              "tipo": "declaracion_responsable",
+              "pagina_inicio": 2,
+              "pagina_fin": 2
+            }
+          },
+          {
+            "tipo": "convenio_cae",
+            "fichero": "doc1.pdf",
+            "pagina": 3,
+            "parte": {
+              "tipo": "convenio_cae",
+              "pagina_inicio": 3,
+              "pagina_fin": 4
+            }
+          }
+        ]
+      },
+      "titular_razon_social": {
+        "valor": "Industrias Sintéticas del Ebro, S.L.",
+        "evidencia": "demostrado",
+        "fuentes": [
+          {
+            "tipo": "ficha_cumplimentada",
+            "fichero": "doc1.pdf",
+            "pagina": 1,
+            "parte": {
+              "tipo": "ficha_cumplimentada",
+              "pagina_inicio": 1,
+              "pagina_fin": 1
+            }
+          },
+          {
+            "tipo": "factura",
+            "fichero": "doc2.pdf",
+            "pagina": 1
+          },
+          {
+            "tipo": "declaracion_responsable",
+            "fichero": "doc1.pdf",
+            "pagina": 2,
+            "parte": {
+              "tipo": "declaracion_responsable",
+              "pagina_inicio": 2,
+              "pagina_fin": 2
+            }
+          },
+          {
+            "tipo": "convenio_cae",
+            "fichero": "doc1.pdf",
+            "pagina": 3,
+            "parte": {
+              "tipo": "convenio_cae",
+              "pagina_inicio": 3,
+              "pagina_fin": 4
+            }
+          }
+        ],
+        "variantes": [
+          "Industrias Sintéticas del Ebro SL",
+          "Industrias Sintéticas del Ebro, S.L."
+        ],
+        "cruce": "normalizado"
+      },
+      "fecha_inicio_actuacion": {
+        "valor": "2026-02-10",
+        "evidencia": "demostrado",
+        "fuentes": [
+          {
+            "tipo": "ficha_cumplimentada",
+            "fichero": "doc1.pdf",
+            "pagina": 1,
+            "parte": {
+              "tipo": "ficha_cumplimentada",
+              "pagina_inicio": 1,
+              "pagina_fin": 1
+            }
+          },
+          {
+            "tipo": "factura",
+            "fichero": "doc2.pdf",
+            "pagina": 1
+          }
+        ]
+      },
+      "fecha_fin_actuacion": {
+        "valor": "2026-03-02",
+        "evidencia": "demostrado",
+        "fuentes": [
+          {
+            "tipo": "ficha_cumplimentada",
+            "fichero": "doc1.pdf",
+            "pagina": 1,
+            "parte": {
+              "tipo": "ficha_cumplimentada",
+              "pagina_inicio": 1,
+              "pagina_fin": 1
+            }
+          },
+          {
+            "tipo": "certificado_instalador",
+            "fichero": "doc3.pdf",
+            "pagina": 1
+          }
+        ]
+      },
+      "n_motores": {
+        "valor": 1,
+        "evidencia": "demostrado",
+        "fuentes": [
+          {
+            "tipo": "factura",
+            "fichero": "doc2.pdf",
+            "pagina": 1
+          },
+          {
+            "tipo": "certificado_instalador",
+            "fichero": "doc3.pdf",
+            "pagina": 1
+          },
+          {
+            "tipo": "ficha_cumplimentada",
+            "fichero": "doc1.pdf",
+            "pagina": 1,
+            "parte": {
+              "tipo": "ficha_cumplimentada",
+              "pagina_inicio": 1,
+              "pagina_fin": 1
+            }
+          },
+          {
+            "tipo": "informe_fotografico",
+            "fichero": "foto1.jpg",
+            "pagina": 0
+          },
+          {
+            "tipo": "registro_funcionamiento",
+            "fichero": "datos.xlsx",
+            "pagina": 0
+          }
+        ]
+      }
+    },
+    "motores": {
+      "MTR-SYN-0001": {
+        "num_serie_motor": {
+          "valor": "MTR-SYN-0001",
+          "evidencia": "demostrado",
+          "fuentes": [
+            {
+              "tipo": "ficha_tecnica_motor",
+              "fichero": "doc5.pdf",
+              "pagina": 1
+            },
+            {
+              "tipo": "certificado_instalador",
+              "fichero": "doc3.pdf",
+              "pagina": 1
+            },
+            {
+              "tipo": "informe_fotografico",
+              "fichero": "foto1.jpg",
+              "pagina": 0
+            },
+            {
+              "tipo": "registro_horas_previo",
+              "fichero": "doc4.pdf",
+              "pagina": 1
+            }
+          ]
+        },
+        "num_serie_variador": {
+          "valor": "VSD-SYN-0001",
+          "evidencia": "demostrado",
+          "fuentes": [
+            {
+              "tipo": "factura",
+              "fichero": "doc2.pdf",
+              "pagina": 1
+            },
+            {
+              "tipo": "ficha_tecnica_variador",
+              "fichero": "scan.pdf",
+              "pagina": 0
+            },
+            {
+              "tipo": "certificado_instalador",
+              "fichero": "doc3.pdf",
+              "pagina": 1
+            },
+            {
+              "tipo": "ficha_cumplimentada",
+              "fichero": "doc1.pdf",
+              "pagina": 1,
+              "parte": {
+                "tipo": "ficha_cumplimentada",
+                "pagina_inicio": 1,
+                "pagina_fin": 1
+              }
+            },
+            {
+              "tipo": "informe_fotografico",
+              "fichero": "foto1.jpg",
+              "pagina": 0
+            }
+          ]
+        },
+        "tipo_equipo_accionado": {
+          "valor": "bomba_dinamica",
+          "evidencia": "demostrado",
+          "fuentes": [
+            {
+              "tipo": "ficha_tecnica_equipo_accionado",
+              "fichero": "doc6.pdf",
+              "pagina": 1
+            },
+            {
+              "tipo": "certificado_instalador",
+              "fichero": "doc3.pdf",
+              "pagina": 1
+            }
+          ]
+        },
+        "regimen_previo": {
+          "valor": "constante_sin_modulacion",
+          "evidencia": "demostrado",
+          "fuentes": [
+            {
+              "tipo": "registro_horas_previo",
+              "fichero": "doc4.pdf",
+              "pagina": 1
+            },
+            {
+              "tipo": "certificado_instalador",
+              "fichero": "doc3.pdf",
+              "pagina": 1
+            }
+          ]
+        },
+        "PM": {
+          "valor": "110",
+          "evidencia": "demostrado",
+          "fuentes": [
+            {
+              "tipo": "ficha_tecnica_motor",
+              "fichero": "doc5.pdf",
+              "pagina": 1
+            },
+            {
+              "tipo": "certificado_instalador",
+              "fichero": "doc3.pdf",
+              "pagina": 1
+            },
+            {
+              "tipo": "ficha_cumplimentada",
+              "fichero": "doc1.pdf",
+              "pagina": 1,
+              "parte": {
+                "tipo": "ficha_cumplimentada",
+                "pagina_inicio": 1,
+                "pagina_fin": 1
+              }
+            }
+          ],
+          "fuentes_ocr": [
+            {
+              "tipo": "placa_caracteristicas_foto",
+              "fichero": "foto3.jpg",
+              "pagina": 0,
+              "metodo": "ocr",
+              "confianza": "0.75"
+            }
+          ],
+          "fuente_primaria": "ficha_tecnica_motor",
+          "unidad": "kW",
+          "conflicto": false
+        },
+        "N1": {
+          "valor": "1485",
+          "evidencia": "demostrado",
+          "fuentes": [
+            {
+              "tipo": "ficha_tecnica_motor",
+              "fichero": "doc5.pdf",
+              "pagina": 1
+            },
+            {
+              "tipo": "certificado_instalador",
+              "fichero": "doc3.pdf",
+              "pagina": 1
+            },
+            {
+              "tipo": "ficha_cumplimentada",
+              "fichero": "doc1.pdf",
+              "pagina": 1,
+              "parte": {
+                "tipo": "ficha_cumplimentada",
+                "pagina_inicio": 1,
+                "pagina_fin": 1
+              }
+            }
+          ],
+          "fuentes_ocr": [
+            {
+              "tipo": "placa_caracteristicas_foto",
+              "fichero": "foto3.jpg",
+              "pagina": 0,
+              "metodo": "ocr",
+              "confianza": "0.75"
+            }
+          ],
+          "fuente_primaria": "ficha_tecnica_motor",
+          "unidad": "rpm"
+        },
+        "N2": {
+          "valor": "1188",
+          "evidencia": "derivado",
+          "fuentes": [
+            {
+              "tipo": "registro_funcionamiento",
+              "fichero": "datos.xlsx",
+              "pagina": 0
+            }
+          ],
+          "fuentes_declaradas": [
+            {
+              "tipo": "certificado_instalador",
+              "fichero": "doc3.pdf",
+              "pagina": 1
+            },
+            {
+              "tipo": "ficha_cumplimentada",
+              "fichero": "doc1.pdf",
+              "pagina": 1,
+              "parte": {
+                "tipo": "ficha_cumplimentada",
+                "pagina_inicio": 1,
+                "pagina_fin": 1
+              }
+            }
+          ],
+          "unidad": "rpm",
+          "interpretacion": "INT-03",
+          "tolerancia_cruce_rpm": "1"
+        },
+        "P_prom": {
+          "valor": "60.0",
+          "evidencia": "derivado",
+          "fuentes": [
+            {
+              "tipo": "registro_funcionamiento",
+              "fichero": "datos.xlsx",
+              "pagina": 0
+            }
+          ],
+          "fuentes_declaradas": [
+            {
+              "tipo": "certificado_instalador",
+              "fichero": "doc3.pdf",
+              "pagina": 1
+            }
+          ],
+          "unidad": "kW",
+          "tolerancia_cruce_kw": "0.5"
+        },
+        "h_antes": {
+          "valor": "6000",
+          "evidencia": "demostrado",
+          "fuentes": [
+            {
+              "tipo": "registro_horas_previo",
+              "fichero": "doc4.pdf",
+              "pagina": 1
+            }
+          ],
+          "unidad": "h"
+        },
+        "h_despues": {
+          "valor": "6570",
+          "evidencia": "derivado",
+          "fuentes": [
+            {
+              "tipo": "registro_funcionamiento",
+              "fichero": "datos.xlsx",
+              "pagina": 0
+            }
+          ],
+          "unidad": "h",
+          "interpretacion": "INT-04",
+          "ausente": false
+        }
+      }
+    }
+  },
+  "hechos_documentales": {
+    "factura.lineas": [
+      {
+        "descripcion": "Variador de frecuencia Variadores Ficticios Europa, S.L. modelo VFE-110-T4 (110 kW), nº serie VSD-SYN-0001 (instalación sobre motor existente MTR-SYN-0001)",
+        "categoria": "variador"
+      },
+      {
+        "descripcion": "Instalación, parametrización y puesta en marcha del variador (1 motor(es) existente(s); no incluye suministro de motor ni de equipo accionado)",
+        "categoria": "instalacion"
+      }
+    ],
+    "factura.campos_minimos_presentes": true,
+    "factura.menciona_motor_existente": true,
+    "ficha_cumplimentada.firmada": true,
+    "ficha_cumplimentada.ahorro_declarado_kwh": null,
+    "convenio.requisitos_presentes": [
+      "identificación de partes (NIF y razón social)",
+      "título descriptivo",
+      "localización (UTM y referencia catastral)",
+      "ahorro anual (kWh)",
+      "tipo de contraprestación",
+      "vida útil de la actuación",
+      "declaración de no suscribir otros convenios por la misma actuación"
+    ],
+    "convenio.ahorro_kwh": 305829,
+    "convenio.fecha_firma": "2026-04-20",
+    "solicitud.fecha": "2026-09-18",
+    "registro.hash_declarado[MTR-SYN-0001]": "fe5d9a3bd83443adeca645fdf123c6020153d7dcc8a0d0cf18d78ba02a1961ab",
+    "foto.antes[MTR-SYN-0001]": 1,
+    "foto.despues[MTR-SYN-0001]": 1
+  },
+  "conflictos_esperados": [],
+  "documentos": [
+    {
+      "fichero": "doc1.pdf",
+      "tipo": "combinado",
+      "formato": "pdf",
+      "sha256": "b69515c2c10fdf74e905f1e663c05b36dca79e05addfb13ab639e29c47d2b5ab",
+      "partes": [
+        {
+          "tipo": "ficha_cumplimentada",
+          "pagina_inicio": 1,
+          "pagina_fin": 1
+        },
+        {
+          "tipo": "declaracion_responsable",
+          "pagina_inicio": 2,
+          "pagina_fin": 2
+        },
+        {
+          "tipo": "convenio_cae",
+          "pagina_inicio": 3,
+          "pagina_fin": 4
+        }
+      ]
+    },
+    {
+      "fichero": "doc2.pdf",
+      "tipo": "factura",
+      "formato": "pdf",
+      "sha256": "cdc3d48329cf7d6c40cbb1c0d53b5d2268e0af66a8e8defcbba069dd53c0d1b0",
+      "paginas": 1
+    },
+    {
+      "fichero": "doc3.pdf",
+      "tipo": "certificado_instalador",
+      "formato": "pdf",
+      "sha256": "83125d45cf1c9f588d8d9efd956c88592702bba8fd1d352141aefe10ef7385e8",
+      "paginas": 1
+    },
+    {
+      "fichero": "doc4.pdf",
+      "tipo": "registro_horas_previo",
+      "formato": "pdf",
+      "sha256": "a4878512f85b93ce9ff649b2f118b7302b7fceae1a8da5273eed8720f5465fd9",
+      "paginas": 1,
+      "num_serie_motor": "MTR-SYN-0001"
+    },
+    {
+      "fichero": "doc5.pdf",
+      "tipo": "ficha_tecnica_motor",
+      "formato": "pdf",
+      "sha256": "525e066cb491f7eda3570a967f133c24987e7ce6cfedaf419b4064f6f505a421",
+      "paginas": 1,
+      "num_serie_motor": "MTR-SYN-0001"
+    },
+    {
+      "fichero": "doc6.pdf",
+      "tipo": "ficha_tecnica_equipo_accionado",
+      "formato": "pdf",
+      "sha256": "1c1b10044cab1ff7ac8697115684670d7555413641d83746b1e6b156f0f57bdf",
+      "paginas": 1,
+      "num_serie_motor": "MTR-SYN-0001"
+    },
+    {
+      "fichero": "scan.pdf",
+      "tipo": "ficha_tecnica_variador",
+      "formato": "pdf",
+      "sha256": "64b9c5fbbf1c34d7e5c6badc80b237d1eb3859fd494c1bd85965abeb0e4c27c0",
+      "subtipo": "escaneo_girado",
+      "num_serie_motor": "MTR-SYN-0001",
+      "num_serie_variador": "VSD-SYN-0001"
+    },
+    {
+      "fichero": "datos.xlsx",
+      "tipo": "registro_funcionamiento",
+      "formato": "xlsx",
+      "sha256": "a2111eaeeac95a328caa90a086a6191029d9873eeac6f0dd26304108b346a041",
+      "num_serie_motor": "MTR-SYN-0001",
+      "num_serie_variador": "VSD-SYN-0001"
+    },
+    {
+      "fichero": "foto1.jpg",
+      "tipo": "informe_fotografico",
+      "formato": "imagen",
+      "sha256": "5a3bffac00bb3bc26a75a1c138749a9d22bb19950d7a524b421d1ad0e1cf723f",
+      "subtipo": "foto_antes",
+      "num_serie_motor": "MTR-SYN-0001"
+    },
+    {
+      "fichero": "foto2.jpg",
+      "tipo": "informe_fotografico",
+      "formato": "imagen",
+      "sha256": "7496bc6f1940036763f197fdee80f74dd23fce0fea5c6a2327bac0c4f68138aa",
+      "subtipo": "foto_despues",
+      "num_serie_motor": "MTR-SYN-0001",
+      "num_serie_variador": "VSD-SYN-0001"
+    },
+    {
+      "fichero": "foto3.jpg",
+      "tipo": "informe_fotografico",
+      "formato": "imagen",
+      "sha256": "6aee8fbd7aae33ebb94945f58e97e91e1215c5ae40554ec968c7b7baef4eb6ee",
+      "subtipo": "placa",
+      "num_serie_motor": "MTR-SYN-0001"
+    },
+    {
+      "fichero": "foto4.jpg",
+      "tipo": null,
+      "formato": "imagen",
+      "sha256": "4024e5037f8fb3030f9008042ce47e9ac0883e72684a0662fea8156f9b8051e7",
+      "subtipo": "irrelevante",
+      "irrelevante": true
+    },
+    {
+      "fichero": "notas.pdf",
+      "tipo": null,
+      "formato": "pdf",
+      "sha256": "461a57779eb55494908fdfe36bba583602e9afd26d4eaab19537cbb5a049fff6",
+      "paginas": 1,
+      "irrelevante": true
+    }
+  ],
+  "avisos_esperados": [
+    {
+      "tipo": "pdf_separado",
+      "fichero": "doc1.pdf",
+      "partes": [
+        "ficha_cumplimentada",
+        "declaracion_responsable",
+        "convenio_cae"
+      ]
+    },
+    {
+      "tipo": "escaneo_ocr",
+      "fichero": "scan.pdf",
+      "confianza": "0.75",
+      "giro_grados": 90
+    },
+    {
+      "tipo": "registro_vinculado_por_hash",
+      "fichero": "datos.xlsx",
+      "nombre_declarado": "registro_funcionamiento_MTR-SYN-0001.xlsx",
+      "sha256_canonico": "fe5d9a3bd83443adeca645fdf123c6020153d7dcc8a0d0cf18d78ba02a1961ab"
+    },
+    {
+      "tipo": "foto_suelta_clasificada_por_exif",
+      "fichero": "foto1.jpg",
+      "subtipo": "foto_antes"
+    },
+    {
+      "tipo": "foto_suelta_clasificada_por_exif",
+      "fichero": "foto2.jpg",
+      "subtipo": "foto_despues"
+    },
+    {
+      "tipo": "foto_suelta_clasificada_por_exif",
+      "fichero": "foto3.jpg",
+      "subtipo": "placa"
+    },
+    {
+      "tipo": "documento_no_clasificado",
+      "fichero": "foto4.jpg"
+    },
+    {
+      "tipo": "documento_no_clasificado",
+      "fichero": "notas.pdf"
+    }
+  ],
+  "registro": {
+    "formato_canonico": "una línea por fila de la hoja 'registro', en su orden, sin cabecera, unidas por '\\n' sin salto final, UTF-8: fecha_hora;estado;velocidad_rpm;potencia_kw — fecha_hora ISO 8601 con segundos y sin zona (AAAA-MM-DDTHH:MM:SS); estado MARCHA|PARO; velocidad_rpm entero; potencia_kw con exactamente un decimal y punto decimal. SHA-256 hexadecimal en minúsculas.",
+    "intervalo_min": 15,
+    "inicio": "2026-03-05",
+    "fin": "2026-04-10",
+    "dias": 36,
+    "hoja_datos": "registro",
+    "hoja_metadatos": "metadatos",
+    "por_motor": {
+      "MTR-SYN-0001": {
+        "fichero": "datos.xlsx",
+        "nombre_declarado": "registro_funcionamiento_MTR-SYN-0001.xlsx",
+        "sha256_canonico": "fe5d9a3bd83443adeca645fdf123c6020153d7dcc8a0d0cf18d78ba02a1961ab",
+        "sha256_fichero": "a2111eaeeac95a328caa90a086a6191029d9873eeac6f0dd26304108b346a041",
+        "filas": 3456,
+        "filas_marcha": 2592,
+        "N2_derivado": "1188",
+        "P_prom_derivado": "60.0",
+        "h_despues_derivado": "6570"
+      }
+    }
+  },
+  "trampas": {
+    "ficha_variador_declara_perdidas_kw": {
+      "MTR-SYN-0001": "3.90"
+    },
+    "perdidas_ref_correctas_kw": {
+      "MTR-SYN-0001": "5.55"
+    },
+    "factura_menciona_motor_existente": true,
+    "ficha_y_convenio_declaran_ahorro_fuera_de_ambito": false,
+    "registro_renombrado": true,
+    "menor_h_es_h_despues": [],
+    "n2_solo_declarado": false,
+    "placa_ocr": true
+  }
+}
