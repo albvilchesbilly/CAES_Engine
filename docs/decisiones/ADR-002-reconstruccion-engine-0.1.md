@@ -322,7 +322,12 @@ Se rellena en F0.12.
 
 ## 6. Decisiones que quedan para Billy (PROPUESTA)
 
-Se rellena al cierre. Candidatos ya identificados:
+**La revisión normativa de cierre está en `docs/decisiones/ADR-003-hallazgos-normativos-fase-0.md`** (22 hallazgos,
+INT-11 a INT-15 propuestos, diff en `spec/propuestas/IND240_v1.1_hallazgos_ADR-003.diff.md`). Ninguno se ha
+aplicado. Las decisiones de esta sección y las de ADR-003 forman una sola lista para Billy. El revisor **no pudo
+contrastar ninguna fuente oficial**: el proxy de esta sesión bloquea BOE, EUR-Lex y MITECO.
+
+Candidatos identificados en la reconstrucción:
 
 1. **Fila 110 kW del cuadro 6 (5,55 kW) frente a 6,11 kW.** Dos recuerdos independientes del cuadro (agente `spec-fichas` y
    orquestador) discrepan; la revisión QA observa que en la transcripción actual pérdidas/PM vale 5,6–5,8 % en las filas
