@@ -256,6 +256,10 @@ Se rellena paso a paso. Formato: paso · decisión · por qué · alternativa de
 | F0.8 | Unidades por claves `clave_union` que sean atributos de `Evidencia`; índice `num_serie_motor` (nombre del contrato); variador huérfano o ambiguo → aviso, no se asigna (el motor no adivina); vinculación por huella con `<raiz>.hash_declarado` contra `sha256` del fichero, `doc_id` o SHA-256 de un valor extraído (datos canónicos); nombre distinto → aviso informativo (G) | Regla de implementación: nunca por nombre | Defecto a "la única unidad" |
 | F0.8 | Colecciones (`foto.antes`, `factura.linea`, `motor`) detectadas desde `count(x)`/`sum(x)` y `colecciones_ligadas`; tipado cerrado de hechos (bool, lista JSON sin float, fecha ISO, Decimal, texto); `n_motores` es un dato normal y `valores_por_fuente_de("n_motores")` da `n_motores_por_fuente` | Sin nombres de la ficha en `evidencias.py` (test) | Lista de colecciones en código |
 | F0.8 → F0.9 | Contrato para el contexto: `motor` = lista de unidades; `X` → `valor_consumido`; `X.valores_por_fuente`; `X.declarado/derivado/demostrado` → valores tipados por tipo; `X.evidencia`; `unique(nombre)` sin sufijo (`R-CON-04/05`) se resuelve sobre `valores_por_fuente`, nunca sobre el escalar; y **un conflicto consolidado bloquea** (`motor.py`: `conflictos` no vacío → `BLOQUEADO`, `docs/04` §4.2 "quien bloquea es el conflicto") aunque la regla quede `NO_EVALUABLE` | Sin esto `unique(titular_nif)` sería siempre `True` | Solo la regla |
+| F0.5 | Un solo modelo de datos (`generator/modelo_caso.py`) produce documentos y ground truth; los casos B–G son variaciones declaradas del caso base A, no juegos de documentos escritos a mano | `docs/05` §2.2: documentos y ground truth no pueden discrepar | Editar documentos generados |
+| F0.5 | Generación determinista: `Canvas(invariant=1)`, semilla fija, xlsx con fechas de propiedades fijas; dos ejecuciones dan los mismos bytes y un test lo comprueba contra lo commiteado | Regenerar no puede cambiar el ground truth en silencio | Aceptar diferencias de bytes |
+| F0.5 | Datos canónicos del registro (para `sha256(registro.datos_canonicos)` de `R-EVD-03`): líneas `fecha_hora ISO;estado;velocidad_rpm;potencia_kw` en el orden de la hoja, UTF-8, sin cabecera; el certificado declara esa huella | INT-05 exige una prueba de inalterabilidad reproducible | Hash del fichero xlsx (cambia al reabrirlo) |
+| F0.5 | El escaneo girado del caso G es la ficha técnica del variador (EVD-04, **no** obligatorio) y las fotos sueltas se clasifican por EXIF: sin OCR, G sigue dando el mismo veredicto y ahorro que A | `docs/05` §8.2 exige 7/7 en un clon sin tesseract | Escanear un documento obligatorio |
 | plan | Caso G sin OCR debe dar el mismo resultado que A: el escaneo girado es `ficha_tecnica_variador` (EVD-04, no obligatorio) y las fotos sueltas se clasifican por EXIF | `docs/05` §8.2 exige 7/7 en un clon sin tesseract | Escanear un documento obligatorio (rompería 7/7 sin OCR) |
 
 ## 3 bis. Estado al cierre de la sesión del 18/09/2026
@@ -269,7 +273,35 @@ reescritura de `calculo.py`.
 
 ## 4. Parámetros de los casos E y F y ground truth recalculado
 
-Se rellena en F0.5 con la salida de `engine/calculo.py`.
+Fijados por el generator en F0.5 (18/09/2026, commit `cff6411`) y calculados con `engine.calculo.calcular`, no a
+mano. Las tres potencias tienen **fila exacta** en el cuadro 6, así que `R-CAL-02` da `CUMPLE` en A–G y ningún
+caso arrastra el aviso INT-02. Los valores de M2 y M3 son nuevos: los del Engine 0.1 (461.433 y 777.128) no son
+reproducibles porque sus parámetros no están documentados fuera de aquel código (`docs/05` §2.3).
+
+| Caso | Motor | Equipo | PM (kW) | N1 (rpm) | N2 (rpm) | h_antes | h_despues | h | pérdidas ref. (kW) | AEM (kWh/año) |
+|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| A, B, C, D, G | MTR-SYN-0001 | bomba dinámica | 110 | 1.485 | 1.188 | 6.000 | 6.570 | 6.000 | 5,55 | 305.829,6 |
+| E, F | MTR-SYN-0002 | ventilador radial | 55 | 1.480 | 1.110 | 5.500 | 5.840 | 5.500 | 3,12 | 164.962,1875 |
+| F | MTR-SYN-0003 | compresor centrífugo | 160 | 2.960 | 2.516 | 7.000 | 6.205 | **6.205** | 8,82 | 361.978,4944125 |
+
+En M3 `h_despues < h_antes`, así que `h = min(h_antes, h_despues)` toma `h_despues`: es la trampa de la regla
+del menor `h` que exige `docs/05` §4.3, y un test comprueba que invertir cuál es el menor cambia el resultado.
+
+**Ground truth de la Fase 0** (sustituye a los números del Engine 0.1; solo cambia con un ADR nuevo aprobado por
+Billy):
+
+| Caso | Veredicto | AETOTAL exacto (kWh/año) | AETOTAL CAE (kWh) | Provisional |
+|---|---|---:|---:|---|
+| A | `PREVALIDADO` | 305.829,6 | 305.829 | no |
+| B | `SUBSANABLE` | 305.829,6 | 305.829 | **sí** (N2 declarado, `h = h_antes`) |
+| C | `BLOQUEADO` | — | — | no calcula |
+| D | `NO_ELEGIBLE` | — | — | no calcula |
+| E | `PREVALIDADO` | 470.791,7875 | 470.791 | no |
+| F | `PREVALIDADO` | 832.770,2819125 | 832.770 | no |
+| G | `PREVALIDADO` | 305.829,6 | 305.829 | no |
+
+Ficheros por caso: A, C, D 11 · B 10 (sin registro) · E 16 · F 21 · G 13. El caso A conserva exactamente los
+parámetros de `docs/05` §2.3 y su 305.829,6 sigue siendo el criterio de aceptación de la fase.
 
 ## 5. Desviaciones respecto a `docs/05` y número de tests
 
