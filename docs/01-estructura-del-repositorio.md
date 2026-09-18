@@ -39,7 +39,7 @@ cae-engine/
 ├── data/                            F0   Tablas de referencia con fuente, verificación y vigencia
 │   ├── README.md                    DOC  Cómo se transcribe una tabla y qué está verificado
 │   ├── reg_2019_1781_cuadro6.csv    F0   Cuadro 6 del Reg. (UE) 2019/1781 (transcribir del DOUE)
-│   └── reg_2019_1781_cuadro6.meta.yaml  F0  Fuente, método de transcripción, verificación y vigencia de la tabla
+│   └── reg_2019_1781_cuadro6.meta.yaml  F0  Fuente, método de transcripción, verificación, vigencia, clave/valor y restricciones
 │
 ├── engine/                          F0   Núcleo determinista. No importa de agentes/ ni de salida/
 ├── agentes/                         S3   Periferia con LLM. Nunca el núcleo
@@ -110,10 +110,10 @@ spec/
 data/
   README.md                          Qué tablas hay, fuente, quién las verificó, vigencia, método de transcripción
   reg_2019_1781_cuadro6.csv          Columnas: kva_salida, kw_motor, perdidas_ref_kw, cos_phi, verificado
-  reg_2019_1781_cuadro6.meta.yaml    id, fuente, fecha y método de transcripción, verificación, vigencia (desde/hasta), columnas, clave
+  reg_2019_1781_cuadro6.meta.yaml    id, fuente, fecha y método de transcripción, verificación, vigencia (desde/hasta), columnas, clave, valor, restricciones
 ```
 
-Toda tabla son **dos ficheros con el mismo nombre base** (`.csv` + `.meta.yaml`); `engine/tablas.py` los lee juntos y `cargar_tabla(id)` resuelve el fichero por el `id` del meta, sin leer la spec. El `.meta.yaml` lleva fuente oficial (URL), fecha y método de transcripción (`doue` / `boe` / `memoria_agente`), quién la verificó y contra qué, y vigencia (`desde`, `hasta`); `README.md` lo explica en prosa. **Valor verificado que hay que reproducir**: 110 kW → 5,55 kW de pérdidas de referencia. El resto de filas se marcan `verificado: pendiente` hasta que Billy las contraste contra el DOUE (ver `data/README.md`; a 18/09/2026 la transcripción es de memoria del agente porque el proxy de la sesión bloqueó BOE y EUR-Lex).
+Toda tabla son **dos ficheros con el mismo nombre base** (`.csv` + `.meta.yaml`); `engine/tablas.py` los lee juntos y `cargar_tabla(id)` resuelve el fichero por el `id` del meta, sin leer la spec. El motor es genérico: el esquema (columnas, columna `clave` de búsqueda, columna `valor` que devuelve `buscar` e interpola según INT-02, `restricciones`) es dato del `.meta.yaml`, nunca código. El `.meta.yaml` lleva fuente oficial (URL), fecha y método de transcripción (`doue` / `boe` / `memoria_agente`), quién la verificó y contra qué, y vigencia (`desde`, `hasta`); `README.md` lo explica en prosa. **Valor verificado que hay que reproducir**: 110 kW → 5,55 kW de pérdidas de referencia. El resto de filas se marcan `verificado: pendiente` hasta que Billy las contraste contra el DOUE (ver `data/README.md`; a 18/09/2026 la transcripción es de memoria del agente porque el proxy de la sesión bloqueó BOE y EUR-Lex).
 
 ### 3.3 `engine/` — núcleo determinista (`F0`, ampliado en `S3`/`S4`)
 

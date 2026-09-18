@@ -22,4 +22,7 @@ unidades:
   kw_motor: kW
   perdidas_ref_kw: kW
   cos_phi: null          # columna vacia: el cuadro 6 no la contiene (README)
-clave: kw_motor
+clave: kw_motor              # columna por la que busca engine/tablas.py (PM del motor)
+valor: perdidas_ref_kw       # columna que devuelve buscar() e interpola INT-02 (p = perdidas_ref_kw / PM, INT-01)
+restricciones:               # sanidad en carga, leida del meta (no cableada): estas columnas deben ser > 0
+  positivo: [kva_salida, kw_motor, perdidas_ref_kw]
