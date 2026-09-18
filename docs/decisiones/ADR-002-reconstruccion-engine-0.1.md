@@ -174,6 +174,15 @@ que resuelve cada identificador de `logica`. Nombres que deben resolverse (todos
 `convenio.ahorro_kwh`, `AETOTAL_cae`, `convenio.fecha_firma`, `solicitud.fecha`, `N2`, `N1`, `PM`, `REG1781_CUADRO6.kw_motor`,
 `FIS-01`, `FIS-02`, `p.fuente`, `tabla:REG1781_CUADRO6`. Un identificador ausente resuelve a `NO_EVALUABLE`, nunca a excepción.
 
+Tipado del contexto (decisión tras la revisión QA de la oleada 1): el contexto entrega **valores tipados** (`Decimal`, `date`,
+`bool`, `str` solo para enumerados e identificadores, listas para colecciones); el parser **no coerciona texto** a número ni a
+fecha (solo `int` → `Decimal`), y una igualdad entre familias distintas (`"true" == true`, `"2026-01-01" == date`) es
+`ErrorEvaluacionExpresion`, nunca `False` silencioso. `valores_por_fuente` (para `unique`) son cadenas canónicas: `unique`
+compara cadenas. `motor` es la **lista** de unidades (no el `dict` de `ActuacionConsolidada.unidades`). Los enumerados de la
+spec (`variables.*.valores`, `ambito.tipos_equipo_*`, `{demostrado, declarado, derivado}`, categorías de línea) se pasan a
+`compilar(..., enumerados=…)` desde el Spec Registry: un nombre del conjunto es siempre literal simbólico y no entra en
+`Expresion.identificadores`; sin el conjunto se aplica la heurística de F0.1 (lado derecho de `==`/`!=` con izquierdo `str`).
+
 Las reglas de nivel motor (`R-CON-01..04`, `R-CAL-*`, `R-EVD-*`, `R-DOC-02`, `R-AMB-01/03`) se evalúan una vez por unidad y la
 regla `CUMPLE` solo si cumple en todas; `FALLA` si falla en alguna; si no, `NO_EVALUABLE`.
 
@@ -209,6 +218,8 @@ Se rellena paso a paso. Formato: paso · decisión · por qué · alternativa de
 | F0.1 | `ErrorEvaluacionExpresion` (no `NO_EVALUABLE`) ante contexto mal construido: `float`, tipos incomparables, `where` sobre no-colección, división por cero. La ausencia nunca lanza | Silenciarlo como `NO_EVALUABLE` escondería defectos del consolidador; `reglas.py` lo captura y marca la regla con mensaje | Todo a `NO_EVALUABLE` |
 | F0.1 | Coerción mínima: `int` → `Decimal`; `str` numérica frente a `Decimal` → `Decimal`. `unique` compara igualdad tras coerción, sin normalizar ni tolerar (eso es del consolidador) | `valores_por_fuente` son texto canónico | Tolerancias en el parser (duplicaría la consolidación) |
 | F0.1 | Precisión: contexto `Decimal` por defecto (28 dígitos); con él el caso A da `305829.6000000000000000000000 == Decimal("305829.6")` | Suficiente y reproducible; `calculo.py` decide si fija `localcontext` | Precisión fija en el parser |
+| QA-1 | Contexto tipado y sin coerción de texto (§2.4); `enumerados` explícitos desde la spec; `True/False/None/null` rechazados como identificadores; valores no finitos → error de contexto; profundidad de anidamiento acotada → error de carga | Hallazgos H3, H5, H6, H7, H8 de la revisión QA de la oleada 1: la corrección del literal simbólico dependía del tipo en runtime y `"true" == true` fallaba en silencio | Mantener coerción heurística (esconde defectos del consolidador) |
+| QA-1 | `engine/tablas.py` genérico: filas como mapa columna → valor según `meta.columnas`; `clave` y `valor` (columna que devuelve `buscar`) declarados en el `.meta.yaml`; sanidad en carga (finito, > 0, monótono en clave con aviso) | Hallazgo H1 (regla de oro 4: el esquema del cuadro 6 estaba cableado) y H4 | Una clase por tabla (un `if ficha ==` encubierto) |
 | F0.2 | Cada tabla = `<nombre>.csv` + `<nombre>.meta.yaml`; `cargar_tabla(id)` localiza el CSV por el `id` del meta, sin leer la spec | `tablas.py` no puede depender de `spec_registry`; vigencia y fuente viven junto al dato | Mapa id → fichero en código (un `if ficha ==` encubierto) |
 | F0.2 | `cargar_tablas(bloque tablas de la spec)` comprueba fichero y columnas declaradas (garantía 4 de `docs/04` §2.5); la spec declara 4 columnas y el CSV tiene 5 (`verificado`): se exige que las declaradas existan, no que sean todas | El Spec Registry delega aquí la garantía 4 | Validar el CSV desde el registro |
 | F0.2 | Columna `verificado` obligatoria con valores cerrados {`si`, `pendiente`}; otro valor = error de carga | Es la traza de la revisión humana (regla de oro 9) | Booleano libre |
@@ -227,7 +238,17 @@ Se rellena en F0.12.
 
 ## 6. Decisiones que quedan para Billy (PROPUESTA)
 
-Se rellena al cierre. Candidatos ya identificados: INT-10 (fecha de solicitud en prevalidación).
+Se rellena al cierre. Candidatos ya identificados:
+
+1. **Fila 110 kW del cuadro 6 (5,55 kW) frente a 6,11 kW.** Dos recuerdos independientes del cuadro (agente `spec-fichas` y
+   orquestador) discrepan; la revisión QA observa que en la transcripción actual pérdidas/PM vale 5,6–5,8 % en las filas
+   vecinas (45–160 kW) y **5,05 % solo en 110 kW**, mientras que 6,11 kW daría 5,55 %, coherente con la serie. `data/README.md`
+   afirma que Billy verificó 5,55 contra el BOE el 17/09/2026, pero `docs/historico/cae-engine-estado-proyecto_2026-09-17.md`
+   solo registra el valor, no el acto de contraste. **Decisión de Billy**: confirmar 5,55 kW contra el DOUE (entonces la fila
+   queda `si` y nada cambia) o corregir a 6,11 kW (entonces cambian INT-01, el caso A y el criterio de aceptación 305.829,6:
+   ADR nuevo, no parche). Hasta entonces la fila se mantiene `si` por precedencia de `data/README.md` y `CLAUDE.md` §5.
+2. Verificación fila a fila de las 38 filas `pendiente` (en especial 55 kW y 160 kW, que sostienen E y F).
+3. INT-10 (fecha de solicitud en prevalidación = fecha de evaluación).
 
 ## Verificación
 
