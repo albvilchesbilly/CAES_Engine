@@ -86,7 +86,8 @@ Al cargar una spec, el registro falla (la ficha **no se activa**) si:
 
 1. Alguna `logica` o `formula` usa una función o construcción fuera del vocabulario de `engine/expresiones.py` (§6). Error de carga, no de ejecución.
 2. Alguna regla carece de `id`, `descripcion`, `logica` o `severidad`, o la severidad no está en el catálogo (§4).
-3. **Toda regla bloqueante que pueda quedar `NO_EVALUABLE` tiene una regla `SUBSANABLE` que recoge la carencia que la causa.** Sin esto, un hueco de datos pasaría inadvertido: la bloqueante no falla (no puede evaluarse) y ninguna otra la sustituye. Es un **test automático del registro** para cualquier ficha, no una comprobación manual. La forma de declarar la relación (qué variable necesita cada regla y qué regla `SUBSANABLE` cubre la ausencia de esa variable) es una decisión de diseño de la Fase 0 que se documenta en el ADR de reconstrucción.
+3. **Toda regla bloqueante que pueda quedar `NO_EVALUABLE` tiene una regla `SUBSANABLE` que recoge la carencia que la causa.** Sin esto, un hueco de datos pasaría inadvertido: la bloqueante no falla (no puede evaluarse) y ninguna otra la sustituye. Es un **test automático del registro** para cualquier ficha, no una comprobación manual. Forma adoptada en la Fase 0 (`ADR-002` §3, F0.4): comprobación estática por **raíz** de cada identificador de la `logica` (una raíz está cubierta si la referencia una `SUBSANABLE`, si es variable con alguna fuente obligatoria y existe una regla de presencia documental, si deriva de tabla o de fórmula con entradas cubiertas, o si es salida del cálculo); raíz mapeable y no cubierta = error de carga; no mapeable = aviso. Límite conocido: es necesaria, no suficiente (opera por variable, no por sufijo como `N2.declarado`).
+5. La spec es **calculable**: el registro invoca `calculo.planificar` al cargar (derivaciones, bloque `calculo`, redondeo, precondiciones). Una precondición con función desconocida o errata es error de carga; solo la prosa sin operadores queda delegada al motor de reglas.
 4. Una tabla referenciada (`tablas.<ID>.fichero`) no existe en `data/` o no tiene las columnas declaradas.
 
 ---
@@ -209,7 +210,7 @@ Reglas de parada:
 
 ### 5.2 Asignación regla a regla de IND240 v1.1 — decisión de diseño de la Fase 0
 
-La spec activa no declara `fase`. Hasta que lo declare (diff v1.2 o posterior), el motor asigna cada una de sus 26 reglas según esta tabla, que es la que el Engine 0.1 aplicaba en su diseño. **Es una decisión de diseño de la Fase 0**: el código la implementa como valor por defecto por `id` y `tests/test_reglas.py` la verifica.
+La spec activa no declara `fase`. Hasta que lo declare (diff v1.2 o posterior), el Spec Registry asigna cada una de sus 26 reglas según esta tabla, que es la que el Engine 0.1 aplicaba en su diseño. **Es una decisión de diseño de la Fase 0**: el código la obtiene **por derivación** (severidad y qué referencia la `logica`; §3.2), nunca por una lista de `id`, y `tests/test_spec_registry.py` verifica que la derivación reproduce las 26 filas.
 
 | Fase | Regla | Descripción (spec) | Severidad |
 |---|---|---|---|

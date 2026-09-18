@@ -189,10 +189,18 @@ regla `CUMPLE` solo si cumple en todas; `FALLA` si falla en alguna; si no, `NO_E
 ### 2.5 Cálculo (`engine/calculo.py`, dueño motor-nucleo)
 
 ```python
-def calcular(spec, unidades: dict[str, dict[str, Decimal]], tablas) -> ResultadoCalculo
-# ResultadoCalculo: por_unidad[{num_serie_motor, PM, N1, N2, h_antes, h_despues, h, perdidas_ref_kw, p, AEM, controles{FIS-01: bool, FIS-02: bool}}],
-#                   total (Decimal), total_cae (int), traza[str], provisional: bool, motivo_no_calculo: str | None, interpretaciones[str]
+def planificar(spec_datos: Mapping, tablas: Mapping[str, Tabla]) -> Plan      # valida el bloque calculo y las derivaciones; ErrorCalculo si la spec no es calculable
+def calcular(spec_datos, unidades: Mapping[str, Mapping[str, Decimal]], tablas, *, provisional=False, fecha=None, plan=None) -> ResultadoCalculo
+# Plan: derivadas (orden topológico), entradas_requeridas, precondiciones, precondiciones_delegadas (solo prosa), controles, fórmulas, criterio_redondeo,
+#       interpretaciones_estaticas, interpretaciones_por_entrada
+# ResultadoUnidad (genérico, sin nombres de la ficha): num_serie_motor, entradas{}, derivadas{}, salida, controles{id: bool|NO_EVALUABLE},
+#       precondiciones{}, fuentes{variable: "tabla:<ID>" | "derivado"}, interpretaciones[], avisos[], motivo_no_calculo
+# ResultadoCalculo: por_unidad[], total, total_cae, traza[], provisional, motivo_no_calculo, interpretaciones[], avisos[], controles_ok, precondiciones_ok,
+#       precondiciones_delegadas[]
 ```
+El Spec Registry llama a `planificar` al cargar (dependencia `spec_registry → calculo → expresiones/tablas`, hacia dentro):
+una spec que el registro activa es, por construcción, calculable. `reglas.py` construye `<variable>.fuente` (p. ej. `p.fuente`)
+desde `ResultadoUnidad.fuentes`; `FIS-xx` desde `controles`; `AETOTAL_cae` desde `total_cae`.
 
 ### 2.6 Motor, informe y CLI
 
@@ -238,6 +246,11 @@ Se rellena paso a paso. Formato: paso · decisión · por qué · alternativa de
 | F0.4 | `fase` y `nivel` por defecto **derivados** (sin lista de ids en código) y verificados contra la tabla de `docs/04` §5.2 (26/26; 3/10/2/11) y contra §2.4 (15 reglas de unidad) | `docs/03` §14.c y regla de oro 4 | Tabla `id → fase` en código |
 | F0.4 | Garantía NO_EVALUABLE → SUBSANABLE estática: raíz de cada identificador de una regla bloqueante cubierta si (a) una SUBSANABLE la referencia, (b) es variable con alguna fuente obligatoria y existe regla de presencia (`presente`), (c) es prefijo de documento obligatorio, (d) derivada de tabla o por `metodo` con entradas cubiertas, (e) salida de cálculo o control físico con entradas cubiertas, (f) constante de la spec; no cubierta → error de carga; no mapeable → aviso (`n_motores` de R-CON-07, `categoria` de R-AMB-02) | `docs/04` §2.5.3 pedía fijar la forma en este ADR | Declaración explícita en la spec (cambio de spec) |
 | F0.4 | `derivacion.metodo` se compila solo si la derivación no declara `fuente`; precondición que no compila → `Spec.precondiciones_texto` + aviso (no error); `hash_reglas` sobre el bloque `reglas` crudo (JSON canónico); toda cadena `INT-nn` debe existir en `interpretaciones`; versiones: con varias y solo fecha, se aplica `spec.vigencia` si todas la declaran, si no la más alta con aviso | Criterios deterministas; no inventar el criterio de vigencia (`docs/04` §2.4) | Error de carga por precondición en prosa (bloquearía la fase) |
+| QA-2 | Criterio único de planificación: `calculo.planificar` valida derivaciones (fuente documental → prosa, nunca se compila; `tabla:<ID>` → tabla declarada y `clave` obligatoria; sin fuente → fórmula que compila sobre variables de la spec, sin ciclos), bloque `calculo`, redondeo (criterio exacto) y precondiciones (función desconocida = error de carga; solo la prosa sin operadores se delega); el registro lo invoca al cargar | Hallazgos H-F03-1/2/3/5 y H-F04-1/2/3: el registro activaba specs que el cálculo rechazaba y una errata en una precondición pasaba en silencio | Dos validaciones paralelas (divergen) |
+| QA-2 | Comparación encadenada (`0 < h <= 8760`) soportada de forma nativa en el parser; retirada la reescritura de `calculo.py` | La reescritura ignoraba `not`/`or`/`->` | Mantener la reescritura acotada |
+| QA-2 | `p_fuente` eliminado del núcleo (regla de oro 4): `fuentes[<variable>]` es la API y `reglas.py` expone `<var>.fuente` | Vocabulario de la ficha en `engine/` | Campo específico por ficha |
+| QA-2 | Errores de una unidad (entrada `None` por conflicto, división por cero) → `motivo_no_calculo` por unidad, nunca excepción global; `float` sigue siendo error de contexto | Regla de oro 6: el conflicto detiene el cálculo, no el motor | Excepción global |
+| QA-2 | Límite documentado de la garantía estática NO_EVALUABLE → SUBSANABLE: es por **raíz** de variable, necesaria pero no suficiente (p. ej. `N2.declarado` ausente con certificado presente no lo recoge ninguna SUBSANABLE de v1.1); cerrarlo exige spec nueva (Billy) | Hallazgo QA-2 | Garantía por sufijo (exigiría declarar coberturas en la spec) |
 | plan | Caso G sin OCR debe dar el mismo resultado que A: el escaneo girado es `ficha_tecnica_variador` (EVD-04, no obligatorio) y las fotos sueltas se clasifican por EXIF | `docs/05` §8.2 exige 7/7 en un clon sin tesseract | Escanear un documento obligatorio (rompería 7/7 sin OCR) |
 
 ## 3 bis. Estado al cierre de la sesión del 18/09/2026
