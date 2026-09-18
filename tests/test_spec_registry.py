@@ -114,6 +114,10 @@ def spec_minima() -> dict:
         "calculo": {
             "motor": {"salida": "S", "formula": "X * Y"},
             "total": {"salida": "T", "formula": "sum(S)"},
+            # el registro valida el bloque con `calculo.planificar` (ADR-002 §3, QA-2): la spec activa
+            # debe ser calculable, asi que la minima declara tambien aritmetica y redondeo
+            "aritmetica": "decimal_exacta",
+            "redondeo_salida": {"T_cae": "truncar a kWh entero"},
         },
         "documentacion": [
             {"id": "D-01", "tipo": "doc_obligatorio", "obligatorio": True},
@@ -244,19 +248,17 @@ def test_expresiones_del_calculo_y_precondiciones(spec_ind240: Spec) -> None:
     # las derivaciones con `fuente` (documento o tabla) describen la extraccion y no se compilan
     assert "variables.N2.derivacion.metodo" not in claves
     assert "variables.perdidas_ref_kw.derivacion.metodo" not in claves
-    # precondiciones: la primera compila; las otras dos no son expresiones del vocabulario y quedan como texto
+    # precondiciones: las dos expresiones compilan (la encadenada `0 < h <= 8760` de forma nativa desde
+    # F0.1); solo la de procedimiento, que es prosa, queda delegada al motor de reglas
     assert "calculo.precondiciones[0]" in claves
-    assert spec_ind240.precondiciones_texto == [
-        "0 < h <= 8760",
-        "ninguna regla con severidad BLOQUEANTE fallida",
-    ]
+    assert spec_ind240.precondiciones_texto == ["ninguna regla con severidad BLOQUEANTE fallida"]
 
 
 def test_avisos_de_carga_de_la_spec_activa(spec_ind240: Spec) -> None:
     avisos = spec_ind240.avisos_carga
     assert any("garantia no verificable estaticamente para R-CON-07: n_motores" in a for a in avisos)
     assert any("garantia no verificable estaticamente para R-AMB-02: categoria" in a for a in avisos)
-    assert sum("precondicion de procedimiento" in a for a in avisos) == 2
+    assert sum("precondicion" in a and "prosa" in a for a in avisos) == 1
     assert not any("tabla" in a for a in avisos)  # el cuadro 6 carga sin avisos propios
 
 
@@ -552,7 +554,7 @@ def test_nivel_derivado_es_generico(tmp_path: Path) -> None:
     datos["documentacion"].append({"id": "D-03", "tipo": "doc_unidad_registro", "obligatorio": True})
     datos["calculo"]["controles_fisicos"] = [
         {"id": "C-01", "regla": "S <= X"},
-        {"id": "C-02", "regla": "T > 0"},
+        {"id": "C-02", "regla": "Y > 0"},  # solo variables de actuacion
     ]
     datos["reglas"] += [
         {"id": "R-N-01", "descripcion": "a", "logica": "for each unidad: Y > 0", "severidad": "AVISO"},
@@ -575,7 +577,7 @@ def test_nivel_derivado_es_generico(tmp_path: Path) -> None:
     assert niveles["R-N-03"] == "unidad"  # hecho documental de un documento que solo citan variables motor
     assert niveles["R-N-04"] == "actuacion"  # documento citado por una variable de expediente
     assert niveles["R-N-05"] == "unidad"  # control fisico sobre variables de unidad
-    assert niveles["R-N-06"] == "actuacion"  # control fisico sobre el total
+    assert niveles["R-N-06"] == "actuacion"  # control fisico solo sobre variables de actuacion
     assert niveles["R-N-07"] == "unidad"  # basta con una salida por unidad
     assert niveles["R-N-08"] == "actuacion"
     assert niveles["R-BLQ-01"] == "actuacion" and niveles["R-PRE-01"] == "actuacion"

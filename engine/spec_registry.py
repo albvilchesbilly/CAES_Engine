@@ -91,6 +91,7 @@ from pathlib import Path
 
 import yaml
 
+from engine.calculo import ErrorCalculo, Plan, planificar
 from engine.expresiones import ErrorCargaExpresion, Expresion, compilar
 from engine.tablas import ErrorTabla, Tabla, cargar_tablas
 
@@ -207,6 +208,7 @@ class Spec:
     enumerados: frozenset[str]
     expresiones_calculo: dict[str, Expresion]
     precondiciones_texto: list[str]
+    plan: Plan
     vigencia: Vigencia | None
     hash_reglas: str
     hash_spec: str
@@ -896,6 +898,16 @@ def cargar_spec(ruta: Path, raiz_datos: Path = RAIZ) -> Spec:
     reglas = _construir_reglas(crudas, enumerados, analizador, ruta)
     avisos.extend(_comprobar_garantia(reglas, analizador, ruta))
 
+    # Criterio unico de validacion del bloque `calculo` (ADR-002 §3, fila QA-2): la spec que el registro
+    # activa es, por construccion, calculable. `planificar` valida derivaciones, formulas, controles,
+    # precondiciones y redondeo; lo que rechaza no se activa.
+    try:
+        plan = planificar(datos, tablas)
+    except ErrorCalculo as exc:
+        raise ErrorCargaSpec(f"{ruta.name}: {exc}") from exc
+    precondiciones_texto = list(plan.precondiciones_delegadas)
+    avisos.extend(f"calculo: {nota}" for nota in plan.notas)
+
     return Spec(
         codigo=codigo,
         version_ficha=version_ficha,
@@ -913,6 +925,7 @@ def cargar_spec(ruta: Path, raiz_datos: Path = RAIZ) -> Spec:
         enumerados=enumerados,
         expresiones_calculo=expresiones_calculo,
         precondiciones_texto=precondiciones_texto,
+        plan=plan,
         vigencia=vigencia,
         hash_reglas=hash_canonico(datos["reglas"]),
         hash_spec=hash_spec,
