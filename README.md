@@ -2,7 +2,16 @@
 
 Motor de prevalidación de actuaciones CAE (certificados de ahorro energético, España): convierte documentación desordenada de una actuación de eficiencia energética en una actuación trazable, calculada de forma determinista y prevalidada.
 
-**Estado (18/09/2026): repositorio documental, sin código todavía.** El Engine 0.1 se reconstruye en la Fase 0 (`docs/06-plan-de-construccion.md`). Este README lo completa Claude Code al cerrar esa fase con las instrucciones de instalación y ejecución.
+**Estado (18/09/2026): Fase 0 en curso** (reconstrucción del Engine 0.1, `docs/06-plan-de-construccion.md`, plan en `docs/decisiones/ADR-002`). Este README se completa al cerrar la fase.
+
+## Instalación mínima
+
+```bash
+python -m venv .venv && . .venv/bin/activate        # Windows: .venv\Scripts\Activate.ps1
+pip install -e ".[dev]"
+python -m pytest -q
+ruff check . && ruff format --check .
+```
 
 ## Por dónde empezar
 
