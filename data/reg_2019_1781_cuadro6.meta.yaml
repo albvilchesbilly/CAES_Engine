@@ -1,0 +1,25 @@
+# Metadatos de la tabla de referencia REG1781_CUADRO6.
+# Los lee engine/tablas.py junto con el CSV del mismo nombre. Ver data/README.md.
+id: REG1781_CUADRO6
+nombre: "Reglamento (UE) 2019/1781, anexo I, cuadro 6: perdidas de referencia de los variadores de velocidad"
+punto_funcionamiento: "90 % frecuencia estatorica nominal, 100 % corriente nominal generadora de par (90;100)"
+fuente: "https://www.boe.es/buscar/doc.php?id=DOUE-L-2019-81609"
+fuente_alternativa: "https://eur-lex.europa.eu/legal-content/ES/TXT/?uri=CELEX:32019R1781"
+fecha_transcripcion: "2026-09-18"
+transcrito_por: "Claude Code (agente spec-fichas), de memoria; sin acceso al DOUE ni al BOE en la sesion (proxy 403)"
+metodo_transcripcion: memoria_agente   # valores: doue | boe | memoria_agente
+verificacion:
+  responsable: "Billy"
+  filas_verificadas: 1
+  alcance_verificado: "kw_motor = 110 -> perdidas_ref_kw = 5.55 (17/09/2026, BOE/DOUE)"
+  filas_pendientes: 38
+vigencia:
+  desde: "2019-10-25"   # publicacion en el DOUE (L 272). El Reglamento se aplica desde 2021-07-01 (art. 12); ver README.
+  hasta: null
+columnas: [kva_salida, kw_motor, perdidas_ref_kw, cos_phi, verificado]
+unidades:
+  kva_salida: kVA
+  kw_motor: kW
+  perdidas_ref_kw: kW
+  cos_phi: null          # columna vacia: el cuadro 6 no la contiene (README)
+clave: kw_motor
