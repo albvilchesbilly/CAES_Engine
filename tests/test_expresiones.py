@@ -13,6 +13,7 @@ import yaml
 from engine.expresiones import (
     FUNCIONES_PERMITIDAS,
     NO_EVALUABLE,
+    PROFUNDIDAD_MAXIMA,
     ContextoDict,
     ErrorCargaExpresion,
     ErrorEvaluacionExpresion,
@@ -71,9 +72,18 @@ def test_identificadores_referenciados(spec):
         "ambito.tipos_equipo_incluidos",
     }
     # los nombres dentro de una lista literal son simbolicos: no son identificadores
-    assert compilar(por_id["R-AMB-02"]).identificadores == {"factura.linea", "categoria"}
-    assert compilar(por_id["R-DOC-02"]).identificadores == {"motor", "foto.antes", "foto.despues"}
+    amb02 = compilar(por_id["R-AMB-02"])
+    assert amb02.identificadores == {"factura.linea", "categoria"}
+    assert amb02.literales_simbolicos == {"motor", "bomba", "ventilador", "compresor", "equipo_completo"}
+    assert amb02.colecciones_ligadas == {"factura.linea"}
+    doc02 = compilar(por_id["R-DOC-02"])
+    assert doc02.identificadores == {"motor", "foto.antes", "foto.despues"}
+    assert doc02.colecciones_ligadas == {"motor"}
     assert compilar(por_id["R-CAL-04"]).identificadores == {"p.fuente"}
+    # sin `enumerados`, el lado derecho de R-EVD-04 es un identificador (la heuristica actua al evaluar)
+    evd04 = compilar(por_id["R-EVD-04"])
+    assert evd04.identificadores == {"N2.evidencia", "derivado"}
+    assert evd04.literales_simbolicos == frozenset() and evd04.enumerados is None
 
 
 # ---------------------------------------------------------------------------
@@ -243,7 +253,9 @@ def test_all_con_implicacion_y_presente(spec):
         {"id": "DOC-01", "tipo": "ficha_cumplimentada", "obligatorio": True},
         {"id": "EVD-01", "tipo": "registro_funcionamiento", "obligatorio": True},
         {"id": "EVD-04", "tipo": "ficha_tecnica_variador", "obligatorio": False},
-        {"id": "DOC-05B", "tipo": "certificado_tecnico_competente", "obligatorio": "condicional"},
+        # `obligatorio: condicional` de la spec lo resuelve el Rules Engine a bool con su `condicion`;
+        # una cadena "condicional" frente a `true` seria error de contexto (tipado, ADR-002 §2.4)
+        {"id": "DOC-05B", "tipo": "certificado_tecnico_competente", "obligatorio": False},
     ]
 
     def contexto(presentes: set[str]) -> dict:
@@ -436,7 +448,8 @@ def test_comparadores_numericos(spec):
         ev(por_id["R-CON-06"], {"convenio": {"ahorro_kwh": Decimal(305000)}, "AETOTAL_cae": 305829}) is False
     )
     assert ev(por_id["R-CON-06"], {"convenio": {"ahorro_kwh": Decimal(305829)}}) is NO_EVALUABLE
-    assert ev("a == b", {"a": Decimal("110"), "b": "110.0"}) is True  # texto numerico se coerciona
+    with pytest.raises(ErrorEvaluacionExpresion):  # el texto numerico no se coerciona (ADR-002 §2.4)
+        ev("a == b", {"a": Decimal("110"), "b": "110.0"})
 
 
 def test_controles_fisicos(spec):
@@ -554,3 +567,367 @@ def test_contexto_personalizado_con_protocolo():
     assert compilar("a * 2", modo="formula").evaluar(Ctx()) == Decimal(4)
     assert compilar("a == b").evaluar(Ctx()) is NO_EVALUABLE  # a es Decimal: b no es un enumerado
     assert compilar("b == a").evaluar(Ctx()) is NO_EVALUABLE
+
+
+# ---------------------------------------------------------------------------
+# 7. Tipado del contexto (ADR-002 §2.4, revision QA-1: H3, H5, H6, H7, H8, H10)
+# ---------------------------------------------------------------------------
+
+
+def enumerados_de(spec: dict) -> frozenset[str]:
+    """Conjunto que el Spec Registry pasara a `compilar(enumerados=...)`, calculado desde la spec."""
+    conjunto: set[str] = set(spec["ambito"]["tipos_equipo_incluidos"])
+    conjunto |= set(spec["ambito"]["tipos_equipo_excluidos"])
+    for variable in spec["variables"].values():
+        if isinstance(variable, dict) and "valores" in variable:
+            conjunto |= set(variable["valores"])
+    conjunto |= {"demostrado", "declarado", "derivado"}
+    conjunto |= {"motor", "bomba", "ventilador", "compresor", "equipo_completo"}
+    return frozenset(conjunto)
+
+
+# --- H3: valores no finitos, desde texto (ya no se coerciona) y desde Decimal -------------------
+
+
+@pytest.mark.parametrize("texto", ["NaN", "sNaN", "inf", "Infinity", "-Infinity", "1e3", "35"])
+def test_texto_numerico_frente_a_numero_es_error_de_contexto_no_true_ni_invalidoperation(texto):
+    # antes: "35" >= 30 daba True y "inf" tambien; ahora el texto no es un numero
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("registro.dias >= 30", {"registro": {"dias": texto}})
+
+
+@pytest.mark.parametrize(
+    "valor", [Decimal("NaN"), Decimal("sNaN"), Decimal("Infinity"), Decimal("-Infinity")]
+)
+def test_decimal_no_finito_en_el_contexto_es_error_de_contexto(valor):
+    with pytest.raises(ErrorEvaluacionExpresion):  # aritmetica
+        ev("abs(N2.declarado - N2.derivado) <= 1", {"N2": {"declarado": valor, "derivado": 1}})
+    with pytest.raises(ErrorEvaluacionExpresion):  # comparacion (con NaN antes era InvalidOperation)
+        ev("registro.dias >= 30", {"registro": {"dias": valor}})
+    with pytest.raises(ErrorEvaluacionExpresion):  # igualdad
+        ev("a == b", {"a": valor, "b": Decimal(1)})
+    with pytest.raises(ErrorEvaluacionExpresion):  # resultado de formula
+        ev("x", {"x": valor}, modo="formula")
+    with pytest.raises(ErrorEvaluacionExpresion):  # sum / min / abs / unario
+        ev("sum(x)", {"x": [Decimal(1), valor]}, modo="formula")
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("min(a, b)", {"a": Decimal(1), "b": valor}, modo="formula")
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("-a", {"a": valor}, modo="formula")
+
+
+# --- H6: politica unica de tipos, sin coercion de texto ---------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("texto", "datos"),
+    [
+        ('"true" == true', {}),
+        ("a == true", {"a": "true"}),
+        ("a != false", {"a": "false"}),
+        ("a == b", {"a": Decimal(1), "b": True}),
+        ("a == 1", {"a": True}),
+        ("a == b", {"a": "1", "b": Decimal(1)}),
+        ("a == b", {"a": "2026-01-01", "b": date(2026, 1, 1)}),
+        ("a == b", {"a": date(2026, 1, 1), "b": Decimal(20260101)}),
+        ("a == b", {"a": b"x", "b": "x"}),
+        ("a == b", {"a": [1], "b": [1]}),  # las listas no son comparables con ==
+        ("a == b", {"a": {"k": 1}, "b": {"k": 1}}),
+        ("a == b", {"a": 1.0, "b": Decimal(1)}),
+    ],
+)
+def test_igualdad_entre_familias_distintas_es_error_de_contexto(texto, datos):
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev(texto, datos)
+
+
+def test_igualdad_dentro_de_la_misma_familia_sigue_funcionando():
+    assert ev("a == true", {"a": True}) is True
+    assert ev("a != true", {"a": False}) is True
+    assert ev("a == b", {"a": Decimal("1.0"), "b": 1}) is True
+    assert ev("a == b", {"a": "x", "b": "x"}) is True
+    assert ev("a == b", {"a": date(2026, 1, 1), "b": date(2026, 1, 1)}) is True
+    assert ev("a == b", {"a": b"x", "b": b"x"}) is True
+    assert ev("a == b", {"a": Decimal(1), "b": Decimal(2)}) is False
+
+
+@pytest.mark.parametrize(
+    ("texto", "datos"),
+    [
+        ("N2 < N1", {"N2": "1188", "N1": "1485"}),
+        ("N2 < N1", {"N2": "1188", "N1": Decimal(1485)}),
+        ("N2 < N1", {"N2": Decimal(1188), "N1": "1485"}),
+        ("a <= b", {"a": "a", "b": "b"}),  # el orden de cadenas no forma parte del vocabulario
+        ("a < b", {"a": True, "b": False}),
+        ("a < b", {"a": Decimal(1), "b": date(2026, 1, 1)}),
+        ("a >= b", {"a": b"a", "b": b"b"}),
+    ],
+)
+def test_orden_solo_entre_numeros_o_entre_fechas(texto, datos):
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev(texto, datos)
+
+
+def test_unique_compara_con_la_igualdad_del_tipo_de_los_elementos():
+    # valores_por_fuente son cadenas canonicas: se comparan como cadenas, sin coercion numerica
+    assert ev("unique(x)", {"x": {"a": "110", "b": "110"}}) is True
+    assert ev("unique(x)", {"x": {"a": "110", "b": "110.0"}}) is False
+    assert ev("unique(x)", {"x": {"a": "1485", "b": "1.485"}}) is False
+    # un dict de Decimal se compara como Decimal
+    assert ev("unique(x)", {"x": {"a": Decimal("110"), "b": Decimal("110.0")}}) is True
+    assert ev("unique(x)", {"x": [Decimal("110"), 110]}) is True
+    assert ev("unique(x)", {"x": [date(2026, 1, 1), date(2026, 1, 1)]}) is True
+    assert ev("unique(x)", {"x": [True, True, None]}) is True
+    # mezclar familias en la misma coleccion es un contexto mal construido
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("unique(x)", {"x": {"a": "110", "b": Decimal("110")}})
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("unique(x)", {"x": ["110", "110", Decimal("110")]})  # sin cortocircuito
+
+
+def test_in_compara_texto_con_simbolos_y_numeros_con_numeros():
+    assert ev("x in [motor, bomba]", {"x": "motor"}) is True
+    assert ev("x in [motor, bomba]", {"x": "variador"}) is False
+    assert ev("x in [1, 2, 3]", {"x": Decimal("2.0")}) is True
+    assert ev("x in [1, 2, 3]", {"x": 4}) is False
+    assert ev('x in ["a", b]', {"x": "b"}) is True
+    assert ev("x in [true, false]", {"x": False}) is True
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("x in [1, 2, 3]", {"x": "2"})
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("x in [motor, bomba]", {"x": Decimal(1)})
+    with pytest.raises(ErrorEvaluacionExpresion):  # sin cortocircuito: el 1 coincide pero "a" es ajeno
+        ev('x in [1, "a"]', {"x": Decimal(1)})
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("x in y", {"x": "bomba_dinamica", "y": ["bomba_dinamica", Decimal(1)]})
+
+
+# --- H5: literal simbolico decidido al compilar con `enumerados` ------------------------------
+
+
+def test_enumerados_de_la_spec_no_entran_en_identificadores(spec):
+    enums = enumerados_de(spec)
+    assert {"motor", "derivado", "constante_sin_modulacion", "bomba_dinamica"} <= enums
+    for regla in spec["reglas"]:
+        expr = compilar(regla["logica"], enumerados=enums)
+        assert expr.enumerados == enums
+        # ningun enumerado es identificador, salvo el que ocupa posicion de ligadura (`for each motor`)
+        assert not (expr.identificadores & enums) - expr.colecciones_ligadas, regla["id"]
+        assert expr.literales_simbolicos <= enums, regla["id"]
+        assert not (expr.literales_simbolicos & expr.identificadores), regla["id"]
+        # y con contexto vacio siguen siendo NO_EVALUABLE
+        assert expr.evaluar(ContextoDict({})) is NO_EVALUABLE, regla["id"]
+    por_id = {r["id"]: compilar(r["logica"], enumerados=enums) for r in spec["reglas"]}
+    assert por_id["R-EVD-04"].identificadores == {"N2.evidencia"}
+    assert por_id["R-EVD-04"].literales_simbolicos == {"derivado"}
+    assert por_id["R-AMB-03"].identificadores == {"regimen_previo"}
+    assert por_id["R-AMB-03"].literales_simbolicos == {"constante_sin_modulacion"}
+    assert por_id["R-AMB-02"].identificadores == {"factura.linea", "categoria"}
+    assert por_id["R-DOC-02"].identificadores == {"motor", "foto.antes", "foto.despues"}
+    assert por_id["R-DOC-02"].colecciones_ligadas == {"motor"}
+    assert por_id["R-AMB-01"].identificadores == {"tipo_equipo_accionado", "ambito.tipos_equipo_incluidos"}
+
+
+def test_con_enumerados_el_literal_no_depende_del_contexto_en_evaluacion(spec):
+    enums = enumerados_de(spec)
+    por_id = {r["id"]: r["logica"] for r in spec["reglas"]}
+    evd04 = compilar(por_id["R-EVD-04"], enumerados=enums)
+    assert evd04.evaluar(ContextoDict({"N2": {"evidencia": "derivado"}})) is True
+    assert evd04.evaluar(ContextoDict({"N2": {"evidencia": "declarado"}})) is False
+    # aunque el contexto tenga una clave `derivado`, el literal no se resuelve
+    assert evd04.evaluar(ContextoDict({"N2": {"evidencia": "derivado"}, "derivado": "otro"})) is True
+    amb03 = compilar(por_id["R-AMB-03"], enumerados=enums)
+    assert amb03.evaluar(ContextoDict({"regimen_previo": "constante_sin_modulacion"})) is True
+    assert amb03.evaluar(ContextoDict({"regimen_previo": "con_modulacion"})) is False
+    # un enumerado a la izquierda o fuera de ==/!= tambien es literal
+    assert (
+        compilar("derivado == N2.evidencia", enumerados=enums).evaluar(
+            ContextoDict({"N2": {"evidencia": "derivado"}})
+        )
+        is True
+    )
+    e = compilar("x in [derivado] and derivado in y", enumerados=enums)
+    assert e.identificadores == {"x", "y"}
+    assert e.evaluar(ContextoDict({"x": "derivado", "y": ["derivado"]})) is True
+    # con enumerados no hay heuristica: un nombre ajeno ausente a la derecha es NO_EVALUABLE
+    assert (
+        compilar("regimen_previo == otra_cosa", enumerados=enums).evaluar(
+            ContextoDict({"regimen_previo": "otra_cosa"})
+        )
+        is NO_EVALUABLE
+    )
+    assert compilar("a == b", enumerados=frozenset()).evaluar(ContextoDict({"a": "b"})) is NO_EVALUABLE
+    # `for each motor` y `motor where` siguen siendo colecciones aunque `motor` sea enumerado
+    doc02 = compilar(por_id["R-DOC-02"], enumerados=enums)
+    unidades = [{"foto": {"antes": ["f1"], "despues": ["f2"]}}]
+    assert doc02.evaluar(ContextoDict({"motor": unidades})) is True
+    assert doc02.evaluar(ContextoDict({"motor": []})) is NO_EVALUABLE
+    filtro = compilar("exists(motor where n > 1)", enumerados=enums)
+    assert filtro.colecciones_ligadas == {"motor"} and filtro.identificadores == {"motor", "n"}
+    assert filtro.evaluar(ContextoDict({"motor": [{"n": 2}]})) is True
+    # R-AMB-02 con enumerados: `motor` dentro de la lista es literal y `categoria` identificador
+    amb02 = compilar(por_id["R-AMB-02"], enumerados=enums)
+    assert amb02.evaluar(ContextoDict({"factura": {"linea": [{"categoria": "motor"}]}})) is False
+    assert amb02.evaluar(ContextoDict({"factura": {"linea": [{"categoria": "variador"}]}})) is True
+
+
+def test_enumerados_invalidos_o_nombre_ajeno_en_lista_son_error_de_carga():
+    with pytest.raises(ErrorCargaExpresion):
+        compilar("x in [motor, foo]", enumerados={"motor"})  # `foo` no esta declarado: errata
+    assert compilar("x in [motor, foo]").literales_simbolicos == {"motor", "foo"}  # sin conjunto, vale
+    with pytest.raises(ErrorCargaExpresion):
+        compilar("a == b", enumerados="motor")  # una cadena no es un conjunto
+    with pytest.raises(ErrorCargaExpresion):
+        compilar("a == b", enumerados={"motor", 1})
+    with pytest.raises(ErrorCargaExpresion):
+        compilar("a == b", enumerados={"and"})  # palabra reservada
+    with pytest.raises(ErrorCargaExpresion):
+        compilar("a == b", enumerados={"None"})
+
+
+# --- H7: vocabulario booleano cerrado --------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "texto",
+    [
+        "a == True",
+        "a == False",
+        "a == TRUE",
+        "a == FALSE",
+        "a == None",
+        "a == null",
+        "a == NULL",
+        "a == Null",
+        "True",
+        "x in [True, false]",
+        "for each None: a",
+        "a == b -> None",
+    ],
+)
+def test_true_false_none_null_como_nombre_es_error_de_carga(texto):
+    with pytest.raises(ErrorCargaExpresion):
+        compilar(texto)
+
+
+def test_true_false_minusculas_y_nombres_con_punto_siguen_valiendo():
+    assert ev("a == true", {"a": True}) is True
+    assert compilar("a.none == b").identificadores == {"a.none", "b"}
+    assert compilar("nulo == 1").identificadores == {"nulo"}
+
+
+# --- H8: anidamiento acotado, datetime, desbordamiento de fecha, `presente` que lanza -------
+
+
+@pytest.mark.parametrize(
+    ("texto", "modo"),
+    [
+        ("(" * 500 + "a" + ")" * 500, "logica"),
+        ("(" * (PROFUNDIDAD_MAXIMA + 1) + "a" + ")" * (PROFUNDIDAD_MAXIMA + 1), "logica"),
+        ("not " * 500 + "a", "logica"),
+        ("-" * 500 + "a", "formula"),
+        ("a -> " * 500 + "a", "logica"),
+        ("abs(" * 500 + "a" + ")" * 500, "formula"),
+        ("2 ** " * 500 + "2", "formula"),
+        ("x where " * 500 + "a", "logica"),
+        ("for each m: " * 500 + "a", "logica"),
+    ],
+)
+def test_anidamiento_excesivo_es_error_de_carga_no_recursion_error(texto, modo):
+    with pytest.raises(ErrorCargaExpresion):
+        compilar(texto, modo=modo)
+
+
+def test_anidamiento_dentro_del_limite_compila_y_evalua():
+    n = PROFUNDIDAD_MAXIMA
+    assert ev("(" * n + "a" + ")" * n, {"a": True}) is True
+    assert ev("abs(" * n + "a" + ")" * n, {"a": Decimal(-1)}, modo="formula") == Decimal(1)
+    assert ev("not " * n + "a", {"a": True}) is True  # 64 negaciones: paridad par
+    assert ev("-" * n + "a", {"a": Decimal(3)}, modo="formula") == Decimal(3)
+
+
+def test_date_frente_a_datetime_es_error_de_evaluacion():
+    from datetime import datetime
+
+    hoy = date(2026, 3, 2)
+    ahora = datetime(2026, 3, 2, 10, 0)
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("a <= b", {"a": hoy, "b": ahora})
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("a == b", {"a": ahora, "b": hoy})
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("a == b", {"a": ahora, "b": ahora})  # el contrato es date; datetime nunca entra
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("a + 3 años", {"a": ahora}, modo="formula")
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("min(a, b)", {"a": hoy, "b": ahora}, modo="formula")
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("a", {"a": ahora}, modo="formula")
+
+
+def test_desbordamiento_de_fecha_es_error_de_evaluacion():
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("f + 3 años", {"f": date(9998, 6, 1)}, modo="formula")
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("f + 24 meses", {"f": date(9999, 1, 1)}, modo="formula")
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("f + 400 dias", {"f": date(9999, 1, 1)}, modo="formula")
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("f - 1 años", {"f": date(1, 1, 1)}, modo="formula")
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev(
+            "solicitud.fecha <= fecha_fin_actuacion + 3 años",
+            {
+                "solicitud": {"fecha": date(2026, 1, 1)},
+                "fecha_fin_actuacion": date(9999, 1, 1),
+            },
+        )
+    assert ev("f + 3 años", {"f": date(9996, 12, 31)}, modo="formula") == date(9999, 12, 31)
+
+
+def test_presente_que_lanza_se_envuelve_con_el_mensaje_original():
+    def presente(doc):
+        raise KeyError("tipo ausente en el documento")
+
+    ctx = {"doc": [{"obligatorio": True}], "presente": presente}
+    with pytest.raises(ErrorEvaluacionExpresion, match="KeyError.*tipo ausente en el documento"):
+        ev("all(doc.obligatorio == true -> presente(doc))", ctx)
+    # una funcion que devuelve algo que no es booleano tambien es error de contexto
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev(
+            "all(doc.obligatorio == true -> presente(doc))",
+            {"doc": [{"obligatorio": True}], "presente": lambda d: "si"},
+        )
+
+
+# --- H10: solo list/tuple son colecciones iterables -----------------------------------------
+
+
+def test_for_each_where_y_ligadura_iteran_solo_sobre_list_o_tuple():
+    unidades = ({"foto": {"antes": ["f1"], "despues": ("f2",)}},)  # tupla vale
+    assert (
+        ev("for each motor: count(foto.antes) >= 1 and count(foto.despues) >= 1", {"motor": unidades}) is True
+    )
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("for each motor: count(foto.antes) >= 1", {"motor": {"M1": unidades[0]}})  # dict de unidades
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("for each motor: count(foto.antes) >= 1", {"motor": frozenset()})
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("for each motor: count(foto.antes) >= 1", {"motor": "M1"})
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("exists(factura.linea where categoria in [motor])", {"factura": {"linea": {"categoria": "motor"}}})
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("exists(factura.linea where categoria in [motor])", {"factura": {"linea": {"a", "b"}}})
+    # la ligadura de all/exists/count no toma un set como coleccion: no hay nada que ligar
+    assert (
+        ev("all(doc.obligatorio == true -> presente(doc))", {"doc": frozenset(), "presente": lambda d: True})
+        is NO_EVALUABLE
+    )
+    with pytest.raises(
+        ErrorEvaluacionExpresion
+    ):  # el set no liga; liga `convenio_cae` y `in` cae sobre un str
+        ev("all(requisito in convenio_cae)", {"requisito": {"a"}, "convenio_cae": ["a"]})
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("count(x)", {"x": {"a", "b"}}, modo="formula")
+    with pytest.raises(ErrorEvaluacionExpresion):
+        ev("x in y", {"x": "a", "y": {"a", "b"}})

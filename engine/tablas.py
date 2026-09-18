@@ -37,7 +37,7 @@ VALORES_VERIFICADO = {"si": True, "pendiente": False}
 CAMPOS_META_OBLIGATORIOS = ("id", "columnas", "clave", "valor", "vigencia")
 RESTRICCIONES_CONOCIDAS = ("positivo",)
 # Formato de celda numerica de data/README.md: punto decimal, sin separador de miles, sin exponente.
-PATRON_CELDA_NUMERICA = re.compile(r"^-?\d+(\.\d+)?$")
+PATRON_CELDA_NUMERICA = r"^-?\d+(\.\d+)?$"  # patron usado con re.match
 
 ValorCelda = Decimal | bool | None
 
@@ -244,7 +244,7 @@ def _celda_decimal(texto: str, contexto: str) -> Decimal | None:
     texto = texto.strip()
     if texto == "":
         return None
-    if not PATRON_CELDA_NUMERICA.match(texto):
+    if not re.match(PATRON_CELDA_NUMERICA, texto):
         raise ErrorTabla(
             f"{contexto}: '{texto}' no es un numero decimal admitido (digitos y punto decimal, sin exponente)"
         )
