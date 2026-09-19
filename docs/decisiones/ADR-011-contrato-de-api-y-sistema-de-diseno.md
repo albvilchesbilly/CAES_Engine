@@ -163,8 +163,9 @@ y para que las tres reglas se apliquen una sola vez. `front/compartido/` **no ha
 - `tests/test_api_contrato.py`: no existe comando que fije un veredicto ni que se llame "firmar"; ningún
   comando declara un evento fuera del catálogo cerrado; `api/` no importa de `front/`.
 - `front/compartido/`: tests de los tres rótulos, incluido que `SIN DATO` nunca se renderiza como `0`.
-- Puerta de siempre: `pytest -q` sin romper los 1.781 · `evaluar_casos.py` 7/7 con el caso A en 305.829,6 ·
-  `ruff` limpio · `engine/` sigue sin importar de nadie.
+- Resultado (19/09/2026): **2.388 tests en verde** (29 saltados, 23 de OCR deselected) · **73 tests del front**
+  en verde · `evaluar_casos.py` **7/7 con el caso A en 305.829,6 kWh/año**, con OCR · `ruff` limpio sobre 118
+  ficheros · `engine/` sigue sin importar de `api/`, `front/`, `salida/`, `agentes/`, `generator/` ni `tests/`.
 
 ## 6 bis. Lo que salió de construirlo (19/09/2026)
 
