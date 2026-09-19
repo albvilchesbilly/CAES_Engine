@@ -17,6 +17,8 @@
 #   origen_subsanacion    "verificador" | "GA" | "CN" | null (`docs/03` §10.5)
 #   alcance               "actuacion" | "grupo" | "expediente": a quien alcanza el efecto
 #   resultado             etiqueta de cierre cuando `ciclo: CERRADA`
+#   inicial               estado en el que nace la actuacion en la plataforma (exactamente una fila)
+#   validacion_automatica estado al que lleva la validacion automatica; fin de la automatizacion (una fila)
 #   exige_firma           la transicion necesita un `FirmaRegistrada` previo de actor humano
 #   exige_desistimiento   la transicion necesita un `DesistimientoRegistrado` previo de actor humano
 #   modificable           seguimos pudiendo modificar la actuacion (antes de la inalterabilidad)
@@ -41,6 +43,7 @@ estados:
     ciclo: ENTREGADA
     alcance: actuacion
     modificable: true
+    inicial: true
     nota: "docs/02 §5.6: ENTREGADA(API); sigue siendo modificable por nosotros"
 
   - literal: COMPLETA
@@ -50,6 +53,7 @@ estados:
     ciclo: ENTREGADA
     alcance: actuacion
     modificable: true
+    validacion_automatica: true
     nota: "Validacion automatica de la plataforma superada. Fin de la automatizacion (docs/02 §5.1)"
 
   - literal: ENVIADA_A_VERIFICACION

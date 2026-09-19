@@ -154,6 +154,8 @@ CLAVES_FILA = frozenset(
         "resultado",
         "exige_firma",
         "exige_desistimiento",
+        "inicial",
+        "validacion_automatica",
         "modificable",
         "candidata_expediente",
         "nota",
@@ -178,6 +180,11 @@ class ProyeccionPlataforma:
     resultado: str | None = None
     exige_firma: bool = False
     exige_desistimiento: bool = False
+    #: Estado en el que nace una actuacion en la plataforma (`docs/02` §5.1: la crea el sujeto).
+    inicial: bool = False
+    #: Estado al que lleva la validacion automatica de la plataforma. **Fin de la automatizacion**
+    #: (`docs/02` §5.1 y §6.2): ningun componente nuestro avanza mas alla de aqui.
+    validacion_automatica: bool = False
     modificable: bool = False
     candidata_expediente: bool = False
     nota: str = ""
@@ -229,6 +236,8 @@ def _fila(cruda: object, indice: int) -> ProyeccionPlataforma:
         resultado=None if cruda.get("resultado") is None else str(cruda["resultado"]),
         exige_firma=bool(cruda.get("exige_firma", False)),
         exige_desistimiento=bool(cruda.get("exige_desistimiento", False)),
+        inicial=bool(cruda.get("inicial", False)),
+        validacion_automatica=bool(cruda.get("validacion_automatica", False)),
         modificable=bool(cruda.get("modificable", False)),
         candidata_expediente=bool(cruda.get("candidata_expediente", False)),
         nota=str(cruda.get("nota", "")),
@@ -250,7 +259,33 @@ def tabla_plataforma(ruta: Path | None = None) -> dict[str, ProyeccionPlataforma
         if fila.literal in tabla:
             raise ErrorEstado(f"{origen.name}: el literal {fila.literal!r} esta declarado dos veces")
         tabla[fila.literal] = fila
+    _garantia_de_carga(tabla, origen.name)
     return tabla
+
+
+def _garantia_de_carga(tabla: Mapping[str, ProyeccionPlataforma], nombre: str) -> None:
+    """Las tres marcas que el simulador (`salida/simulador/`) necesita para no depender del orden del YAML.
+
+    Sin ellas habria que distinguir "crear" de "validado" por la posicion de la fila, y reordenar el fichero
+    cambiaria el comportamiento en silencio. Se comprueba **al cargar**: una tabla mal marcada es un error de
+    carga, nunca un estado equivocado en mitad de una entrega.
+    """
+    for marca, que in (
+        ("inicial", "el estado en el que nace una actuacion"),
+        ("validacion_automatica", "el estado al que lleva la validacion automatica"),
+        ("exige_firma", "el estado al que solo se llega firmando"),
+    ):
+        marcadas = [f for f in tabla.values() if getattr(f, marca)]
+        if len(marcadas) != 1:
+            raise ErrorEstado(
+                f"{nombre}: exactamente una fila declara `{marca}` ({que}, `docs/02` §5.1) y hay "
+                f"{len(marcadas)}: {sorted(f.literal for f in marcadas)}"
+            )
+        if marcadas[0].nivel != "actuacion":
+            raise ErrorEstado(
+                f"{nombre}: `{marca}` es de nivel actuacion (fase 1) y lo declara {marcadas[0].literal!r}, "
+                f"que es de nivel {marcadas[0].nivel!r}"
+            )
 
 
 def _literales(nivel: str) -> tuple[str, ...]:

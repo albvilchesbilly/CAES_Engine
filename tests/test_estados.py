@@ -837,3 +837,72 @@ def test_ningun_reloj_en_la_maquina_de_estados() -> None:
     codigo = FUENTE.read_text(encoding="utf-8")
     assert "now(" not in codigo
     assert "ahora_utc" not in codigo
+
+
+# ---------------------------------------------------------------------------
+# Las tres marcas de carga: `inicial`, `validacion_automatica` y `exige_firma`
+# ---------------------------------------------------------------------------
+
+#: Una tabla minima y bien formada, para alterarle una marca cada vez.
+FILA_INICIAL = (
+    "  - literal: A\n    nivel: actuacion\n    fase: '1A'\n    oficial: true\n    ciclo: ENTREGADA\n"
+    "    inicial: true\n"
+)
+FILA_VALIDADA = (
+    "  - literal: B\n    nivel: actuacion\n    fase: '1A'\n    oficial: true\n    ciclo: ENTREGADA\n"
+    "    validacion_automatica: true\n"
+)
+FILA_FIRMA = (
+    "  - literal: C\n    nivel: actuacion\n    fase: '1A'\n    oficial: true\n    ciclo: EN_PLATAFORMA\n"
+    "    exige_firma: true\n"
+)
+
+
+def _cargar(filas: str, tmp_path: Path):
+    ruta = tmp_path / "tabla.yaml"
+    ruta.write_text("version_tabla: '1.0'\nestados:\n" + filas, encoding="utf-8")
+    tabla_plataforma.cache_clear()
+    try:
+        return tabla_plataforma(ruta)
+    finally:
+        tabla_plataforma.cache_clear()
+
+
+@pytest.mark.parametrize("marca", ["inicial", "validacion_automatica", "exige_firma"])
+def test_la_tabla_marca_exactamente_un_estado_de_cada_cosa(marca: str) -> None:
+    """Lo que el simulador necesita para no depender del orden de las filas (`ADR-009` §5 regla 1)."""
+    marcadas = [f for f in tabla_plataforma().values() if getattr(f, marca)]
+    assert len(marcadas) == 1, f"{marca}: {[f.literal for f in marcadas]}"
+    assert marcadas[0].nivel == "actuacion"
+
+
+@pytest.mark.parametrize(
+    ("filas", "marca"),
+    [
+        (FILA_VALIDADA + FILA_FIRMA, "inicial"),
+        (FILA_INICIAL + FILA_FIRMA, "validacion_automatica"),
+        (FILA_INICIAL + FILA_VALIDADA, "exige_firma"),
+    ],
+)
+def test_una_tabla_sin_alguna_de_las_tres_marcas_no_carga(filas: str, marca: str, tmp_path: Path) -> None:
+    with pytest.raises(ErrorEstado, match=marca):
+        _cargar(filas, tmp_path)
+
+
+def test_una_tabla_con_la_marca_repetida_no_carga(tmp_path: Path) -> None:
+    dos_veces = FILA_VALIDADA.replace("literal: B", "literal: B\n    inicial: true")
+    repetida = FILA_INICIAL + dos_veces + FILA_FIRMA
+    with pytest.raises(ErrorEstado, match="inicial"):
+        _cargar(repetida, tmp_path)
+
+
+def test_una_marca_de_carga_en_nivel_expediente_no_carga(tmp_path: Path) -> None:
+    """Las tres marcas son de fase 1: un estado de expediente no crea ni valida una actuacion."""
+    mal = (
+        FILA_VALIDADA
+        + FILA_FIRMA
+        + "  - literal: D\n    nivel: expediente\n    fase: '2'\n    oficial: false\n    ciclo: null\n"
+        "    inicial: true\n"
+    )
+    with pytest.raises(ErrorEstado, match="nivel actuacion"):
+        _cargar(mal, tmp_path)
