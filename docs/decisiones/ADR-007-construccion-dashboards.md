@@ -9,8 +9,8 @@
 
 Billy decidió el 19/09/2026 construir los dos dashboards completos:
 
-- ADR-002: dashboard **operativo** (actuaciones, estados…) y **técnico** (latencias, errores…) para `ADM-MOD` y `ADM-OPS`.
-- ADR-005 (D3): dashboards **funcional y operativo de su propio tenant** para el Responsable del tenant (`T-RES`), con capacidades CAP-35, CAP-36, CAP-66 y CAP-67.
+- Dashboard **operativo** (actuaciones, estados…) y **técnico** (latencias, errores…) para `ADM-MOD` y `ADM-OPS`.
+- Dashboards **funcional y operativo de su propio tenant** para el Responsable del tenant (`T-RES`), con capacidades CAP-35, CAP-36, CAP-66 y CAP-67.
 
 Fuentes disponibles, según lo documentado:
 
