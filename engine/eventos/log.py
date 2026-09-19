@@ -15,8 +15,28 @@ Reglas que este modulo hace cumplir:
 - **Catalogo cerrado** (`catalogo.TIPOS`) y **clases de actor cerradas** (`catalogo.CLASES_ACTOR`).
 - **Eventos que exigen actor humano** (`TIPOS_SOLO_HUMANO`): con actor `motor` o `agente`, `ErrorEvento`.
   Ninguna firma, ninguna correccion humana y ningun desistimiento los puede escribir una maquina.
+- **`actor.rol` obligatorio en actor humano** (A8, `ADR-006`, S3.1b). Una persona actua siempre **con un
+  perfil**, y el perfil ejercido es parte de la traza: sin el, la auditoria dice quien pulso pero no con que
+  autoridad. No hay rol por defecto y no se infiere ninguno: un rol inventado en el log es peor que ninguno,
+  porque parece trazabilidad. La restriccion es **de escritura**, igual que la del catalogo de tipos: un log
+  antiguo con actores humanos sin rol se lee (`desde_jsonl`) y se verifica (`verificar`) sin tocarlo, porque
+  el log es solo-anadir y no se reescribe. Lo que no se puede es sellar hoy un evento humano sin rol.
 - **Eventos de actor `agente`**: el payload trae `modelo`, `version_prompt`, `coste` y `latencia`
   (`docs/03` §11.2 punto 6). Hoy no hay agentes; el contrato se fija ya.
+- **Autorizacion por capacidad, como gancho** (S3.1b). `LogEventos(autorizador=...)` recibe una funcion
+  `(tipo, actor) -> None` que levanta `ErrorEvento` si ese rol no puede producir ese tipo. El log **no sabe**
+  que perfil concede que capacidad: esa matriz es configuracion (`engine/capacidades.yaml`) y no se copia
+  aqui. Sin autorizador el log valida todo lo demas igual; con el, un `ADM-OPS` no puede sellar una
+  `SpecActivada`. Quien lo concede lo dice `engine/capacidades.yaml`, nunca este modulo.
+
+  El otro extremo ya existe: `engine.capacidades.perfiles_que_pueden_emitir(tipo)`. Enchufarlos es esto, y
+  va donde se compone el sistema, **no aqui** (el log no puede depender de un fichero de configuracion
+  para sellar un evento, ni `engine/eventos/` de `engine/capacidades.py`):
+
+      def autorizar(tipo, actor):
+          if actor.rol is not None and actor.rol not in perfiles_que_pueden_emitir(tipo):
+              raise ErrorEvento(...)
+      log = LogEventos(actuacion_id, autorizador=autorizar)
 
 Dos decisiones propias:
 
@@ -32,7 +52,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from types import MappingProxyType
@@ -70,29 +90,56 @@ HASH_INICIAL = ""
 
 @dataclass(frozen=True)
 class Actor:
-    """Quien provoca el evento. `clase` en `CLASES_ACTOR`; `id` identifica a la persona o al componente."""
+    """Quien provoca el evento: `clase` en `CLASES_ACTOR`, `id` la persona o el componente, `rol` el perfil.
+
+    `rol` es el codigo de perfil de `ADR-006` (`T-REV`, `ADM-MOD`…) **ejercido en este acto**, no todos los
+    que el usuario acumula: un delegado pequeno junta `T-RES`, `T-OPE` y `T-REV`, y la auditoria necesita
+    saber con cual aprobo. Aqui no se valida contra ningun catalogo de perfiles a proposito: los perfiles
+    son configuracion (`engine/capacidades.yaml`) y duplicarlos en el nucleo seria el `if perfil == ...` que
+    la regla de oro 4 prohibe. Quien comprueba que el rol existe y que puede producir el evento es el
+    `autorizador` de `LogEventos`.
+
+    **`rol` no se exige aqui sino al anadir** (`_validar_actor`). Construir un `Actor("humano", "x")` sin rol
+    es legitimo: es lo que hace `Evento.desde_dict` al leer un log antiguo, que se lee y se verifica igual.
+    """
 
     clase: str
     id: str
+    rol: str | None = None
 
     def __post_init__(self) -> None:
         if self.clase not in CLASES_ACTOR:
             raise ErrorEvento(f"clase de actor desconocida {self.clase!r}; las validas son {CLASES_ACTOR}")
         if not isinstance(self.id, str) or not self.id.strip():
             raise ErrorEvento(f"el actor {self.clase!r} necesita un `id` no vacio")
+        if self.rol is not None and (not isinstance(self.rol, str) or not self.rol.strip()):
+            raise ErrorEvento(
+                f"el `rol` del actor {self.id!r} es un codigo de perfil o `None`, no una cadena vacia"
+            )
 
     def a_dict(self) -> dict[str, str]:
-        return {"clase": self.clase, "id": self.id}
+        """El actor como va al sobre. **`rol` solo aparece cuando lo hay**: asi un evento sellado antes de
+        A8 conserva su hash byte a byte y `verificar()` sigue pasando sobre un log antiguo."""
+        datos = {"clase": self.clase, "id": self.id}
+        if self.rol is not None:
+            datos["rol"] = self.rol
+        return datos
 
     @classmethod
     def de(cls, valor: object) -> Actor:
-        """Acepta un `Actor`, un mapping `{clase, id}` o una pareja `(clase, id)`."""
+        """Acepta un `Actor`, un mapping `{clase, id, rol?}` o una pareja `(clase, id)` / terna con rol."""
         if isinstance(valor, Actor):
             return valor
         if isinstance(valor, Mapping):
-            return cls(clase=str(valor.get("clase")), id=str(valor.get("id")))
-        if isinstance(valor, tuple) and len(valor) == 2:
-            return cls(clase=str(valor[0]), id=str(valor[1]))
+            rol = valor.get("rol")
+            return cls(
+                clase=str(valor.get("clase")),
+                id=str(valor.get("id")),
+                rol=None if rol is None else str(rol),
+            )
+        if isinstance(valor, tuple) and len(valor) in (2, 3):
+            rol = valor[2] if len(valor) == 3 else None
+            return cls(clase=str(valor[0]), id=str(valor[1]), rol=None if rol is None else str(rol))
         raise ErrorEvento(f"no es un actor: {valor!r}")
 
 
@@ -181,6 +228,12 @@ def _validar_actor(tipo: str, actor: Actor, payload: Mapping[str, object]) -> No
         raise ErrorEvento(
             f"{tipo} solo es valido con actor humano (`docs/03` §6.1 y §7.3); llego actor {actor.clase!r}"
         )
+    if actor.clase == CLASE_HUMANO and actor.rol is None:
+        raise ErrorEvento(
+            f"{tipo}: un actor humano escribe siempre con un perfil, y {actor.id!r} no declara `rol` "
+            "(A8, `ADR-006`; `docs/06` S3.1b). No hay rol por defecto: un rol inventado en el log parece "
+            "trazabilidad y no lo es. Los codigos de perfil estan en `engine/capacidades.yaml`"
+        )
     if actor.clase == CLASE_AGENTE:
         faltan = [campo for campo in CAMPOS_AGENTE if campo not in payload]
         if faltan:
@@ -190,10 +243,20 @@ def _validar_actor(tipo: str, actor: Actor, payload: Mapping[str, object]) -> No
             )
 
 
+#: Firma del gancho de autorizacion (ver cabecera): `(tipo, actor) -> None`, `ErrorEvento` si se deniega.
+Autorizador = Callable[[str, Actor], None]
+
+
 class LogEventos:
     """Log solo-anadir de una actuacion: en memoria, con serializacion JSONL (ver cabecera)."""
 
-    def __init__(self, actuacion_id: str | None = None, eventos: Iterable[Evento] = ()) -> None:
+    def __init__(
+        self,
+        actuacion_id: str | None = None,
+        eventos: Iterable[Evento] = (),
+        *,
+        autorizador: Autorizador | None = None,
+    ) -> None:
         adoptados = list(eventos)
         if actuacion_id is None:
             if not adoptados:
@@ -203,6 +266,10 @@ class LogEventos:
             raise ErrorEvento("`actuacion_id` no puede estar vacio")
         self.actuacion_id = str(actuacion_id)
         self._eventos = adoptados
+        # ENGANCHE S3.1b: lo instala quien compone el sistema, con la matriz ya cargada
+        # (`engine/capacidades.py` sobre `engine/capacidades.yaml`). El log no conoce ningun perfil.
+        # `desde_jsonl` no lo propaga a proposito: leer un log no vuelve a autorizar lo ya escrito.
+        self.autorizador = autorizador
 
     # -- lectura ---------------------------------------------------------------------------------
 
@@ -251,6 +318,8 @@ class LogEventos:
         if not isinstance(payload, Mapping):
             raise ErrorEvento(f"el payload de {tipo} debe ser un Mapping, no {type(payload).__name__}")
         _validar_actor(tipo, actor, payload)
+        if self.autorizador is not None:
+            self.autorizador(tipo, actor)
         codificado = codificar(dict(payload))
         if not isinstance(codificado, dict):  # pragma: no cover - codificar(dict) siempre da dict
             raise ErrorEvento(f"payload no codificable de {tipo}")
@@ -341,6 +410,7 @@ __all__ = [
     "HASH_INICIAL",
     "NAMESPACE_EVENTOS",
     "Actor",
+    "Autorizador",
     "Evento",
     "LogEventos",
 ]

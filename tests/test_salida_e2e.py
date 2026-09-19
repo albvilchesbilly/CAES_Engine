@@ -141,7 +141,7 @@ def log_revisado(caso: str) -> LogEventos:
     log.anadir(
         "ObservacionRegistrada",
         {"origen": "revision_humana", "texto": "revisado antes de empaquetar"},
-        actor=("humano", "revisor@tenant"),
+        actor=("humano", "revisor@tenant", "T-REV"),
     )
     return log
 
@@ -362,7 +362,9 @@ def test_el_log_de_la_carpeta_entregada_no_se_trunca(tmp_path: Path, mapeo: Mape
 def test_el_log_que_crece_si_se_reescribe(tmp_path: Path, mapeo: Mapeo) -> None:
     """La otra direccion si vale: el mismo log con mas eventos es el mismo log, mas tarde."""
     adaptador, paquete, entrega, log = recorrido(tmp_path)
-    log.anadir("ObservacionRegistrada", {"texto": "una nota mas"}, actor=("humano", "revisor@tenant"))
+    log.anadir(
+        "ObservacionRegistrada", {"texto": "una nota mas"}, actor=("humano", "revisor@tenant", "T-REV")
+    )
 
     acuse = adaptador.entregar(paquete, destino_carpeta=entrega, mapeo=mapeo, log=log)
 
@@ -395,7 +397,7 @@ def test_la_firma_de_un_humano_con_perfil_modificacion_se_rechaza(tmp_path: Path
     with pytest.raises(ErrorSimulador, match="no firma"):
         simulador.registrar_firma(
             referencia,
-            Actor("humano", "representante@tenant"),
+            Actor("humano", "representante@tenant", rol="T-RES"),
             credencial=credencial(PERFIL_MODIFICACION),
         )
     assert simulador.consultar_estado(referencia).literal == estado_validado().literal
@@ -406,7 +408,7 @@ def test_la_firma_humana_con_perfil_firma_avanza_al_estado_que_la_exige(tmp_path
     evento = log.anadir(
         "FirmaRegistrada",
         {"nota": "firmado por el representante del tenant, con su certificado"},
-        actor=("humano", "representante@tenant"),
+        actor=("humano", "representante@tenant", "T-RES"),
     )
 
     acuse = simulador.registrar_firma(referencia, evento, credencial=credencial())
@@ -463,7 +465,7 @@ def test_el_recorrido_completo_deja_la_actuacion_en_plataforma_firmada_por_hando
     simulador = Simulador(instante=INSTANTE)
     acuse = simulador.entregar(paquete, credencial=credencial(), canonica=canonica(CASO_A), log=log)
     evento = log.anadir(
-        "FirmaRegistrada", {"nota": "firma del tenant"}, actor=("humano", "representante@tenant")
+        "FirmaRegistrada", {"nota": "firma del tenant"}, actor=("humano", "representante@tenant", "T-RES")
     )
     simulador.registrar_firma(acuse.referencia, evento, credencial=credencial())
     simulador.eventos_en(log, acuse.referencia)

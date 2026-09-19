@@ -2,7 +2,9 @@
 
 Cuatro piezas, separadas a proposito (`ADR-004` C1):
 
-- `entidades`: dataclasses inmutables y tontas. No validan ni derivan nada.
+- `entidades`: dataclasses inmutables y tontas. No validan ni derivan nada. Desde S3.1b incluyen las cinco
+  de perfiles y capacidades (`Usuario`, `Perfil`, `Capacidad`, `AsignacionPerfil`, `PoliticaTenant`), que
+  describen quien hay y que se le ha asignado; **quien concede que** es la matriz, no el modelo.
 - `conversion.desde_motor`: traduce la `Actuacion` del motor a `ActuacionCanonica`. No decide nada.
 - `serializacion.a_dict`: JSON compatible sin `default=` (`Decimal` y `date` como cadena).
 - `validacion.validar`: contra el JSON Schema versionado del paquete; `ErrorModelo` con la ruta del campo.
@@ -30,17 +32,24 @@ from engine.modelo.conversion import (
     desde_motor,
 )
 from engine.modelo.entidades import (
+    AMBITOS_PERFIL,
     MODELO_VERSION,
     ROLES_PARTE,
+    TIPOS_CAPACIDAD,
     TIPOS_TENANT,
     ActuacionCanonica,
+    AsignacionPerfil,
+    Capacidad,
     DocumentoRef,
     ErrorModelo,
     Expediente,
     GrupoActuaciones,
     Parte,
+    Perfil,
+    PoliticaTenant,
     Tenant,
     Unidad,
+    Usuario,
     Verificador,
 )
 from engine.modelo.serializacion import a_dict, decimal_a_texto
@@ -54,23 +63,30 @@ from engine.modelo.validacion import (
 )
 
 __all__ = [
+    "AMBITOS_PERFIL",
     "CARPETA_ESQUEMAS",
     "ESQUEMAS",
     "ESQUEMA_POR_ENTIDAD",
     "ESTADO_CICLO_TRAS_EVALUAR",
     "MODELO_VERSION",
     "ROLES_PARTE",
+    "TIPOS_CAPACIDAD",
     "TIPOS_TENANT",
     "VARIABLES_POR_ROL",
     "VARIABLE_FECHA_FIN",
     "ActuacionCanonica",
+    "AsignacionPerfil",
+    "Capacidad",
     "DocumentoRef",
     "ErrorModelo",
     "Expediente",
     "GrupoActuaciones",
     "Parte",
+    "Perfil",
+    "PoliticaTenant",
     "Tenant",
     "Unidad",
+    "Usuario",
     "Verificador",
     "a_dict",
     "decimal_a_texto",

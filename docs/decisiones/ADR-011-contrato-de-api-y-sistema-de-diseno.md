@@ -21,7 +21,8 @@ componentes.
 
 ## 1. La decisión que lo gobierna todo: la matriz es configuración
 
-`ADR-006` define 8 perfiles y 47 capacidades en una tabla. Esa tabla **no se escribe en Python**: vive en
+`ADR-006` define 8 perfiles y **46** capacidades en una tabla (`ADR-011` decía 47 y `ADR-050` habla de 51: la
+tabla es la fuente y tiene 46; corregido el 19/09/2026 al transcribirla). Esa tabla **no se escribe en Python**: vive en
 `api/capacidades.yaml`, validada con JSON Schema propio al cargar, exactamente con el mismo criterio que las
 fichas (`spec/`) y las métricas (`metricas/catalogo.yaml`).
 
@@ -33,7 +34,17 @@ celdas de la matriz están hoy marcadas `(?)` esperando decisiones de Billy (A1 
 no se concede "provisionalmente": se niega y se dice por qué. Conceder por defecto lo que nadie ha decidido es
 como se abren los agujeros de permisos.
 
-## 2. Contrato C13 — la matriz como configuración (`api/capacidades.yaml`)
+Al transcribir resultaron **nueve celdas `pendiente` en cinco capacidades**, no siete: CAP-02, CAP-04 y CAP-40
+(`EXT-INS`, `EXT-CLI`) esperan **A1** y **A2**; CAP-32 (`T-RES`) espera **A3**; CAP-35 (`T-OPE`, `T-REV`)
+espera **A4**. CAP-32 y CAP-40 quedan hoy **sin conceder a nadie**.
+
+**Corrección del 19/09/2026 — dónde vive la matriz.** Este ADR la puso en `api/capacidades.yaml`. Es
+`engine/capacidades.yaml`: al aprobarse **A8**, el propio log tiene que rechazar que un perfil selle un evento
+que su capacidad no concede, y `engine/` no puede importar de `api/`. Si el control viviera solo en `api/`, se
+rodearía escribiendo el evento a mano — exactamente el agujero de `R-REQ-02` que se cerró ese mismo día. La
+matriz baja al núcleo, junto a `engine/estados_plataforma.yaml`, y `api/` la **consume**.
+
+## 2. Contrato C13 — la matriz como configuración (`engine/capacidades.yaml`)
 
 ```yaml
 version_matriz: "1.0"
@@ -63,7 +74,7 @@ Reglas de carga, todas error al cargar y no en mitad de una petición:
    declara qué decisión la cierra (`decide`).
 4. **`SYS-API` no tiene superficie**: aparece como identidad técnica, no como usuario con pantallas.
 
-## 3. Contrato C14 — permisos e inferencia de rol (`api/permisos.py`)
+## 3. Contrato C14 — permisos e inferencia de rol (`api/permisos.py`, sobre `engine/capacidades.py`)
 
 ```python
 class ErrorPermiso(Exception): ...        # denegación; nunca devuelve datos parciales
@@ -123,10 +134,9 @@ def leer(peticion) -> Respuesta           # lectura: valida, proyecta y filtra p
 - **`R-UI-02` y `R-UI-03` por ausencia**: no existe comando para fijar un veredicto, y el de la firma se llama
   `CAP-22 Registrar firma`, nunca "firmar". Un test recorre el catálogo y lo comprueba.
 
-**Dependencia abierta, declarada**: `actor.rol` **no se persiste todavía**. `engine.eventos.log.Actor` tiene
-`clase` e `id`, y añadirle `rol` es `S3.1b`, que espera la decisión **A8** de Billy. `FR0` calcula el rol, lo
-devuelve en `Respuesta.rol` y lo deja listo; escribirlo en el evento es una línea el día que A8 se cierre. Se
-construye así en vez de esperar, porque el resto de `FR0` no depende de ello.
+**Resuelto el mismo día**: Billy aprobó **A8**, así que `actor.rol` **sí se persiste**. `Actor` lo admite y el
+log lo exige en todo actor humano (`S3.1b`); `Respuesta.rol` de `api/` va tal cual al evento. El párrafo
+anterior de este ADR, que decía que no se persistía, quedó obsoleto a las pocas horas de escribirse.
 
 ## 5. Contrato C16 — sistema de diseño mínimo (`front/compartido/`)
 
@@ -156,10 +166,38 @@ y para que las tres reglas se apliquen una sola vez. `front/compartido/` **no ha
 - Puerta de siempre: `pytest -q` sin romper los 1.781 · `evaluar_casos.py` 7/7 con el caso A en 305.829,6 ·
   `ruff` limpio · `engine/` sigue sin importar de nadie.
 
+## 6 bis. Lo que salió de construirlo (19/09/2026)
+
+**Dos huecos reales del modelo de capacidades**, que no son defectos de código sino cosas que `ADR-006` no
+previó y que aparecen en cuanto se intenta implementar:
+
+1. **Nadie puede escalar a revisión humana.** `ADR-006` no da de alta ninguna capacidad de "escalar", así que
+   con el autorizador puesto ningún perfil puede sellar el evento que abre `EN_REVISION_HUMANA`. El camino
+   antiguo (`ObservacionRegistrada{origen: escalado}`) sigue ahí y hoy solo lo puede recorrer el motor, que es
+   defendible para el escalado automático por umbral (`docs/03` §7.3) pero deja **sin vía a la persona que ve
+   algo raro y quiere parar la actuación**. Necesita una capacidad en `ADR-006`, y es decisión de Billy.
+2. **Los eventos de gobierno no tienen dónde vivir.** `LogEventos` es **por actuación**, y `TenantAlta`,
+   `SpecActivada`, `UsuarioAlta` o `RolAsignado` no pertenecen a ninguna. `ADR-006` da por existentes una
+   "auditoría del tenant" (CAP-31) y una "auditoría global" (CAP-65) que **no existen**. Es lo primero que se
+   va a chocar cuando `FR5` o `FR6` quieran escribir uno, y es la carencia más gorda de `FR0`.
+
+**Una duplicación creada y eliminada el mismo día**: el catálogo de eventos declaró durante unas horas, en
+paralelo al YAML, qué capacidad produce qué evento. Las dos coincidían. Se quitó igualmente, y hay un test que
+impide que vuelva: dos fuentes de la misma verdad no se separan el día que nacen, se separan el día que
+alguien cambia una.
+
+**Colisión de nombres declarada**: `engine.modelo.entidades.Capacidad` (la entidad del modelo canónico) y
+`engine.capacidades.Capacidad` (la fila de la matriz) son cosas distintas con el mismo nombre. Peor que la
+colisión sería que la entidad se poblara a mano: volvería a haber dos matrices. Debe construirse desde el
+YAML, y conviene renombrar una de las dos antes de que alguien las confunda.
+
 ## 7. Lo que queda para Billy (PROPUESTA)
 
-1. **A8** (`ADR-006`): modelar capacidades y `actor.rol` en el modelo y el log. Es lo único que impide
-   persistir el rol que `FR0` ya calcula. Recomendación de `ADR-006`: sí.
+1. ~~**A8**~~ → **APROBADA por Billy el 19/09/2026**. `actor.rol` es obligatorio en actor humano y se persiste.
+   Coste pagado: ~100 casos de test actualizados, porque el banco simulaba un usuario omnipotente que hacía de
+   revisor y de responsable a la vez, y la matriz no lo permite. Ese hallazgo vale más que el cambio.
+1 bis. **Capacidad de escalar a revisión humana** (§6 bis punto 1): hoy ninguna la concede.
+1 ter. **Dónde viven los eventos de gobierno** (§6 bis punto 2): hacen falta un log de tenant y uno global.
 2. **C2** (`ADR-050`): rol inferido frente a cambio explícito. `FR0` implementa la inferencia recomendada; si
    se prefiere el cambio explícito, cambia `rol_para` y nada más.
 3. **A1 a A4**: mientras no se decidan, siete celdas de la matriz quedan `pendiente` y **se deniegan**. Afecta

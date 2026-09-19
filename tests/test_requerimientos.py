@@ -47,7 +47,10 @@ from engine.requerimientos import (
 RAIZ = Path(__file__).resolve().parents[1]
 FUENTE = RAIZ / "engine" / "requerimientos.py"
 
-HUMANO = Actor("humano", "billy@cae")
+# CAP-15 (confirmar la interpretacion de A9) y CAP-05 (corregir el dato) son del revisor
+# tecnico; la firma del punto de partida es del responsable (CAP-22). A8, `ADR-006`.
+HUMANO = Actor("humano", "billy@cae", rol="T-REV")
+RESPONSABLE = Actor("humano", "responsable@tenant", rol="T-RES")
 MOTOR = Actor("motor", "engine@test")
 AGENTE = Actor("agente", "a9@prompt-v3")
 
@@ -514,13 +517,19 @@ def test_ningun_componente_automatico_nuestro_reabre_una_actuacion(clase: str) -
 
 @pytest.mark.parametrize("clase", ["humano", "plataforma"])
 def test_quien_si_puede_escribir_un_requerimiento(clase: str) -> None:
-    """Un humano (tras confirmar) y la plataforma (el contagio de GA/CN): nadie mas."""
+    """Un humano (tras confirmar) y la plataforma (el contagio de GA/CN): nadie mas.
+
+    El humano es el revisor tecnico: quien reabre lo hace tras confirmar la interpretacion de A9, que es
+    CAP-15, y esa capacidad sella los dos eventos (la confirmacion y el que reabre). La plataforma escribe
+    el suyo sin rol: no ejerce ninguna capacidad, refleja un hecho oficial.
+    """
     log = LogEventos("ACT-99")
     log.anadir("ActuacionAbierta", {}, actor=("motor", "engine@test"))
+    rol = "T-REV" if clase == "humano" else None
     evento = log.anadir(
         "RequerimientoRecibido",
         {"origen": "GA", "requerimiento_ref": "REQ-9"},
-        actor=(clase, f"{clase}@test"),
+        actor=(clase, f"{clase}@test", rol),
     )
     assert evento.actor.clase == clase
     log.verificar()

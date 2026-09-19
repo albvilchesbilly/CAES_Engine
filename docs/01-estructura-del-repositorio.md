@@ -52,8 +52,8 @@ cae-engine/
 │   ├── EXP001-A_completo/ … EXP001-G_desordenado/
 │   └── _resultados_esperados/            GROUND TRUTH. Nunca se entrega al Engine. Solo cambia con ADR
 ├── metricas/                        NUEVO   Catálogo de métricas en YAML, proyecciones y render (ADR-007)
-├── api/                             NUEVO   Comandos y lecturas por capacidad; valida permisos en servidor (ADR-050)
-├── front/                           NUEVO   Cuatro superficies por capacidades; solo habla con api/ (ADR-050)
+├── api/                             EXISTE  Comandos y lecturas por capacidad; valida permisos en servidor (FR0)
+├── front/                           PARCIAL Cuatro superficies; hoy solo compartido/. Solo habla con api/ (FR0)
 ├── informes/                        EXISTE  Salida generada (markdown + JSON). No se commitea
 ├── tests/                           EXISTE  Pruebas: cálculo, spec, paquete, Engine end-to-end, metamórficas
 └── evaluar_casos.py                 EXISTE  Matriz esperado/obtenido sobre los casos de expedientes/
@@ -303,25 +303,35 @@ Una métrica se define **una sola vez en configuración**, con el mismo criterio
 YAML validado, no código. Una métrica sin fuente se muestra `SIN DATO` con su "desde", nunca como cero.
 Dependencias: `metricas/` lee de `engine/` y de `telemetria/`; **nada importa de `metricas/`**.
 
-### 3.9 ter `api/` — comandos y lecturas por capacidad (`NUEVO`, `ADR-050`)
+### 3.9 ter `api/` — comandos y lecturas por capacidad (`EXISTE`, FR0, `ADR-011`)
 
 ```
 api/
-  comandos/       Un comando por capacidad que produce un evento (CAP-nn de ADR-005)
-  lecturas/       Un lector por capacidad de consulta; nunca devuelve campos fuera del ámbito del perfil
-  permisos.py     Valida capacidad y tenant EN EL SERVIDOR (R-UI-01) e infiere `actor.rol` (R-UI de ADR-050)
+  permisos.py     Valida capacidad y tenant EN EL SERVIDOR (R-UI-01) e infiere `actor.rol`. Consume la matriz
+  contrato.py     Peticion, Respuesta y el paso comun: autorizar, ejecutar, comprobar el alcance
+  comandos/       Un comando por capacidad que produce evento. Escribe con `anadir_una_vez`: un comando que el
+                  ciclo no admite no deja el log envenenado
+  lecturas/       Un lector por capacidad de consulta; **no construye** los campos fuera del ámbito (R-UI-12)
+  servicios.py    Puerto de datos: quién es el tenant de una actuación y quién es parte en ella. Sin él, falla
+  repositorio.py  Implementación en memoria, el equivalente de `salida/simulador/` para las pruebas
 ```
+
+**La matriz de capacidades NO vive aquí**: está en `engine/capacidades.yaml`, porque el log tiene que poder
+rechazar un evento que el perfil no concede y `engine/` no importa de `api/` (`ADR-011` §1). 46 capacidades,
+8 perfiles, 9 celdas pendientes de decisión que **se deniegan**. 21 capacidades tienen implementación real;
+25 existen como contrato y fallan diciendo qué falta — que es justo lo que `FR0` significa.
 
 El contrato se construye **antes** que las pantallas (`FR0`). Dos reglas que no se reabren en el código:
 **ocultar un control no es autorización** —cada comando valida capacidad y tenant aquí, no en el front
 (`R-UI-01`)— y **el portal externo no recibe campos que su perfil no puede ver**, no basta con no pintarlos
 (`R-UI-12`). `api/` lee de `engine/` y de `metricas/`; **nada importa de `api/`**.
 
-### 3.9 quater `front/` — cuatro superficies por capacidades (`NUEVO`, `ADR-050`)
+### 3.9 quater `front/` — cuatro superficies por capacidades (`PARCIAL`: solo `compartido/`, desde FR0)
 
 ```
 front/
-  compartido/     Sistema de diseño, visor de evidencias con cita, rótulos obligatorios (R-UI-06 a R-UI-08)
+  compartido/     EXISTE (FR0) los tres rótulos obligatorios (R-UI-06 a R-UI-08); React + TypeScript, sin
+                  dependencias de producción. Visor de evidencias y el resto del sistema de diseño, en FR1
   workspace/      T-RES, T-OPE, T-REV — escritorio, cuenta del tenant
   externo/        EXT-INS, EXT-CLI — móvil primero, sin navegación
   consola/        ADM-MOD, ADM-OPS — cuenta interna, segundo factor, cambio de rol explícito

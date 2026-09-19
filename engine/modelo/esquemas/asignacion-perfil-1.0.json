@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cae-engine:modelo/asignacion-perfil-1.0.json",
+  "title": "AsignacionPerfil",
+  "description": "Que perfil tiene un usuario, desde cuando y quien se lo dio (ADR-006, CAP-30). Una asignacion con asignado_por igual a usuario_id es una autoasignacion: ADR-006 no la prohibe, pide que se vea.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["usuario_id", "perfil_id", "desde", "tenant_id", "hasta", "asignado_por"],
+  "properties": {
+    "usuario_id": { "type": "string", "minLength": 1 },
+    "perfil_id": { "type": "string", "minLength": 1 },
+    "desde": { "type": "string", "format": "date" },
+    "tenant_id": { "type": ["string", "null"], "minLength": 1 },
+    "hasta": {
+      "description": "null mientras la asignacion siga vigente. Cerrarla no la borra: el log guarda las dos cosas.",
+      "type": ["string", "null"],
+      "format": "date"
+    },
+    "asignado_por": { "type": ["string", "null"], "minLength": 1 }
+  }
+}

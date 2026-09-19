@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cae-engine:modelo/perfil-1.0.json",
+  "title": "Perfil",
+  "description": "Perfil de ADR-006 como paquete de capacidades (opcion C). `id` no lleva enumerado a proposito: la lista de perfiles es configuracion (engine/capacidades.yaml) y copiarla aqui crearia una segunda fuente.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "nombre", "ambito", "capacidades", "superficie"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "nombre": { "type": "string", "minLength": 1 },
+    "ambito": {
+      "description": "Ambito de datos: marca el aislamiento, por eso si es un enumerado (AMBITOS_PERFIL).",
+      "type": "string",
+      "enum": ["tenant", "externo", "global", "sistema"]
+    },
+    "capacidades": {
+      "description": "ids CAP-nn que el perfil concede. Los rellena quien carga la matriz, no el modelo.",
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "superficie": {
+      "description": "null en SYS-API: identidad tecnica, no usuario con pantallas (ADR-011 seccion 2, regla 4).",
+      "type": ["string", "null"],
+      "minLength": 1
+    }
+  }
+}

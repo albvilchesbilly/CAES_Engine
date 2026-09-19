@@ -36,10 +36,14 @@ Los cinco invariantes que protege (`ADR-004` C3, criterios de `docs/06`):
 
 Decisiones propias de esta pieza (todas para el ADR):
 
-- **El catalogo de eventos no tiene tipo para "un humano reviso esto", "escalar a revision" ni "descartar".**
-  Se resuelven con `ObservacionRegistrada` (el evento de P6) y un `origen` en el payload:
-  `revision_humana` (exige actor humano), `escalado` y `descarte` (exige humano y veredicto `NO_ELEGIBLE`).
-  Propuesta: tipos propios `RevisionHumanaRegistrada` y `ActuacionDescartada`.
+- **Aprobar una revision y descartar una actuacion tienen tipo propio desde S3.1b** (A8, `ADR-006`):
+  `RevisionAprobada` (CAP-10) y `ActuacionDescartada` (CAP-08). **Son los buenos**; escribe estos.
+  Hasta S3.1b esto se resolvia con `ObservacionRegistrada` y un `origen` en el payload
+  (`revision_humana` y `descarte`), y ese camino **se mantiene** porque hay logs sellados y tests que lo
+  usan: el log es solo-anadir y no se reescribe. Los dos caminos llevan exactamente a la misma transicion
+  (`_aprobar_revision` y `_descartar` son la unica implementacion de cada una).
+  **`escalado` sigue sin tipo propio**: `ADR-006` no da de alta ninguna capacidad de "escalar a revision",
+  asi que `ObservacionRegistrada{origen: escalado}` es todavia el unico camino. Va al ADR.
 - **`LISTA_PARA_ENVIO` la marca el empaquetado** (`PayloadConstruido` / `ManifiestoGenerado`, P8): es el
   primer evento del catalogo que solo tiene sentido sobre una actuacion lista.
 - **Una transicion a uno mismo no es una transicion**: veinte `DocumentoRegistrado` seguidos dejan la
@@ -327,7 +331,12 @@ def proyectar_estado_plataforma(literal: str) -> str | None:
 # La proyeccion
 # ---------------------------------------------------------------------------
 
-#: Payload de `ObservacionRegistrada` (P6) que usa esta maquina, a falta de tipos propios (ver cabecera).
+#: P6: los dos tipos propios de `ADR-006` (CAP-10 y CAP-08). **Estos son los buenos** (ver cabecera).
+TIPO_REVISION_APROBADA = "RevisionAprobada"
+TIPO_ACTUACION_DESCARTADA = "ActuacionDescartada"
+
+#: Payload de `ObservacionRegistrada` (P6): el camino anterior a S3.1b, que se mantiene por los logs ya
+#: sellados. `escalado` es el unico de los tres que **no** tiene tipo propio (ver cabecera).
 CLAVE_ORIGEN_OBSERVACION = "origen"
 ORIGEN_REVISION = "revision_humana"
 ORIGEN_ESCALADO = "escalado"
@@ -379,6 +388,30 @@ TIPOS_SIN_EFECTO = (
     "ExpedientePropuesto",
     "AvisoContagio",
     "ActuacionHuerfana",
+    # S3.1b (`ADR-006`): gobierno y administracion. Ninguno mueve el ciclo de **esta** actuacion; se
+    # registran y ya. `ActuacionReasignada` cambia a quien le toca, no en que estado esta (y por eso
+    # tampoco reescribe el actor de los eventos anteriores: el log es solo-anadir).
+    "ObservacionRevisada",
+    "DiscrepanciaResuelta",
+    "ExpedienteAprobado",
+    "UsuarioAlta",
+    "UsuarioBaja",
+    "RolAsignado",
+    "ActuacionReasignada",
+    "PoliticaTenantCambiada",
+    "AccesoSoporteAutorizado",
+    "AccesoSoporteDenegado",
+    "SpecActivada",
+    "AgenteActivado",
+    "AgenteDesactivado",
+    "PromptActivado",
+    "UmbralCambiado",
+    "TenantAlta",
+    "TenantBaja",
+    "TenantSuspendido",
+    "CapacidadActualizada",
+    "AccesoSoporteSolicitado",
+    "AccesoSoporteUsado",
 )
 
 
@@ -487,31 +520,53 @@ def _rechazo(proyeccion: Proyeccion, evento: Evento, motivo: str) -> Proyeccion:
     return replace(proyeccion, rechazos=(*proyeccion.rechazos, anotacion), secuencia=evento.secuencia)
 
 
-def _aplicar_observacion(proyeccion: Proyeccion, evento: Evento, datos: Mapping[str, object]) -> Proyeccion:
-    origen = datos.get(CLAVE_ORIGEN_OBSERVACION)
-    if origen not in ORIGENES_OBSERVACION:
-        return proyeccion  # una observacion cualquiera (p. ej. la de consolidacion) no mueve el ciclo
-    if origen == ORIGEN_ESCALADO:
-        if proyeccion.terminal:
-            raise ErrorEstado(
-                f"transicion invalida {proyeccion.estado_ciclo} -> EN_REVISION_HUMANA (escalado sobre una "
-                "actuacion terminal)"
-            )
-        return _transitar(proyeccion, "EN_REVISION_HUMANA", "escalado a revision humana")
+def _exigir_humano(evento: Evento, que: str) -> None:
     if evento.actor.clase != CLASE_HUMANO:
         raise ErrorEstado(
-            f"ObservacionRegistrada con origen {origen!r} solo es valida con actor humano; llego actor "
-            f"{evento.actor.clase!r} (`docs/03` §7.3)"
+            f"{que} solo es valido con actor humano; llego actor {evento.actor.clase!r} (`docs/03` §7.3)"
         )
-    if origen == ORIGEN_REVISION:
-        destino = "EVALUADA" if proyeccion.estado_ciclo == "EN_REVISION_HUMANA" else proyeccion.estado_ciclo
-        return _transitar(proyeccion, destino, "revision humana conforme", revisada_por_humano=True)
+
+
+def _aprobar_revision(proyeccion: Proyeccion, evento: Evento) -> Proyeccion:
+    """CAP-10: **el unico disparador humano** de `EN_REVISION_HUMANA -> EVALUADA` y lo unico que pone
+    `revisada_por_humano`, que es la mitad de la guarda de `LISTA_PARA_ENVIO` (`docs/03` §7.3)."""
+    _exigir_humano(evento, f"{evento.tipo} (aprobar la revision)")
+    destino = "EVALUADA" if proyeccion.estado_ciclo == "EN_REVISION_HUMANA" else proyeccion.estado_ciclo
+    return _transitar(proyeccion, destino, "revision humana conforme", revisada_por_humano=True)
+
+
+def _descartar(proyeccion: Proyeccion, evento: Evento) -> Proyeccion:
+    """CAP-08: confirmar el descarte de un `NO_ELEGIBLE`. Las dos condiciones, no una."""
+    _exigir_humano(evento, f"{evento.tipo} (confirmar el descarte)")
     if proyeccion.veredicto != VEREDICTO_NO_ELEGIBLE:
         raise ErrorEstado(
             f"DESCARTADA exige veredicto {VEREDICTO_NO_ELEGIBLE} confirmado por un humano "
             f"(`docs/03` §7.2); el veredicto es {proyeccion.veredicto!r}"
         )
     return _transitar(proyeccion, "DESCARTADA", "descarte confirmado por un humano", resultado="descartada")
+
+
+def _escalar(proyeccion: Proyeccion) -> Proyeccion:
+    """`ObservacionRegistrada{origen: escalado}`: sin tipo propio en `ADR-006` (ver cabecera)."""
+    if proyeccion.terminal:
+        raise ErrorEstado(
+            f"transicion invalida {proyeccion.estado_ciclo} -> EN_REVISION_HUMANA (escalado sobre una "
+            "actuacion terminal)"
+        )
+    return _transitar(proyeccion, "EN_REVISION_HUMANA", "escalado a revision humana")
+
+
+def _aplicar_observacion(proyeccion: Proyeccion, evento: Evento, datos: Mapping[str, object]) -> Proyeccion:
+    """El camino anterior a S3.1b. Delega en las mismas piezas que los tipos propios: una sola
+    implementacion de cada transicion, dos puertas de entrada (ver cabecera)."""
+    origen = datos.get(CLAVE_ORIGEN_OBSERVACION)
+    if origen not in ORIGENES_OBSERVACION:
+        return proyeccion  # una observacion cualquiera (p. ej. la de consolidacion) no mueve el ciclo
+    if origen == ORIGEN_ESCALADO:
+        return _escalar(proyeccion)
+    if origen == ORIGEN_REVISION:
+        return _aprobar_revision(proyeccion, evento)
+    return _descartar(proyeccion, evento)
 
 
 def _aplicar_plataforma(proyeccion: Proyeccion, evento: Evento, datos: Mapping[str, object]) -> Proyeccion:
@@ -622,6 +677,10 @@ def aplicar(proyeccion: Proyeccion, evento: Evento) -> Proyeccion:
         )
     elif tipo == "EstadoPlataformaRecibido":
         siguiente = _aplicar_plataforma(proyeccion, evento, datos)
+    elif tipo == TIPO_REVISION_APROBADA:
+        siguiente = _aprobar_revision(proyeccion, evento)
+    elif tipo == TIPO_ACTUACION_DESCARTADA:
+        siguiente = _descartar(proyeccion, evento)
     elif tipo == "ObservacionRegistrada":
         siguiente = _aplicar_observacion(proyeccion, evento, datos)
     elif tipo in TIPOS_SIN_EFECTO:
@@ -785,6 +844,8 @@ __all__ = [
     "TIPOS_REQUERIMIENTO",
     "TIPOS_SIN_EFECTO",
     "TIPOS_TRABAJO",
+    "TIPO_ACTUACION_DESCARTADA",
+    "TIPO_REVISION_APROBADA",
     "TRANSICIONES",
     "VIAS_ENTREGA",
     "ErrorEstado",

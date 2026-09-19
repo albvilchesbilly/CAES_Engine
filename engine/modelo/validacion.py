@@ -33,9 +33,14 @@ from pathlib import Path
 
 from engine.modelo.entidades import (
     ActuacionCanonica,
+    AsignacionPerfil,
+    Capacidad,
     ErrorModelo,
     Expediente,
     GrupoActuaciones,
+    Perfil,
+    PoliticaTenant,
+    Usuario,
 )
 from engine.modelo.serializacion import a_dict
 
@@ -47,6 +52,12 @@ ESQUEMAS: Mapping[str, str] = {
     "actuacion": "actuacion-1.0.json",
     "grupo": "grupo-1.0.json",
     "expediente": "expediente-1.0.json",
+    # S3.1b (`ADR-006`): perfiles y capacidades.
+    "usuario": "usuario-1.0.json",
+    "perfil": "perfil-1.0.json",
+    "capacidad": "capacidad-1.0.json",
+    "asignacion_perfil": "asignacion-perfil-1.0.json",
+    "politica_tenant": "politica-tenant-1.0.json",
 }
 
 #: Entidad → esquema con el que se valida.
@@ -54,6 +65,11 @@ ESQUEMA_POR_ENTIDAD: Mapping[type, str] = {
     ActuacionCanonica: "actuacion",
     GrupoActuaciones: "grupo",
     Expediente: "expediente",
+    Usuario: "usuario",
+    Perfil: "perfil",
+    Capacidad: "capacidad",
+    AsignacionPerfil: "asignacion_perfil",
+    PoliticaTenant: "politica_tenant",
 }
 
 #: Palabras de JSON Schema que este validador entiende. Otra cosa en un esquema es un error de carga.

@@ -12,6 +12,8 @@ Lo que **no** llevan estas entidades, y por que:
 - `atributos_agrupacion.ccaa`, `Tenant.capacidad_delegacion_disponible` y `Verificador.ccaa_operativas` son
   opcionales y sin semantica propia: la plataforma no ha documentado como se obtienen (`docs/HUECOS.md`).
 - Ninguna entidad conoce ninguna ficha: lo especifico vive en el YAML de la spec (regla de oro 4).
+- Ninguna entidad de perfiles conoce la matriz de permisos: `Perfil.capacidades` es un campo que alguien
+  rellena desde `engine/capacidades.yaml`, no una tabla escrita aqui (S3.1b, `ADR-006` opcion C).
 """
 
 from __future__ import annotations
@@ -28,7 +30,18 @@ MODELO_VERSION = "1.0"
 TIPOS_TENANT = ("delegado", "obligado_directo")
 
 #: Roles de parte (`docs/03` §5.2). El verificador solo aparece cuando se conoce; no se inventa.
+#:
+#: **No confundir con `actor.rol`**: `Parte.rol` dice que pinta una empresa en la actuacion (quien instalo,
+#: quien es el propietario inicial); `actor.rol` es el perfil de `ADR-006` con el que una persona de nuestra
+#: plataforma ejecuta un acto. Son dos cosas distintas y no se cruzan.
 ROLES_PARTE = ("propietario_inicial", "solicitante", "instalador", "verificador")
+
+#: Ambitos de datos de un perfil (`ADR-006`, tabla de perfiles). Aqui solo el enumerado: que bloques ve cada
+#: ambito lo dice la matriz (`engine/capacidades.yaml`), que es configuracion y no se copia en el modelo.
+AMBITOS_PERFIL = ("tenant", "externo", "global", "sistema")
+
+#: Tipos de capacidad (`ADR-011` §2): un comando escribe eventos, una lectura no escribe nada.
+TIPOS_CAPACIDAD = ("comando", "lectura")
 
 
 class ErrorModelo(Exception):
@@ -46,6 +59,9 @@ class Tenant:
     # NO DOCUMENTADO como se consulta en la plataforma. Atributo informativo, sin semantica propia.
     # TODO(API-11): ver docs/HUECOS.md
     capacidad_delegacion_disponible: Decimal | None = None
+    # `ADR-006`: el tenant referencia a sus usuarios. Solo los `id`: el `Usuario` entero vive aparte, para
+    # que copiar un tenant a un informe no arrastre datos personales que ese informe no necesita.
+    usuarios: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -132,6 +148,104 @@ class ActuacionCanonica:
     ciclo: dict[str, object]
 
 
+# ---------------------------------------------------------------------------
+# Perfiles y capacidades (S3.1b, `ADR-006` con la decision A8 de Billy)
+# ---------------------------------------------------------------------------
+#
+# Cinco entidades igual de tontas que las de arriba. La regla que las gobierna: **describen quien hay y que
+# se le ha asignado; no deciden nada**. Que perfil concede que capacidad es la matriz
+# (`engine/capacidades.yaml`), que es configuracion; si esa tabla se copiase aqui habria dos fuentes y una
+# de las dos se quedaria vieja. Por eso `Perfil.capacidades` y `Capacidad.eventos` existen como campos pero
+# el modelo no los rellena solo: los rellena quien carga la matriz.
+
+
+@dataclass(frozen=True)
+class Usuario:
+    """Persona que usa la plataforma. `tenant_id` es `None` solo en los perfiles globales (`ADM-*`).
+
+    No guarda credenciales ni segundo factor: eso es de la capa de autenticacion, no del modelo canonico.
+    `activo` es el estado corriente y `baja` la fecha en que se dio de baja (`UsuarioBaja`); el historico
+    de altas y bajas esta en el log, no aqui.
+    """
+
+    id: str
+    nombre: str
+    email: str
+    tenant_id: str | None = None
+    activo: bool = True
+    alta: date | None = None
+    baja: date | None = None
+
+
+@dataclass(frozen=True)
+class Perfil:
+    """Un perfil de `ADR-006` (`T-RES`, `T-REV`, `ADM-MOD`…) como paquete de capacidades (opcion C).
+
+    `id` no se valida contra ningun enumerado del nucleo a proposito: los perfiles son configuracion y la
+    lista vive en la matriz. `ambito` si es un enumerado (`AMBITOS_PERFIL`) porque marca el aislamiento.
+    """
+
+    id: str
+    nombre: str
+    ambito: str  # uno de AMBITOS_PERFIL
+    capacidades: tuple[str, ...] = ()  # ids `CAP-nn`; los rellena quien carga la matriz
+    superficie: str | None = None  # `SYS-API` no tiene ninguna (`ADR-011` §2 regla 4)
+
+
+@dataclass(frozen=True)
+class Capacidad:
+    """Una capacidad atomica de `ADR-006` (`CAP-nn`). `eventos` son los del catalogo cerrado que produce.
+
+    Una `lectura` no produce ninguno; un `comando` produce al menos uno (o declara un efecto fuera del log,
+    como un commit). Esa regla la comprueba el cargador de la matriz, no esta dataclass.
+    """
+
+    id: str
+    nombre: str
+    tipo: str  # uno de TIPOS_CAPACIDAD
+    eventos: tuple[str, ...] = ()
+    proceso: str | None = None  # P0-P10 cuando la capacidad pertenece a un proceso del Engine
+
+
+@dataclass(frozen=True)
+class AsignacionPerfil:
+    """Que perfil tiene un usuario, desde cuando y quien se lo dio (`ADR-006`, CAP-30).
+
+    `asignado_por` igual a `usuario_id` es una **autoasignacion**: `ADR-006` no la prohibe, pide que se vea.
+    Aqui solo se guarda el dato; quien la senala en la auditoria es la vista, y quien la registra en el log
+    es `RolAsignado`.
+    """
+
+    usuario_id: str
+    perfil_id: str
+    desde: date
+    tenant_id: str | None = None
+    hasta: date | None = None
+    asignado_por: str | None = None
+
+
+@dataclass(frozen=True)
+class PoliticaTenant:
+    """Lo que un tenant configura sobre si mismo (`ADR-006`, CAP-33).
+
+    Los valores por defecto son las **recomendaciones** de `ADR-006`, no decisiones cerradas:
+
+    - `quien_prepara_puede_aprobar`: recomendacion A6, "por defecto permitido y senalado". Es de Billy.
+    - `minimo_responsables`: la regla de continuidad pide dos `T-RES` o un procedimiento de recuperacion
+      por `ADM-OPS`; se modela el numero, no el procedimiento.
+    - `acceso_soporte_permitido`: `T-RES` autoriza cada acceso (CAP-34); esto es el interruptor general.
+
+    Ninguno de estos campos decide nada por si mismo: los lee quien autoriza, que es `api/permisos.py`.
+    """
+
+    tenant_id: str
+    quien_prepara_puede_aprobar: bool = True  # A6 (recomendacion de `ADR-006`, pendiente de Billy)
+    minimo_responsables: int = 2
+    acceso_soporte_permitido: bool = True
+    vigencia_acceso_soporte_horas: int | None = None
+    version: str = "1.0"
+
+
 @dataclass(frozen=True)
 class GrupoActuaciones:
     """Actuaciones que se verifican juntas, con dictamen unico (`docs/03` §5.2).
@@ -168,16 +282,23 @@ class Expediente:
 
 
 __all__ = [
+    "AMBITOS_PERFIL",
     "MODELO_VERSION",
     "ROLES_PARTE",
+    "TIPOS_CAPACIDAD",
     "TIPOS_TENANT",
     "ActuacionCanonica",
+    "AsignacionPerfil",
+    "Capacidad",
     "DocumentoRef",
     "ErrorModelo",
     "Expediente",
     "GrupoActuaciones",
     "Parte",
+    "Perfil",
+    "PoliticaTenant",
     "Tenant",
     "Unidad",
+    "Usuario",
     "Verificador",
 ]

@@ -1,0 +1,585 @@
+# Matriz de perfiles y capacidades (contrato C13 de `ADR-011` §2).
+#
+# Transcripcion literal de la tabla de `ADR-006` (PROPUESTA, 19/09/2026). **Este fichero es la unica
+# fuente**: ni en `engine/capacidades.py` ni en `api/*.py` hay un `if perfil == ...` ni un `CAP-nn`
+# cableado (regla de oro 4 aplicada a los permisos). Cambiar quien puede hacer que es cambiar este YAML.
+#
+# Vive en `engine/` y no en `api/` porque el log de eventos tiene que comprobar, al sellar, que el perfil
+# que actua puede producir ese evento (A8, aprobada por Billy el 19/09/2026). Ese control va en el log y
+# no en el llamante, y `engine/` no importa de `api/`. El precedente exacto es
+# `engine/estados_plataforma.yaml`: configuracion que el nucleo lee y que nadie cablea. `api/permisos.py`
+# consume esta misma matriz; no hay una segunda copia de quien puede hacer que.
+#
+# Las celdas `(?)` de `ADR-006` van a `pendiente`, **nunca a `concede`**: se deniegan y el error dice que
+# decision (A1 a A4) las cerraria. Conceder por defecto lo que nadie ha decidido es como se abren los
+# agujeros de permisos.
+#
+# Tres campos que `ADR-011` §2 no previo y que la tabla de `ADR-006` obliga a tener (ver informe de FR0):
+#
+#   - `eventos_propuestos`: para los eventos que `ADR-006` marca "(nuevo)" y que el catalogo cerrado
+#     todavia no admite. **Hoy esta vacio en todas las capacidades**: con A8 aprobada, S3.1b los dio de
+#     alta en `engine.eventos.catalogo`. El campo se queda porque el mecanismo vale para el proximo evento
+#     nuevo: se declara lo que falta en vez de inventarlo, la capacidad se queda sin manejador, y en cuanto
+#     el catalogo lo incorpora la carga falla y obliga a moverlo a `eventos`. Es lo que acaba de pasar.
+#   - `efecto`: para los tres comandos de `ADR-006` cuyo resultado no es un evento del log (un commit, una
+#     fila en `docs/mejoras/`). Un comando declara al menos un evento **o** un efecto; nunca nada.
+#   - `condicionada`: la unica celda de la tabla que no es ni ✅ ni — ni (?): CAP-03 para `ADM-OPS`,
+#     "solo con CAP-63". Hoy se deniega, porque no hay forma de comprobar un acceso de soporte vigente.
+#
+# `manejador` es el nombre de la funcion que atiende la capacidad (`api/comandos/`, `api/lecturas/`).
+# `null` = contrato sin implementacion: la entrada existe, valida permisos y levanta un error que dice
+# exactamente que falta (`falta`). El contrato de `FR0` es completo aunque la implementacion no lo sea.
+
+version_matriz: "1.0"
+fuente: "ADR-006 (PROPUESTA, 19/09/2026), tabla de la seccion Matriz"
+
+# ---------------------------------------------------------------------------
+# Ambitos de datos: que bloques puede llegar a construir una lectura (R-UI-12)
+# ---------------------------------------------------------------------------
+#
+# El filtrado es de **serializacion**: una lectura solo construye los bloques que estan a la vez en su
+# lista y en la de su ambito. Lo que no esta no se construye; no es que no se pinte.
+
+ambitos:
+  - id: tenant
+    nombre: Todo su tenant, con contenido
+    exige_tenant: true
+    solo_actuaciones_propias: false
+    bloques:
+      - identificacion
+      - estado_simplificado
+      - que_te_falta
+      - documentos
+      - evidencias
+      - conflictos
+      - calculo
+      - veredicto
+      - historial
+      - estados_plataforma
+      - actividad_usuarios
+
+  - id: externo
+    nombre: Solo sus actuaciones, en lenguaje no tecnico
+    exige_tenant: true
+    solo_actuaciones_propias: true
+    # `ADR-006`, regla de aislamiento: los externos nunca ven la cabecera economica, otras actuaciones ni
+    # payloads; `ADR-050` anade que tampoco veredictos tecnicos. Por eso aqui no hay `veredicto`,
+    # `calculo`, `documentos`, `evidencias`, `conflictos` ni `historial`.
+    bloques:
+      - identificacion
+      - estado_simplificado
+      - que_te_falta
+
+  - id: global
+    nombre: Global, sin contenido documental de ningun tenant
+    exige_tenant: false
+    solo_actuaciones_propias: false
+    # `ADM-MOD` ve agregados y `ADM-OPS` metadatos; la separacion entre ambos la hace la matriz, porque
+    # ninguna capacidad de agregados la tiene `ADM-OPS` ni al reves.
+    bloques:
+      - agregados
+      - metadatos_auditoria
+
+  - id: sistema
+    nombre: El tenant al que sirve la identidad tecnica
+    exige_tenant: true
+    solo_actuaciones_propias: false
+    bloques:
+      - identificacion
+      - estados_plataforma
+
+# ---------------------------------------------------------------------------
+# Superficies y pantallas (`ADR-050`): desempatan el rol de una capacidad compartida
+# ---------------------------------------------------------------------------
+#
+# `Contexto.superficie` admite un id de superficie o un id de pantalla. Solo la pantalla desempata entre
+# dos perfiles de la misma superficie, que es justo el caso de CAP-02 y CAP-09 (`T-OPE` y `T-REV`, los dos
+# en el workspace).
+
+superficies:
+  - id: workspace
+    nombre: Workspace del tenant
+    pantallas:
+      - id: bandeja_actuaciones
+        nombre: Mis actuaciones
+        perfil: T-OPE
+      - id: cola_revision
+        nombre: Cola de revision
+        perfil: T-REV
+      - id: pendiente_de_mi
+        nombre: Pendiente de mi
+        perfil: T-RES
+  - id: externo
+    nombre: Portal externo
+    pantallas:
+      - id: enlace_actuacion
+        nombre: Enlace de actuacion
+        perfil: null            # `EXT-INS` y `EXT-CLI` comparten pantalla; no desempata (y no hace falta)
+  - id: consola
+    nombre: Consola interna
+    pantallas:
+      - id: consola_tenants
+        nombre: Tenants
+        perfil: ADM-OPS
+      - id: consola_gobierno
+        nombre: Bandeja de gobierno
+        perfil: ADM-MOD
+  - id: ninguna
+    nombre: Sin front
+    pantallas: []
+
+# ---------------------------------------------------------------------------
+# Perfiles (`ADR-006`, catalogo de perfiles; superficies de `ADR-050`)
+# ---------------------------------------------------------------------------
+
+perfiles:
+  - id: T-RES
+    nombre: Responsable del tenant
+    ambito: tenant
+    superficie: workspace
+  - id: T-OPE
+    nombre: Operador del tenant
+    ambito: tenant
+    superficie: workspace
+  - id: T-REV
+    nombre: Revisor tecnico
+    ambito: tenant
+    superficie: workspace
+  - id: EXT-INS
+    nombre: Instalador o ingenieria
+    ambito: externo
+    superficie: externo
+  - id: EXT-CLI
+    nombre: Cliente o propietario inicial
+    ambito: externo
+    superficie: externo
+  - id: ADM-MOD
+    nombre: Propietario del modelo
+    ambito: global
+    superficie: consola
+  - id: ADM-OPS
+    nombre: Administrador de operacion
+    ambito: global
+    superficie: consola
+  - id: SYS-API
+    nombre: Identidad de sistema para la API oficial
+    ambito: sistema
+    superficie: ninguna         # `ADR-011` §2 regla 4: identidad tecnica, no usuario con pantallas
+
+# ---------------------------------------------------------------------------
+# Capacidades
+# ---------------------------------------------------------------------------
+
+capacidades:
+
+  # -- Trabajo sobre actuaciones ---------------------------------------------------------------
+
+  - id: CAP-01
+    nombre: Abrir actuacion y asignar partes
+    grupo: actuaciones
+    tipo: comando
+    proceso: P0
+    eventos: [ActuacionAbierta, TenantAsignado]
+    concede: [T-OPE]
+    manejador: abrir_actuacion
+
+  - id: CAP-02
+    nombre: Subir documentacion
+    grupo: actuaciones
+    tipo: comando
+    proceso: P1
+    eventos: [DocumentoRegistrado]
+    concede: [T-OPE, T-REV]
+    pendiente: [EXT-INS, EXT-CLI]
+    decide: "A1 y A2"
+    manejador: registrar_documento
+
+  - id: CAP-03
+    nombre: Consultar la actuacion completa
+    grupo: actuaciones
+    tipo: lectura
+    concede: [T-RES, T-OPE, T-REV]
+    condicionada:
+      - perfil: ADM-OPS
+        requiere: acceso_soporte_vigente
+        nota: "ADR-006: 'solo con CAP-63'. Sin CAP-62/63 implementadas no se puede comprobar: se deniega."
+    bloques: [identificacion, documentos, evidencias, conflictos, calculo, veredicto, historial]
+    manejador: actuacion_completa
+
+  - id: CAP-04
+    nombre: Consultar el que te falta y el informe de su destinatario
+    grupo: actuaciones
+    tipo: lectura
+    concede: [T-RES, T-OPE, T-REV]
+    pendiente: [EXT-INS, EXT-CLI]
+    decide: "A1 y A2"
+    bloques: [identificacion, que_te_falta, estado_simplificado]
+    manejador: que_te_falta
+
+  - id: CAP-05
+    nombre: Resolver conflicto o corregir dato, con justificacion
+    grupo: actuaciones
+    tipo: comando
+    proceso: P4
+    eventos: [DatoCorregidoPorHumano]
+    exige_justificacion: true       # R-UI-04
+    concede: [T-REV]
+    manejador: corregir_dato
+
+  - id: CAP-06
+    nombre: Resolver desacuerdo entre extractores
+    grupo: actuaciones
+    tipo: comando
+    proceso: P2
+    eventos: [DatoCorregidoPorHumano]
+    exige_justificacion: true       # R-UI-04: tambien es una correccion humana de un dato
+    concede: [T-REV]
+    manejador: resolver_desacuerdo
+
+  - id: CAP-07
+    nombre: Revisar observaciones de A8
+    grupo: actuaciones
+    tipo: comando
+    proceso: P6
+    eventos: [ObservacionRevisada]
+    concede: [T-REV]
+    manejador: revisar_observacion
+
+  - id: CAP-08
+    nombre: Confirmar descarte de un NO_ELEGIBLE
+    grupo: actuaciones
+    tipo: comando
+    eventos: [ActuacionDescartada]
+    concede: [T-REV]
+    manejador: confirmar_descarte
+
+  - id: CAP-09
+    nombre: Revisar y enviar al cliente la subsanacion redactada por A5
+    grupo: actuaciones
+    tipo: comando
+    proceso: P7
+    eventos: [SubsanacionSolicitada]
+    concede: [T-OPE, T-REV]         # compartida: el rol lo desempata la pantalla (`ADR-050`)
+    manejador: enviar_subsanacion
+
+  - id: CAP-10
+    nombre: Aprobar el paso a LISTA_PARA_ENVIO
+    grupo: actuaciones
+    tipo: comando
+    eventos: [RevisionAprobada]
+    concede: [T-REV]
+    manejador: aprobar_revision
+
+  - id: CAP-11
+    nombre: Construir payload o paquete de handoff
+    grupo: actuaciones
+    tipo: comando
+    proceso: P8
+    eventos: [PayloadConstruido, ManifiestoGenerado]
+    concede: [T-OPE]
+    falta: "lo construye salida/constructor y api/ no importa de salida/ (ADR-050, regla de dependencias)"
+
+  - id: CAP-12
+    nombre: Ordenar la entrega, handoff o API
+    grupo: actuaciones
+    tipo: comando
+    proceso: P8
+    eventos: [EntregadoADelegado, EnviadoAPI]
+    concede: [T-OPE]
+    falta: "lo entrega salida/ (puerto y adaptadores) y api/ no importa de salida/ (ADR-050)"
+
+  - id: CAP-13
+    nombre: Proponer grupos y expedientes con el Expediente Builder
+    grupo: actuaciones
+    tipo: comando
+    proceso: P10
+    eventos: [GrupoPropuesto, ExpedientePropuesto]
+    concede: [T-OPE]
+    falta: "el Expediente Builder (P10) es S4.1 y no existe todavia"
+
+  - id: CAP-14
+    nombre: Consultar estados y tareas de la plataforma oficial
+    grupo: actuaciones
+    tipo: lectura
+    proceso: P9
+    concede: [T-RES, T-OPE, T-REV]
+    bloques: [identificacion, estados_plataforma]
+    manejador: estados_y_tareas
+
+  - id: CAP-15
+    nombre: Confirmar la interpretacion de A9 de un requerimiento
+    grupo: actuaciones
+    tipo: comando
+    proceso: P9
+    # `engine.requerimientos.reabrir` sella los dos: la confirmacion y el hecho que reabre la subsanacion
+    # (deduplicado con `anadir_una_vez` si el requerimiento ya estaba anotado). Los dos son del catalogo.
+    eventos: [RequerimientoInterpretado, RequerimientoRecibido]
+    concede: [T-REV]
+    manejador: confirmar_interpretacion
+
+  - id: CAP-16
+    nombre: Decidir ante una discrepancia con el calculo de la plataforma
+    grupo: actuaciones
+    tipo: comando
+    eventos: [DiscrepanciaResuelta]
+    concede: [T-REV]
+    exige_justificacion: true       # decidir contra la plataforma se motiva o no se decide
+    manejador: resolver_discrepancia
+
+  # -- Actos del sujeto ------------------------------------------------------------------------
+
+  - id: CAP-20
+    nombre: Elegir o validar el verificador
+    grupo: actos
+    tipo: comando
+    proceso: P0
+    eventos: [VerificadorAsignado]
+    concede: [T-RES]
+    manejador: asignar_verificador
+
+  - id: CAP-21
+    nombre: Aprobar la composicion del expediente antes de firmar
+    grupo: actos
+    tipo: comando
+    eventos: [ExpedienteAprobado]
+    concede: [T-RES]
+    manejador: aprobar_expediente
+
+  - id: CAP-22
+    nombre: Registrar la firma, quien firmo, cuando y referencia
+    grupo: actos
+    tipo: comando
+    proceso: P8
+    eventos: [FirmaRegistrada]
+    concede: [T-RES]
+    manejador: registrar_firma        # R-UI-03: se registra una firma ajena; aqui nadie firma nada
+
+  - id: CAP-23
+    nombre: Registrar un desistimiento
+    grupo: actos
+    tipo: comando
+    proceso: P9
+    eventos: [DesistimientoRegistrado]
+    concede: [T-RES]
+    manejador: registrar_desistimiento
+
+  # -- Gobierno del tenant ---------------------------------------------------------------------
+
+  - id: CAP-30
+    nombre: Alta, baja y asignacion de perfiles a usuarios del tenant
+    grupo: gobierno_tenant
+    tipo: comando
+    eventos: [UsuarioAlta, UsuarioBaja, RolAsignado]
+    concede: [T-RES]
+    falta: "el log es por actuacion y estos eventos son del tenant: falta donde escribirlos (S3.1b)"
+
+  - id: CAP-31
+    nombre: Ver la actividad de todos los usuarios del tenant
+    grupo: gobierno_tenant
+    tipo: lectura
+    concede: [T-RES]
+    bloques: [actividad_usuarios]
+    manejador: actividad_del_tenant
+
+  - id: CAP-32
+    nombre: Reasignar actuaciones y tareas entre usuarios
+    grupo: gobierno_tenant
+    tipo: comando
+    eventos: [ActuacionReasignada]
+    concede: []
+    pendiente: [T-RES]
+    decide: "A3"
+    falta: "la celda espera A3 y no hay asignacion de trabajo que reasignar (S3.1b)"
+
+  - id: CAP-33
+    nombre: Configurar la politica del tenant
+    grupo: gobierno_tenant
+    tipo: comando
+    eventos: [PoliticaTenantCambiada]
+    concede: [T-RES]
+    falta: "el log es por actuacion y la politica es del tenant: falta donde escribirla (S3.1b)"
+
+  - id: CAP-34
+    nombre: Autorizar o denegar un acceso de soporte
+    grupo: gobierno_tenant
+    tipo: comando
+    eventos: [AccesoSoporteAutorizado, AccesoSoporteDenegado]
+    concede: [T-RES]
+    falta: "el acceso de soporte (motivo, caducidad, vigencia) no esta modelado; sin el, CAP-03 de ADM-OPS sigue denegada"
+
+  - id: CAP-35
+    nombre: Dashboard operativo, vista funcional del tenant
+    grupo: gobierno_tenant
+    tipo: lectura
+    concede: [T-RES]
+    pendiente: [T-OPE, T-REV]
+    decide: "A4"
+    falta: "los dashboards (O-FUN) son ADR-007 / DB1 y no existen"
+
+  - id: CAP-36
+    nombre: Dashboard operativo, vista de equipo del tenant
+    grupo: gobierno_tenant
+    tipo: lectura
+    concede: [T-RES]
+    falta: "los dashboards (O-EQU) son ADR-007 / DB1; ademas A5 y la revision juridica siguen abiertas"
+
+  # -- Externos --------------------------------------------------------------------------------
+
+  - id: CAP-40
+    nombre: Consultar el estado simplificado de sus propias actuaciones
+    grupo: externos
+    tipo: lectura
+    concede: []
+    pendiente: [EXT-INS, EXT-CLI]
+    decide: "A1 y A2"
+    bloques: [identificacion, estado_simplificado]
+    manejador: estado_simplificado
+
+  # -- Gobierno del modelo ---------------------------------------------------------------------
+
+  - id: CAP-50
+    nombre: Activar spec, cabecera o familia de reglas
+    grupo: gobierno_modelo
+    tipo: comando
+    eventos: [SpecActivada]
+    concede: [ADM-MOD]
+    falta: "activar una spec es cambiar spec/ y eso pasa por Billy (regla de oro 9); FR6 nace en solo lectura"
+
+  - id: CAP-51
+    nombre: Cambiar severidades; abrir, cerrar o reinterpretar INT-xx
+    grupo: gobierno_modelo
+    tipo: comando
+    eventos: [SpecActivada]
+    concede: [ADM-MOD]
+    falta: "severidades e INT-xx son spec activa y pasan por Billy (regla de oro 9); no se activan desde una API"
+
+  - id: CAP-52
+    nombre: Activar o desactivar agentes A1-A9; fijar umbrales
+    grupo: gobierno_modelo
+    tipo: comando
+    eventos: [AgenteActivado, AgenteDesactivado]
+    concede: [ADM-MOD]
+    falta: "no hay runtime de agentes todavia (agentes/ no existe), asi que no hay nada que activar"
+
+  - id: CAP-53
+    nombre: Activar versiones de prompt o router
+    grupo: gobierno_modelo
+    tipo: comando
+    eventos: [PromptActivado]
+    concede: [ADM-MOD]
+    falta: "no hay registro de versiones de prompt ni router que activar"
+
+  - id: CAP-54
+    nombre: Fijar presupuestos y umbrales de alerta
+    grupo: gobierno_modelo
+    tipo: comando
+    eventos: [UmbralCambiado]
+    concede: [ADM-MOD]
+    falta: "los umbrales de las metricas siguen sin decidir (ADR-007) y no hay presupuesto que fijar"
+
+  - id: CAP-55
+    nombre: Aceptar o descartar propuestas MEJ-nnn
+    grupo: gobierno_modelo
+    tipo: comando
+    efecto: "registro en docs/mejoras/"
+    concede: [ADM-MOD]
+    falta: "las mejoras se registran en el repositorio, no en el log de eventos de una actuacion"
+
+  - id: CAP-56
+    nombre: Aprobar o rechazar diffs normativos de A6
+    grupo: gobierno_modelo
+    tipo: comando
+    eventos: [SpecActivada]
+    concede: [ADM-MOD]
+    falta: "un diff normativo se aprueba en spec/propuestas/ y lo aprueba Billy; un rechazo es un ADR"
+
+  - id: CAP-57
+    nombre: Mantener HUECOS.md y el registro de INT-xx
+    grupo: gobierno_modelo
+    tipo: comando
+    efecto: "commit en el repositorio"
+    concede: [ADM-MOD]
+    falta: "es trabajo de repositorio; ninguna API nuestra escribe docs/"
+
+  - id: CAP-58
+    nombre: Recibir aviso de toda DiscrepanciaCalculoPlataforma
+    grupo: gobierno_modelo
+    tipo: lectura                 # ADR-006 la anota como "Notificacion": aqui es la consulta de esos avisos
+    proceso: P5
+    concede: [ADM-MOD]
+    bloques: [agregados]
+    manejador: avisos_de_discrepancia
+
+  # -- Operacion interna -----------------------------------------------------------------------
+
+  - id: CAP-60
+    nombre: Alta, baja y suspension de tenants; alta del primer T-RES
+    grupo: operacion
+    tipo: comando
+    eventos: [TenantAlta, TenantBaja, TenantSuspendido]
+    concede: [ADM-OPS]
+    falta: "no hay registro de tenants ni log de tenant donde escribir estos eventos (S3.1b)"
+
+  - id: CAP-61
+    nombre: Registrar la capacidad de delegacion disponible
+    grupo: operacion
+    tipo: comando
+    eventos: [CapacidadActualizada]
+    concede: [ADM-OPS]
+    falta: "como se consulta la capacidad de delegacion de un sujeto no esta documentado (HUECOS.md)"
+
+  - id: CAP-62
+    nombre: Solicitar un acceso de soporte a una actuacion concreta
+    grupo: operacion
+    tipo: comando
+    eventos: [AccesoSoporteSolicitado]
+    concede: [ADM-OPS]
+    falta: "el acceso de soporte (motivo, caducidad) no esta modelado (S3.1b)"
+
+  - id: CAP-63
+    nombre: Usar un acceso de soporte autorizado y vigente
+    grupo: operacion
+    tipo: comando
+    eventos: [AccesoSoporteUsado]
+    concede: [ADM-OPS]
+    falta: "sin acceso de soporte modelado no hay vigencia que comprobar; por eso CAP-03 de ADM-OPS se deniega"
+
+  - id: CAP-64
+    nombre: Ver el estado de integracion de cada tenant
+    grupo: operacion
+    tipo: lectura
+    concede: [ADM-OPS]
+    falta: "no hay registro de tenants ni de integraciones (S3.1, API-09)"
+
+  - id: CAP-65
+    nombre: Consultar la auditoria global
+    grupo: operacion
+    tipo: lectura
+    concede: [ADM-OPS]
+    bloques: [metadatos_auditoria]
+    manejador: auditoria_global
+
+  - id: CAP-66
+    nombre: Dashboard operativo, vista global
+    grupo: operacion
+    tipo: lectura
+    concede: [ADM-MOD, ADM-OPS]
+    falta: "los dashboards (O-GLO) son ADR-007 / DB1 y no existen"
+
+  - id: CAP-67
+    nombre: Dashboard tecnico
+    grupo: operacion
+    tipo: lectura
+    concede: [ADM-MOD, ADM-OPS]
+    falta: "los dashboards (T-TEC) son ADR-007 / DB1 y no existen"
+
+  # -- Sistema ---------------------------------------------------------------------------------
+
+  - id: CAP-70
+    nombre: Transportar a la API oficial
+    grupo: sistema
+    tipo: comando
+    proceso: P9
+    eventos: [EnviadoAPI, EstadoPlataformaRecibido, TareaPendienteRecibida]
+    concede: [SYS-API]
+    falta: "el transporte vive en salida/transporte y depende de API-01 y API-09; api/ no importa salida/"

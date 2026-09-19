@@ -56,7 +56,11 @@ ESQUEMA_ACTUACION = RAIZ / "engine" / "modelo" / "esquemas" / "actuacion-1.0.jso
 ACT = "ACT-0001"
 INSTANTE = datetime(2026, 9, 19, 8, 0, tzinfo=UTC)
 
-HUMANO = Actor("humano", "billy@cae")
+# Dos personas, dos perfiles (A8, `ADR-006`): desde S3.1b el actor humano escribe con el rol que ejerce, y
+# revisar no es firmar. `T-REV` corrige datos, aprueba la revision y confirma el descarte (CAP-05/06/08/10);
+# `T-RES` hace los actos del sujeto: firma y desistimiento (CAP-22, CAP-23).
+REVISOR = Actor("humano", "revisor@tenant", rol="T-REV")
+RESPONSABLE = Actor("humano", "billy@cae", rol="T-RES")
 MOTOR = Actor("motor", "engine@test")
 AGENTE = Actor("agente", "lector@prompt-v3")
 PLATAFORMA = Actor("plataforma", "omie")
@@ -275,10 +279,10 @@ def log_ciclo_completo() -> LogEventos:
     log.anadir("DatoConsolidado", {"variable": "P"}, actor=MOTOR, ocurrido_en=INSTANTE)
     log.anadir("CalculoRealizado", {"unidades": 1}, actor=MOTOR, ocurrido_en=INSTANTE)
     log.anadir("VeredictoEmitido", {"veredicto": "PREVALIDADO"}, actor=MOTOR, ocurrido_en=INSTANTE)
-    log.anadir("ObservacionRegistrada", {"origen": ORIGEN_REVISION}, actor=HUMANO, ocurrido_en=INSTANTE)
+    log.anadir("ObservacionRegistrada", {"origen": ORIGEN_REVISION}, actor=REVISOR, ocurrido_en=INSTANTE)
     log.anadir("PayloadConstruido", {"hash_cabecera": "b" * 64}, actor=MOTOR, ocurrido_en=INSTANTE)
     log.anadir("EntregadoADelegado", {"tenant": "T1"}, actor=MOTOR, ocurrido_en=INSTANTE)
-    log.anadir("FirmaRegistrada", {"firmante": "billy"}, actor=HUMANO, ocurrido_en=INSTANTE)
+    log.anadir("FirmaRegistrada", {"firmante": "billy"}, actor=RESPONSABLE, ocurrido_en=INSTANTE)
     log.anadir(
         "EstadoPlataformaRecibido",
         {"estado": "ENVIADA_A_VERIFICACION"},
@@ -372,12 +376,12 @@ def test_ningun_actor_no_humano_mueve_entregada_a_en_plataforma(actor: Actor) ->
 
 
 def test_solo_el_actor_humano_mueve_entregada_a_en_plataforma() -> None:
-    despues = aplicar(en_estado("ENTREGADA"), suceso("FirmaRegistrada", {}, actor=HUMANO))
+    despues = aplicar(en_estado("ENTREGADA"), suceso("FirmaRegistrada", {}, actor=RESPONSABLE))
     assert despues.estado_ciclo == "EN_PLATAFORMA"
     assert despues.firmada is True
 
 
-@pytest.mark.parametrize("actor", [HUMANO, MOTOR, AGENTE, PLATAFORMA], ids=lambda a: a.clase)
+@pytest.mark.parametrize("actor", [RESPONSABLE, MOTOR, AGENTE, PLATAFORMA], ids=lambda a: a.clase)
 def test_ningun_otro_evento_mueve_entregada_a_en_plataforma(actor: Actor) -> None:
     """Las cuatro clases de actor, con el evento que mas se parece a una entrada en plataforma."""
     payload = dict(PAYLOAD_AGENTE) if actor.clase == "agente" else {}
@@ -415,7 +419,7 @@ def test_sin_revision_humana_no_hay_lista_para_envio() -> None:
 
 def test_prevalidado_y_revisada_por_un_humano_si_llega_a_lista_para_envio() -> None:
     partida = en_estado("EVALUADA", veredicto="PREVALIDADO")
-    revisada = aplicar(partida, suceso("ObservacionRegistrada", {"origen": ORIGEN_REVISION}, actor=HUMANO))
+    revisada = aplicar(partida, suceso("ObservacionRegistrada", {"origen": ORIGEN_REVISION}, actor=REVISOR))
     assert revisada.revisada_por_humano is True
     assert aplicar(revisada, suceso("PayloadConstruido")).estado_ciclo == "LISTA_PARA_ENVIO"
 
@@ -443,13 +447,13 @@ def test_escalado_lleva_a_revision_humana_y_la_revision_devuelve_a_evaluada() ->
         suceso("ObservacionRegistrada", {"origen": ORIGEN_ESCALADO}),
     )
     assert escalada.estado_ciclo == "EN_REVISION_HUMANA"
-    vuelta = aplicar(escalada, suceso("ObservacionRegistrada", {"origen": ORIGEN_REVISION}, actor=HUMANO))
+    vuelta = aplicar(escalada, suceso("ObservacionRegistrada", {"origen": ORIGEN_REVISION}, actor=REVISOR))
     assert vuelta.estado_ciclo == "EVALUADA"
     assert vuelta.revisada_por_humano is True
 
 
 def test_descartada_exige_no_elegible_confirmado_por_un_humano() -> None:
-    descarte = suceso("ObservacionRegistrada", {"origen": ORIGEN_DESCARTE}, actor=HUMANO)
+    descarte = suceso("ObservacionRegistrada", {"origen": ORIGEN_DESCARTE}, actor=REVISOR)
     with pytest.raises(ErrorEstado, match="NO_ELEGIBLE"):
         aplicar(en_estado("EVALUADA", veredicto="SUBSANABLE"), descarte)
     final = aplicar(en_estado("EVALUADA", veredicto="NO_ELEGIBLE"), descarte)
@@ -463,7 +467,7 @@ def test_descartada_exige_no_elegible_confirmado_por_un_humano() -> None:
 CAMBIOS_DE_DATOS = [
     ("DocumentoRegistrado", {"sha256": "c" * 64}, MOTOR),
     ("DatoConsolidado", {"variable": "P"}, MOTOR),
-    ("DatoCorregidoPorHumano", {"variable": "P"}, HUMANO),
+    ("DatoCorregidoPorHumano", {"variable": "P"}, REVISOR),
     ("CalculoRealizado", {"unidades": 1}, MOTOR),
     ("VeredictoEmitido", {"veredicto": "PREVALIDADO"}, MOTOR),
 ]
@@ -483,7 +487,7 @@ def test_tras_en_plataforma_un_cambio_de_datos_se_rechaza(tipo: str, payload: di
 def test_el_rechazo_post_firma_alimenta_correccion_rechazada_post_firma() -> None:
     """El rechazo no se pierde: es el payload del evento `CorreccionRechazadaPostFirma` (`docs/02` §5.4)."""
     partida = en_estado("EN_PLATAFORMA", firmada=True)
-    despues = aplicar(partida, suceso("DatoCorregidoPorHumano", {"variable": "P"}, actor=HUMANO))
+    despues = aplicar(partida, suceso("DatoCorregidoPorHumano", {"variable": "P"}, actor=REVISOR))
     log = LogEventos(actuacion_id=ACT)
     evento = log.anadir(
         "CorreccionRechazadaPostFirma", dict(despues.rechazos[0]), actor=MOTOR, ocurrido_en=INSTANTE
@@ -501,7 +505,7 @@ def test_con_un_requerimiento_abierto_la_correccion_si_se_admite() -> None:
     )
     assert requerida.estado_ciclo == "PENDIENTE_SUBSANACION"
     assert requerida.origen_subsanacion == "verificador"
-    corregida = aplicar(requerida, suceso("DatoCorregidoPorHumano", {"variable": "P"}, actor=HUMANO))
+    corregida = aplicar(requerida, suceso("DatoCorregidoPorHumano", {"variable": "P"}, actor=REVISOR))
     assert corregida.estado_ciclo == "EN_PROCESO"
     assert corregida.rechazos == ()
     cerrada = aplicar(corregida, suceso("SubsanacionCerrada", {"origen": "verificador"}))
@@ -647,7 +651,7 @@ def test_el_desistimiento_humano_cierra_la_actuacion_como_desistida() -> None:
     requerida = en_estado(
         "PENDIENTE_SUBSANACION", firmada=True, origen_subsanacion="GA", requerimiento_abierto="GA"
     )
-    desistida = aplicar(requerida, suceso("DesistimientoRegistrado", {"motivo": "coste"}, actor=HUMANO))
+    desistida = aplicar(requerida, suceso("DesistimientoRegistrado", {"motivo": "coste"}, actor=RESPONSABLE))
     assert desistida.estado_ciclo == "CERRADA"
     assert desistida.resultado == "desistida"
     assert desistida.desistimiento_registrado is True

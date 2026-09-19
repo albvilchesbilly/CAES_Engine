@@ -169,7 +169,7 @@ def test_lo_que_escala_se_anota_en_el_log_y_no_reabre_nada(spec_ind240, ground_t
 
     log = log_firmado(req.actuacion_id)
     estado_previo = proyectar(log).estado_ciclo
-    escalar(log, req, interpretacion, actor=("humano", "revisor@tenant"))
+    escalar(log, req, interpretacion, actor=("humano", "revisor@tenant", "T-REV"))
 
     assert log.por_tipo("RequerimientoRecibido") == (), "escalar no reabre: eso lo decide un humano"
     assert estado_previo == "EN_PLATAFORMA"  # de donde salia
@@ -184,16 +184,18 @@ def test_lo_que_escala_se_anota_en_el_log_y_no_reabre_nada(spec_ind240, ground_t
 def log_firmado(actuacion_id: str, expediente_id: str = "EXPD-SYN-2026-001") -> LogEventos:
     log = LogEventos(actuacion_id)
     motor = ("motor", "engine@test")
-    humano = ("humano", "responsable@tenant")
+    # Dos perfiles: el revisor aprueba la revision (CAP-10) y el responsable firma (CAP-22). A8.
+    revisor = ("humano", "revisor@tenant", "T-REV")
+    responsable = ("humano", "responsable@tenant", "T-RES")
     instante = datetime(2026, 6, 30, 9, 0, tzinfo=UTC)
     for tipo, payload, actor in (
         ("ActuacionAbierta", {"expediente_id": expediente_id}, motor),
         ("DocumentoRegistrado", {}, motor),
         ("VeredictoEmitido", {"veredicto": "PREVALIDADO"}, motor),
-        ("ObservacionRegistrada", {"origen": "revision_humana", "texto": "ok"}, humano),
+        ("ObservacionRegistrada", {"origen": "revision_humana", "texto": "ok"}, revisor),
         ("PayloadConstruido", {}, motor),
         ("EntregadoADelegado", {}, motor),
-        ("FirmaRegistrada", {}, humano),
+        ("FirmaRegistrada", {}, responsable),
     ):
         log.anadir(tipo, payload, actor=actor, ocurrido_en=instante)
     return log
@@ -207,8 +209,8 @@ def test_el_verificador_reabre_con_la_regla_que_dice_el_banco(spec_ind240, groun
     log = log_firmado(req.actuacion_id)
 
     propuesta = InterpreteLexico().interpretar(req, spec=spec_ind240)
-    interpretacion = confirmar(propuesta, actor=("humano", "billy"))
-    reabrir(log, req, interpretacion, actor=("humano", "billy"))
+    interpretacion = confirmar(propuesta, actor=("humano", "billy", "T-REV"))
+    reabrir(log, req, interpretacion, actor=("humano", "billy", "T-REV"))
 
     proyeccion = proyectar(log)
     assert proyeccion.estado_ciclo == "PENDIENTE_SUBSANACION"
@@ -230,8 +232,8 @@ def test_el_contagio_del_banco_coincide_con_lo_que_hace_el_motor(spec_ind240, gr
     req = requerimiento_de(datos)
     logs = {identificador: log_firmado(identificador) for identificador in actuaciones}
     propuesta = InterpreteLexico().interpretar(req, spec=spec_ind240)
-    interpretacion = confirmar(propuesta, actor=("humano", "billy"))
-    reabrir(logs[req.actuacion_id], req, interpretacion, actor=("humano", "billy"))
+    interpretacion = confirmar(propuesta, actor=("humano", "billy", "T-REV"))
+    reabrir(logs[req.actuacion_id], req, interpretacion, actor=("humano", "billy", "T-REV"))
 
     evento = logs[req.actuacion_id].ultimo("RequerimientoRecibido")
     proyecciones = propagar_requerimiento([proyectar(log) for log in logs.values()], evento)

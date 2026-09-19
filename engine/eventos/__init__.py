@@ -2,7 +2,8 @@
 
 Cuatro piezas:
 
-- `catalogo` — que eventos existen y que clases de actor hay. Catalogo cerrado.
+- `catalogo` — que eventos existen, que clases de actor hay y que capacidad de `ADR-006` produce cada
+  evento: eso lo dice `engine/capacidades.yaml`. Catalogo cerrado.
 - `canonico` — `json_canonico`, la codificacion tipada de los payloads y el hash encadenado.
 - `log` — el sobre (`Evento`), el log solo-anadir (`LogEventos`) y sus invariantes.
 - `grabacion` / `replay` — `grabar(actuacion)` escribe el log de una ejecucion del motor y
@@ -30,11 +31,12 @@ from engine.eventos.catalogo import (
     CONFIRMACIONES_SOLO_HUMANO,
     PROCESO_DE_TIPO,
     TIPOS,
+    TIPOS_ADMINISTRACION,
     TIPOS_POR_PROCESO,
     TIPOS_SOLO_HUMANO,
 )
 from engine.eventos.grabacion import grabar
-from engine.eventos.log import Actor, Evento, LogEventos
+from engine.eventos.log import Actor, Autorizador, Evento, LogEventos
 from engine.eventos.replay import consolidada_de, divergencias, reproducir, verificar_replay
 
 __all__ = [
@@ -43,9 +45,11 @@ __all__ = [
     "CONFIRMACIONES_SOLO_HUMANO",
     "PROCESO_DE_TIPO",
     "TIPOS",
+    "TIPOS_ADMINISTRACION",
     "TIPOS_POR_PROCESO",
     "TIPOS_SOLO_HUMANO",
     "Actor",
+    "Autorizador",
     "ErrorEvento",
     "Evento",
     "LogEventos",

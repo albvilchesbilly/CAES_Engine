@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cae-engine:modelo/politica-tenant-1.0.json",
+  "title": "PoliticaTenant",
+  "description": "Lo que un tenant configura sobre si mismo (ADR-006, CAP-33). Los valores por defecto son las recomendaciones del ADR, no decisiones cerradas: quien_prepara_puede_aprobar es la A6, pendiente de Billy.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tenant_id",
+    "quien_prepara_puede_aprobar",
+    "minimo_responsables",
+    "acceso_soporte_permitido",
+    "vigencia_acceso_soporte_horas",
+    "version"
+  ],
+  "properties": {
+    "tenant_id": { "type": "string", "minLength": 1 },
+    "quien_prepara_puede_aprobar": { "type": "boolean" },
+    "minimo_responsables": {
+      "description": "Regla de continuidad de ADR-006: minimo dos T-RES, o procedimiento de recuperacion por ADM-OPS.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "acceso_soporte_permitido": { "type": "boolean" },
+    "vigencia_acceso_soporte_horas": { "type": ["integer", "null"], "minimum": 1 },
+    "version": { "type": "string", "minLength": 1 }
+  }
+}

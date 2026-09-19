@@ -175,14 +175,16 @@ def log_firmado(actuacion_id: str) -> LogEventos:
     """Una actuacion que llego a la plataforma: prevalidada, revisada, entregada y firmada."""
     log = LogEventos(actuacion_id)
     motor = ("motor", "engine@test")
-    humano = ("humano", "responsable@tenant")
+    # `T-REV` aprueba la revision (CAP-10) y `T-RES` firma (CAP-22): son dos actos y dos perfiles.
+    revisor = ("humano", "revisor@tenant", "T-REV")
+    responsable = ("humano", "responsable@tenant", "T-RES")
     log.anadir("ActuacionAbierta", {"expediente_id": "EXP-1"}, actor=motor)
     log.anadir("DocumentoRegistrado", {}, actor=motor)
     log.anadir("VeredictoEmitido", {"veredicto": "PREVALIDADO"}, actor=motor)
-    log.anadir("ObservacionRegistrada", {"origen": "revision_humana", "texto": "revisado"}, actor=humano)
+    log.anadir("ObservacionRegistrada", {"origen": "revision_humana", "texto": "revisado"}, actor=revisor)
     log.anadir("PayloadConstruido", {}, actor=motor)
     log.anadir("EntregadoADelegado", {}, actor=motor)
-    log.anadir("FirmaRegistrada", {}, actor=humano)
+    log.anadir("FirmaRegistrada", {}, actor=responsable)
     log.anadir("ExpedientePropuesto", {"expediente_id": "EXP-1"}, actor=motor)
     return log
 

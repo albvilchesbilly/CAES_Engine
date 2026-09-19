@@ -31,10 +31,13 @@ packages = [
     "salida.transporte",
     "generator",
     "generator.documentos",
+    "api",
+    "api.comandos",
+    "api.lecturas",
 ]
 
 [tool.setuptools.package-data]
-"engine" = ["*.yaml"]
+"engine" = ["*.yaml", "*.json"]
 "engine.modelo" = ["esquemas/*.json"]
 
 [tool.pytest.ini_options]

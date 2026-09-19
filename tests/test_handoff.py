@@ -96,7 +96,7 @@ def log_revisado(caso: str) -> LogEventos:
     log.anadir(
         "ObservacionRegistrada",
         {"origen": "revision_humana", "texto": "revisado antes de empaquetar"},
-        actor=("humano", "revisor@tenant"),
+        actor=("humano", "revisor@tenant", "T-REV"),
     )
     return log
 

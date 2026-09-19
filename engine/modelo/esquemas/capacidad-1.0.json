@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cae-engine:modelo/capacidad-1.0.json",
+  "title": "Capacidad",
+  "description": "Capacidad atomica de ADR-006 (CAP-nn). Los eventos son tipos del catalogo cerrado (engine.eventos.catalogo.TIPOS); que un comando declare al menos uno lo comprueba el cargador de la matriz, no este esquema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "nombre", "tipo", "eventos", "proceso"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "nombre": { "type": "string", "minLength": 1 },
+    "tipo": { "type": "string", "enum": ["comando", "lectura"] },
+    "eventos": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "proceso": {
+      "description": "P0 a P10 cuando la capacidad pertenece a un proceso del Engine; null en gobierno y administracion.",
+      "type": ["string", "null"],
+      "minLength": 1
+    }
+  }
+}

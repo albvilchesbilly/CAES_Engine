@@ -43,7 +43,10 @@ from engine.seguimiento import (
 RAIZ = Path(__file__).resolve().parents[1]
 FUENTE = RAIZ / "engine" / "seguimiento.py"
 
-HUMANO = Actor("humano", "billy@cae")
+# Dos perfiles, dos actos (A8, `ADR-006`): `T-REV` revisa y corrige (CAP-05/06/10); `T-RES` hace los
+# actos del sujeto, firma y desistimiento (CAP-22, CAP-23). Desde S3.1b el rol es obligatorio.
+REVISOR = Actor("humano", "revisor@tenant", rol="T-REV")
+RESPONSABLE = Actor("humano", "billy@cae", rol="T-RES")
 MOTOR = Actor("motor", "engine@test")
 AGENTE = Actor("agente", "lector@prompt-v3")
 
@@ -59,11 +62,11 @@ def log_en_plataforma(actuacion_id: str, *, expediente_id: str | None = EXPEDIEN
     log.anadir("ActuacionAbierta", {"expediente_id": expediente_id}, actor=MOTOR, ocurrido_en=T0)
     log.anadir("DocumentoRegistrado", {"doc_id": "d1"}, actor=MOTOR, ocurrido_en=T0)
     log.anadir("VeredictoEmitido", {"veredicto": VEREDICTO_PREVALIDADO}, actor=MOTOR, ocurrido_en=T0)
-    log.anadir("ObservacionRegistrada", {"origen": "revision_humana"}, actor=HUMANO, ocurrido_en=T0)
+    log.anadir("ObservacionRegistrada", {"origen": "revision_humana"}, actor=REVISOR, ocurrido_en=T0)
     log.anadir("PayloadConstruido", {"hash_paquete": "0" * 64}, actor=MOTOR, ocurrido_en=T0)
     log.anadir("EnviadoAPI", {"referencia": f"SIM-{actuacion_id}-abcd1234"}, actor=MOTOR, ocurrido_en=T0)
     firma = {"referencia": f"SIM-{actuacion_id}-abcd1234"}
-    log.anadir("FirmaRegistrada", firma, actor=HUMANO, ocurrido_en=T0)
+    log.anadir("FirmaRegistrada", firma, actor=RESPONSABLE, ocurrido_en=T0)
     return log
 
 
@@ -386,7 +389,7 @@ def test_el_seguimiento_solo_consume_estados_y_tareas():
 def test_el_estado_de_plataforma_solo_lo_escribe_un_actor_plataforma():
     logs, _ = expediente_de_tres()
     with pytest.raises(ErrorSeguimiento, match="lo reflejamos"):
-        registrar_estado(logs["ACT-0001"], estado("EXP001-A", "VERIFICADA_FAVORABLE"), actor=HUMANO)
+        registrar_estado(logs["ACT-0001"], estado("EXP001-A", "VERIFICADA_FAVORABLE"), actor=RESPONSABLE)
 
 
 # ---------------------------------------------------------------------------

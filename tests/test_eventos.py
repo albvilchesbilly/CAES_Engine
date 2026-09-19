@@ -37,6 +37,7 @@ from engine.eventos import (
     CLASES_ACTOR,
     PROCESO_DE_TIPO,
     TIPOS,
+    TIPOS_ADMINISTRACION,
     TIPOS_POR_PROCESO,
     TIPOS_SOLO_HUMANO,
     Actor,
@@ -52,7 +53,9 @@ from engine.eventos import (
     reproducir,
 )
 from engine.eventos.canonico import instante_desde_texto, texto_instante
+from engine.eventos.catalogo import GRUPOS_ADMINISTRACION
 from engine.eventos.replay import consolidada_de, identidad_spec_de, verificar_replay
+from tests.apoyo_permisos import humano_para
 
 RAIZ = Path(__file__).resolve().parents[1]
 FUENTES_EVENTOS = sorted((RAIZ / "engine" / "eventos").rglob("*.py"))
@@ -73,7 +76,10 @@ AETOTAL_A = Decimal("305829.6")
 #: Instante fijo de las grabaciones de prueba: el log no debe depender del reloj.
 INSTANTE = datetime(2026, 9, 19, 8, 0, tzinfo=UTC)
 ACTOR_MOTOR = Actor("motor", "engine@pruebas")
-ACTOR_HUMANO = Actor("humano", "revisor@cae")
+#: El revisor tecnico (`T-REV`): es quien corrige datos (CAP-05/06) y quien confirma una interpretacion de
+#: A9 (CAP-15), que son los dos actos humanos que prueba este fichero con un actor fijo. Desde A8 un actor
+#: humano sin `rol` no puede escribir: los tests parametrizados sacan el suyo de la matriz (`humano_para`).
+ACTOR_HUMANO = Actor("humano", "revisor@cae", rol="T-REV")
 ACTOR_AGENTE = Actor("agente", "lector@prompt-v3")
 PAYLOAD_AGENTE = {
     "modelo": "modelo-x",
@@ -237,7 +243,7 @@ def _log_alterado(posicion: int, **cambios: object) -> LogEventos:
         ({"ocurrido_en": INSTANTE + timedelta(hours=1)}, "no corresponde a su contenido"),
         ({"secuencia": 99}, "secuencia"),
         ({"hash": "0" * 64}, "no corresponde a su contenido"),
-        ({"actor": Actor("humano", "impostor")}, "no corresponde a su contenido"),
+        ({"actor": Actor("humano", "impostor", rol="T-RES")}, "no corresponde a su contenido"),
     ],
     ids=["payload", "tipo", "ocurrido_en", "secuencia", "hash", "actor"],
 )
@@ -281,7 +287,10 @@ def test_evento_de_otra_actuacion_rompe_la_cadena() -> None:
 
 def test_catalogo_cerrado_cubre_los_procesos_de_docs_03() -> None:
     procesos = {clave.split(" ", 1)[0] for clave in TIPOS_POR_PROCESO}
-    assert procesos == {f"P{n}" for n in range(11)}
+    # P0-P10 son los procesos del Engine; G1-G3 son los grupos de gobierno que anade `ADR-006` con A8
+    # (S3.1b): no los produce ninguna ejecucion del motor, los escribe una persona con un perfil.
+    assert procesos == {f"P{n}" for n in range(11)} | {"G1", "G2", "G3"}
+    assert set(GRUPOS_ADMINISTRACION) <= set(TIPOS_POR_PROCESO)
     assert TIPOS == frozenset(PROCESO_DE_TIPO)
     for imprescindible in (
         "ActuacionAbierta",
@@ -325,12 +334,40 @@ def test_clase_de_actor_desconocida_es_error() -> None:
 
 def test_los_actos_humanos_se_declaran_en_un_solo_sitio() -> None:
     """`TIPOS_SOLO_HUMANO` (y la confirmacion de A9) viven en `catalogo.py` y en ningun otro fuente."""
+    # Los tres de S3.1 y, desde S3.1b (A8, `ADR-006`), los de las capacidades que ejerce una persona.
+    # La lista se escribe entera a mano: es un contrato, y que crezca tiene que costar una linea aqui.
     assert set(TIPOS_SOLO_HUMANO) == {
         "DatoCorregidoPorHumano",
         "DesistimientoRegistrado",
         "FirmaRegistrada",
+        "ObservacionRevisada",
+        "ActuacionDescartada",
+        "RevisionAprobada",
+        "DiscrepanciaResuelta",
+        "ExpedienteAprobado",
+        "UsuarioAlta",
+        "UsuarioBaja",
+        "RolAsignado",
+        "ActuacionReasignada",
+        "PoliticaTenantCambiada",
+        "AccesoSoporteAutorizado",
+        "AccesoSoporteDenegado",
+        "SpecActivada",
+        "AgenteActivado",
+        "AgenteDesactivado",
+        "PromptActivado",
+        "UmbralCambiado",
+        "TenantAlta",
+        "TenantBaja",
+        "TenantSuspendido",
+        "CapacidadActualizada",
+        "AccesoSoporteSolicitado",
+        "AccesoSoporteUsado",
     }
     assert set(TIPOS_SOLO_HUMANO) <= TIPOS
+    # Todo evento de administracion es un acto humano: es lo que hace cierto el criterio de `docs/06`
+    # S3.1b "ningun evento de administracion carece de `actor.rol`".
+    assert TIPOS_ADMINISTRACION <= set(TIPOS_SOLO_HUMANO)
     catalogo = RAIZ / "engine" / "eventos" / "catalogo.py"
     for fuente in FUENTES_EVENTOS:
         if fuente == catalogo:
@@ -354,8 +391,11 @@ def test_eventos_de_acto_humano_rechazan_a_la_maquina(tipo: str, clase: str) -> 
 @pytest.mark.parametrize("tipo", TIPOS_SOLO_HUMANO)
 def test_eventos_de_acto_humano_con_actor_humano_se_anaden(tipo: str) -> None:
     log = LogEventos("ACT-001")
-    evento = log.anadir(tipo, {"nota": "firmado en persona"}, actor=ACTOR_HUMANO, ocurrido_en=INSTANTE)
+    # El rol sale de la matriz, no de un valor comodo: cada acto lo ejerce el perfil que `ADR-006` le da.
+    actor = humano_para(tipo)
+    evento = log.anadir(tipo, {"nota": "firmado en persona"}, actor=actor, ocurrido_en=INSTANTE)
     assert evento.actor.clase == "humano"
+    assert evento.actor.rol == actor.rol
     assert log.ultimo(tipo) is evento
     log.verificar()
 

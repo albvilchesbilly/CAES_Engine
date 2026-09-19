@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cae-engine:modelo/usuario-1.0.json",
+  "title": "Usuario",
+  "description": "Persona que usa la plataforma (ADR-006, S3.1b). Sin credenciales ni segundo factor: eso es de la capa de autenticacion, no del modelo canonico. El historico de altas y bajas esta en el log.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "nombre", "email", "tenant_id", "activo", "alta", "baja"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "nombre": { "type": "string", "minLength": 1 },
+    "email": { "type": "string", "minLength": 3 },
+    "tenant_id": {
+      "description": "null solo en los perfiles globales (ADM-MOD, ADM-OPS): no pertenecen a ningun tenant.",
+      "type": ["string", "null"],
+      "minLength": 1
+    },
+    "activo": { "type": "boolean" },
+    "alta": { "type": ["string", "null"], "format": "date" },
+    "baja": { "type": ["string", "null"], "format": "date" }
+  }
+}

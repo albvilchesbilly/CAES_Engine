@@ -68,6 +68,10 @@ INSTANTE = datetime(2026, 9, 19, 10, 40, tzinfo=UTC)
 
 CASO_A = "EXP001-A_completo"
 
+#: Quien firma es el responsable del tenant (`T-RES`, CAP-22 de `ADR-006`): desde A8 el actor humano lleva
+#: el perfil con el que actua, y firmar no es de ningun otro perfil.
+RESPONSABLE = Actor("humano", "responsable", rol="T-RES")
+
 #: Identificadores del mapeo: **FICTICIOS**. El mapeo declarativo de verdad (`salida/mapeo.py`,
 #: `mapping/IND240.handoff.yaml`) es la mitad A de S3.4 y este banco no depende de ella.
 MAPEO_ID = "FICTICIO-test-simulador"
@@ -275,24 +279,26 @@ def test_la_firma_con_perfil_modificacion_se_rechaza(tmp_path):
     sim, referencia = _validado(tmp_path)
     with pytest.raises(ErrorSimulador, match="no firma"):
         sim.registrar_firma(
-            referencia, Actor("humano", "persona"), credencial=credencial(PERFIL_MODIFICACION)
+            referencia, Actor("humano", "persona", rol="T-OPE"), credencial=credencial(PERFIL_MODIFICACION)
         )
 
 
 def test_la_firma_correcta_avanza_al_estado_que_la_exige(tmp_path):
     sim, referencia = _validado(tmp_path)
-    acuse = sim.registrar_firma(referencia, Actor("humano", "responsable"), credencial=credencial())
+    acuse = sim.registrar_firma(referencia, RESPONSABLE, credencial=credencial())
     assert acuse.aceptado
     assert acuse.estado_plataforma == estado_firmado().literal
     assert sim.consultar_estado(referencia).literal == estado_firmado().literal
-    assert acuse.detalle["firmado_por"] == {"clase": "humano", "id": "responsable"}
+    # El acuse guarda el actor entero, con el rol ejercido: la traza de la firma dice quien y con que
+    # perfil (`ADR-006` CAP-22; el que firma puede no ser quien lo anota).
+    assert acuse.detalle["firmado_por"] == {"clase": "humano", "id": "responsable", "rol": "T-RES"}
 
 
 def test_la_firma_acepta_el_evento_del_log_como_prueba(tmp_path):
     """La prueba natural es el `FirmaRegistrada` del log, que ya exige actor humano."""
     sim, referencia = _validado(tmp_path)
     log = grabar(procesado(CASO_A), instante=INSTANTE)
-    evento = log.anadir("FirmaRegistrada", {"referencia": referencia}, actor=Actor("humano", "responsable"))
+    evento = log.anadir("FirmaRegistrada", {"referencia": referencia}, actor=RESPONSABLE)
     acuse = sim.registrar_firma(referencia, evento, credencial=credencial())
     assert acuse.estado_plataforma == estado_firmado().literal
 
@@ -303,7 +309,7 @@ def test_firmar_antes_de_la_validacion_se_rechaza(tmp_path):
     sim = simulador()
     acuse = sim.crear_borrador(paquete_de(CASO_A, raiz), credencial(), canonica=canonica(CASO_A))
     with pytest.raises(ErrorSimulador, match="despues de la validacion"):
-        sim.registrar_firma(acuse.referencia, Actor("humano", "responsable"), credencial=credencial())
+        sim.registrar_firma(acuse.referencia, RESPONSABLE, credencial=credencial())
 
 
 def test_el_simulador_no_avanza_solo_mas_alla_del_estado_validado(tmp_path):
@@ -393,7 +399,7 @@ def test_el_estado_que_exige_desistimiento_pide_un_acto_humano(tmp_path):
         sim.avanzar(referencia, fila.literal)
     with pytest.raises(ErrorSimulador, match="actor humano"):
         sim.avanzar(referencia, fila.literal, evidencia=Actor("motor", "engine"))
-    estado = sim.avanzar(referencia, fila.literal, evidencia=Actor("humano", "sujeto"))
+    estado = sim.avanzar(referencia, fila.literal, evidencia=Actor("humano", "sujeto", rol="T-RES"))
     assert estado.literal == fila.literal
 
 
@@ -409,7 +415,7 @@ def test_consultar_una_referencia_desconocida_se_niega():
 
 def test_eventos_en_escribe_p9_con_actor_plataforma(tmp_path):
     sim, referencia = _validado(tmp_path)
-    sim.registrar_firma(referencia, Actor("humano", "responsable"), credencial=credencial())
+    sim.registrar_firma(referencia, RESPONSABLE, credencial=credencial())
     sim.avanzar(referencia, fila_de_origen("verificador").literal)
 
     log = LogEventos(actuacion_id=canonica(CASO_A).id)
@@ -497,6 +503,6 @@ def test_una_actuacion_firmada_no_se_vuelve_a_cargar(tmp_path):
     paquete = paquete_de(CASO_A, raiz)
     sim = simulador()
     acuse = sim.entregar(paquete, credencial=credencial(), canonica=canonica(CASO_A))
-    sim.registrar_firma(acuse.referencia, Actor("humano", "responsable"), credencial=credencial())
+    sim.registrar_firma(acuse.referencia, RESPONSABLE, credencial=credencial())
     with pytest.raises(ErrorSimulador, match="inalterabilidad"):
         sim.crear_borrador(paquete, credencial(), canonica=canonica(CASO_A))
