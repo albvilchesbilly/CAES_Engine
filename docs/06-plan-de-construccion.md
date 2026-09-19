@@ -123,7 +123,7 @@ abiertas C2 a C6 (`ADR-050` §Pendiente), ninguna de las cuales bloquea `FR0`.
 | # | Entregable | Depende de | Estado |
 |---|---|---|---|
 | FR0 | Contrato de comandos y lecturas por capacidad en `api/`; sistema de diseño mínimo en `front/compartido/` | S3.1 (HECHO) · stack C1 (**APROBADO**) · A8 de `ADR-005` para persistir `actor.rol` | **HECHO** (19/09/2026, `ADR-011`) |
-| FR1 | Workspace `T-REV`: cola y vista de revisión. **Absorbe `S4.4`** | FR0, S3.5 (HECHO) | PENDIENTE (espera FR0) |
+| FR1 | Workspace `T-REV`: cola y vista de revisión. **Absorbe `S4.4`** | FR0 (HECHO), S3.5 (HECHO) | **EN CURSO** (19/09/2026, `ADR-012`) |
 | FR2 | Workspace `T-OPE`: bandeja, alta, subida y "qué te falta" | FR0 | PENDIENTE (espera FR0) |
 | FR3 | Workspace `T-RES`: pendiente de mí, registro de firma, equipo, `O-FUN` | FR0, DB1 | PENDIENTE (espera FR0 y DB1) |
 | FR4 | Portal externo (`EXT-INS`, `EXT-CLI`) | FR0 · A1 y A2 de `ADR-005` | BLOQUEADO (decisión) |
