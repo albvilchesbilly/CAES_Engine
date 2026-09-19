@@ -57,6 +57,7 @@ Decidido el 17/09/2026 y reordenado el 18/09/2026 tras la confrontación con la 
 | # | Entregable | Módulos | Hecho cuando… | Depende de | Estado |
 |---|---|---|---|---|---|
 | S3.1 | Modelo canónico `Actuacion` + `GrupoActuaciones` + `Expediente` + `Verificador` + `Tenant` con JSON Schema; log de eventos; máquina de estados con cuatro niveles, fases 2–4 provisionales y `DESISTIDO` | `engine/modelo/`, `engine/eventos/`, `engine/estados.py` | Los 7 casos producen `Actuacion` válida contra el esquema; el replay del log reproduce veredicto y ahorro bit a bit; ningún evento de actor `agente` o `motor` mueve `ENTREGADA` → `EN_PLATAFORMA`; un requerimiento GA/CN simulado marca todas las actuaciones del expediente | Fase 0 | HECHO (19/09/2026, ea89b6a; `ADR-004`) |
+| S3.1b | Capacidades y perfiles en el modelo y en el log: entidades `Usuario`, `Perfil`, `Capacidad`, `AsignacionPerfil`, `PoliticaTenant`; `actor.rol` obligatorio en actor humano; los ~20 eventos nuevos de `ADR-006`; tests de autorización | `engine/modelo/`, `engine/eventos/`, `tests/test_permisos_*.py` | Un `ADM-OPS` no puede generar `SpecActivada` ni un `ADM-MOD` un `TenantAlta`; ningún evento de administración carece de `actor.rol`; CAP-10 y CAP-22 son los únicos disparadores humanos de sus transiciones | **Decisión A8 de Billy** (`ADR-006`): si las capacidades se modelan ya en el Sprint 3 | BLOQUEADO (decisión) |
 | S3.2 | Spec transversal de cabecera + reglas `R-CAB-*` + extracción de las variables de cabecera con fuente documental | `spec/cabecera_v1.yaml` (movida desde `propuestas/` tras aprobación), `engine/spec_registry.py`, `engine/extraccion.py` | El caso A rellena todos los campos de cabecera con fuente documental y deja los sin fuente como `declarado` o `NO DOCUMENTADO`; IND240 hereda R-TMP-02/03 de la cabecera sin duplicarlas | **Aprobación de Billy** de `cabecera_v1.yaml` y del diff v1.2 | BLOQUEADO (decisión) |
 | S3.3 | Manifiesto interno e integridad total | `salida/constructor/`, `tests/` | Manifiesto del caso A verificable; alterar un byte de cualquier adjunto lo detecta; `hash_cabecera` y `hash_detalle` presentes | S3.1 | PENDIENTE |
 | S3.4 | Puerto de salida + adaptador handoff + simulador; `transporte/` separado; huecos referenciados | `salida/puerto.py`, `salida/handoff/`, `salida/simulador/`, `mapping/IND240.handoff.yaml`, `mapping/manifiesto.handoff.yaml` | Simulador acepta el paquete del caso A y rechaza uno con hash alterado; la "firma" es un paso humano simulado que cambia `COMPLETA` → `ENVIADA_A_VERIFICACION` solo con `FirmaRegistrada` de actor humano; ningún campo inventado de la API (cada hueco cita `docs/HUECOS.md`) | S3.1, S3.3 | PENDIENTE |
@@ -99,6 +100,12 @@ las dependencias, para que no haya dos planes.
 
 Una métrica se define **una sola vez en configuración**, con el mismo criterio que las fichas: el catálogo es
 YAML validado, no código. Una métrica sin fuente se muestra como `SIN DATO`, nunca como cero.
+
+Los perfiles y la matriz de capacidades que estas vistas filtran están en `ADR-006`; su encaje en el modelo y en
+el log es **S3.1b**, arriba, y depende de la decisión A8 de Billy. Las consecuencias ya integradas en la
+documentación viva: `docs/03` §5.2 (entidades), §6.1 y §6.2 (`actor.rol` y eventos de administración), §7.3
+(disparadores humanos), §12 (seguridad, acceso de soporte, monitorización) y §13 (F-24, F-25); `docs/01` §3.9 bis
+(`metricas/`); `docs/00` §4 (glosario de perfiles).
 
 ---
 

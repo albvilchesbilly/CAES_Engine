@@ -116,6 +116,7 @@ No negociables. Cualquier propuesta que las rompa está mal planteada, por buena
 - **Veredicto**: resultado de calidad de una actuación: `NO_ELEGIBLE`, `BLOQUEADO`, `SUBSANABLE`, `PREVALIDADO`. Ninguno significa CAE garantizado.
 - **`INT-xx`**: interpretación pendiente de validar; criterio propio, no verdad normativa.
 - **`TODO(API-xx)`**: hueco de documentación de la plataforma oficial; enumerado en `docs/HUECOS.md`.
+- **Perfiles** (`ADR-005`, `ADR-006`): quién puede hacer qué, por **capacidades** (`CAP-nn`) y no por pantallas. Ocho: `T-RES` (responsable del tenant), `T-OPE` (operador), `T-REV` (revisor técnico), `EXT-INS` (instalador), `EXT-CLI` (cliente), `ADM-MOD` (propietario del modelo: specs, reglas, agentes), `ADM-OPS` (operación: tenants, soporte, auditoría) y `SYS-API` (identidad de sistema, condicionada a `API-09`). Cada capacidad va atada a su evento del log: un permiso sin evento sería un permiso sin traza.
 
 ---
 
@@ -241,6 +242,8 @@ Documentos del cliente (PDF, escaneos, Excel, fotos)
 **Sprint 3 — Integración con la plataforma oficial** (`docs/06` §2): modelo canónico `Actuacion`/`GrupoActuaciones`/`Expediente`, log de eventos, máquina de estados, `cabecera_v1.yaml` (tras aprobación), puerto de salida con handoff y simulador, P9 y A9, extractor LLM detrás de la interfaz existente, conector API cuando existan diccionario y acceso.
 
 **En paralelo, fuera del código**: respuesta de `consultas-plataforma@registrocae.es` (modelos de intercambio, diccionario, perfil Modificación); cierre de delegado partner con certificado y capacidad; expediente real anonimizado; sesión con verificador para INT-01/03/04/05; seguimiento de la tramitación del RD 36/2023; primeros contactos (`docs/08`).
+
+**Perfiles y dashboards (19/09/2026)**: `ADR-005` (administración en dos planos), `ADR-006` (catálogo de perfiles y matriz de capacidades) y `ADR-007` (catálogo de métricas y plan DB0–DB5). Su plan de construcción se enlaza desde `docs/06` §3 bis, que sigue siendo el plan único.
 
 **Decisiones abiertas para Billy**: lista única en `CLAUDE.md` §6 y `docs/decisiones/ADR-001` §3.
 
