@@ -79,8 +79,8 @@ Rutas según `docs/01` §3. La columna Estado, tras cerrar la Fase 0 (19/09/2026
 | N4 | Evidence Store | Grafo de evidencias, tres capas por dato, consolidación, conflictos, `tratable_por_plataforma` | `engine/evidencias.py` | `EXISTE` (F0.8) en memoria con serialización JSON (§14 e) · `NUEVO` S3: persistencia junto al log |
 | N5 | Integridad | SHA-256 de **todo** fichero en ingesta + manifiesto interno | `engine/ingesta.py` (hash) · `salida/constructor/` (manifiesto) | `EXISTE` (F0.6) hash total de todo fichero (§14 d) · `NUEVO` S3: manifiesto interno |
 | N6 | Máquina de estados | Cuatro niveles de estado, contagio, inalterabilidad post-firma; es el A0 (coordinador) hecho código | `engine/estados.py` | `NUEVO` S3 |
-| N7 | Modelo canónico | `Actuacion`, `GrupoActuaciones`, `Expediente`, `Verificador`, `Tenant`; validado con JSON Schema | `engine/modelo/` | `NUEVO` S3 |
-| N8 | Log de eventos | Solo-añadir, hash encadenado, JSON canónico, replay | `engine/eventos/` | `NUEVO` S3 |
+| N7 | Modelo canónico | `ActuacionCanonica`, `GrupoActuaciones`, `Expediente`, `Verificador`, `Tenant`; validado con JSON Schema propio (sin dependencias nuevas) | `engine/modelo/` | `EXISTE` (S3.1): los 7 casos validan · `cabecera` vacía hasta S3.2 |
+| N8 | Log de eventos | Solo-añadir, hash encadenado, JSON canónico, replay | `engine/eventos/` | `EXISTE` (S3.1): el replay de los 7 casos reproduce veredicto y ahorro bit a bit |
 | N9 | Compositor de expedientes | Propone grupos y expedientes válidos a partir de `R-GRP` / `R-EXP` | `engine/compositor.py` | `NUEVO` S4 (Expediente Builder, decisión de Billy) |
 
 Módulos de `engine/` sin ID propio en este mapa (`docs/01` §3.3): `motor.py` (S3), `informe.py` e `cli.py` (informe de prevalidación markdown + JSON y línea de comandos, `EXISTE` desde F0.10), `ingesta.py`, `clasificacion.py`, `extraccion.py`, `registro_xlsx.py` (S1 y extractor por reglas, `EXISTE` desde F0.6/F0.7).

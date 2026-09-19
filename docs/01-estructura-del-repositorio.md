@@ -136,8 +136,9 @@ engine/
                                   → reglas → cálculo; devuelve `Actuacion`
   informe.py            EXISTE —   Informe de prevalidación (markdown + JSON)
   cli.py                EXISTE —   `python -m engine.cli <carpeta> --md … --json … [--sin-ocr] [--fecha]`
-  modelo/               S3  N7  Actuacion, GrupoActuaciones, Expediente, Verificador, Tenant (JSON Schema)
-  eventos/              S3  N8  Log solo-añadir, hash encadenado, JSON canónico, replay
+  modelo/               EXISTE N7  ActuacionCanonica, GrupoActuaciones, Expediente, Verificador, Tenant,
+                                  con JSON Schema propio en esquemas/ y `desde_motor` (S3.1)
+  eventos/              EXISTE N8  Log solo-añadir, hash encadenado, JSON canónico, grabación y replay (S3.1)
   estados.py            S3  N6  Cuatro niveles de estado, contagio, inalterabilidad post-firma
   compositor.py         S4  N9  R-GRP / R-EXP, propuesta de grupos y expedientes
 ```
