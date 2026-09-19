@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup · T-REV — Cola de revisión</title>
+<style>
+  :root{
+    --tinta:#1b1f23; --tinta-suave:#5b646d; --linea:#dfe3e8; --fondo:#f6f7f9; --panel:#fff;
+    --rojo:#b3261e; --rojo-suave:#fdeceb; --ambar:#8a6100; --ambar-suave:#fdf4e3;
+    --verde:#1e6b3a; --verde-suave:#eaf5ee; --gris-suave:#eef0f3; --azul:#14507d;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--fondo);color:var(--tinta);
+       font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .aviso-mockup{background:#20242a;color:#fff;padding:14px 22px;font-size:13px;line-height:1.6}
+  .aviso-mockup b{color:#ffd479}
+  .marco{max-width:1180px;margin:0 auto;padding:22px}
+  header.app{display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+             background:var(--panel);border:1px solid var(--linea);border-radius:10px;padding:14px 18px}
+  header.app h1{font-size:18px;margin:0;font-weight:650}
+  .crecer{flex:1}
+  .chip{display:inline-block;border:1px solid var(--linea);border-radius:999px;
+        padding:3px 10px;font-size:12px;background:var(--gris-suave);color:var(--tinta-suave)}
+  .chip.rol{background:#e8f0f7;border-color:#c7dcec;color:var(--azul)}
+  .origen{display:inline-block;border:1px solid #c9a227;background:#fff8dd;color:#6b5300;
+          border-radius:4px;padding:3px 9px;font-size:11px;font-weight:700;letter-spacing:.04em}
+  .banda-degradado{margin-top:14px;background:var(--ambar-suave);border:1px solid #e8d3a2;
+       border-left:5px solid var(--ambar);border-radius:8px;padding:11px 15px;font-size:13.5px;color:#5e4500}
+  .filtros{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .filtros .et{font-size:12.5px;color:var(--tinta-suave);margin-right:2px}
+  .filtro{border:1px solid var(--linea);background:var(--panel);border-radius:999px;
+          padding:5px 13px;font-size:13px;cursor:default}
+  .filtro[aria-pressed="true"]{background:#20242a;color:#fff;border-color:#20242a}
+  table{width:100%;border-collapse:collapse;margin-top:14px;background:var(--panel);
+        border:1px solid var(--linea);border-radius:10px;overflow:hidden}
+  thead th{text-align:left;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;
+           color:var(--tinta-suave);font-weight:700;padding:11px 14px;background:#fafbfc;
+           border-bottom:1px solid var(--linea)}
+  tbody td{padding:13px 14px;border-bottom:1px solid var(--linea);vertical-align:top}
+  tbody tr:last-child td{border-bottom:none}
+  .cod{font-weight:650}
+  .cod small{display:block;font-weight:400;color:var(--tinta-suave);font-size:12px;margin-top:2px}
+  .vd{display:inline-flex;align-items:center;gap:7px;font-weight:650;font-size:13.5px;white-space:nowrap}
+  .pt{width:9px;height:9px;border-radius:50%;display:inline-block}
+  .pt.v{background:#2e9e5b}.pt.a{background:#d99b0b}.pt.r{background:#c5372c}
+  .motivo{display:block;margin-bottom:5px;font-size:13px;border-radius:6px;padding:4px 9px;
+          border:1px solid transparent;width:fit-content}
+  .m-conf{background:var(--rojo-suave);border-color:#f1c4c0;color:var(--rojo);font-weight:650}
+  .m-esc{background:#eef1fb;border-color:#ccd6f2;color:#2b3f8f;font-weight:650}
+  .m-corr{background:var(--ambar-suave);border-color:#e8d3a2;color:var(--ambar)}
+  .m-tarea{background:var(--gris-suave);border-color:var(--linea);color:var(--tinta-suave)}
+  .m-req{background:#f3e9fb;border-color:#dcc6ef;color:#5b2a86;font-weight:650}
+  .cifra{font-variant-numeric:tabular-nums;font-weight:650;white-space:nowrap}
+  .rotulo{display:block;font-size:11px;color:var(--tinta-suave);font-weight:400;
+          margin-top:3px;max-width:230px;line-height:1.35}
+  .sindato{display:inline-block;background:var(--gris-suave);border:1px dashed #b9c0c8;
+           border-radius:4px;padding:2px 8px;font-size:12px;font-weight:700;color:#4a525a;letter-spacing:.03em}
+  .porque{display:block;font-size:11.5px;color:var(--tinta-suave);margin-top:4px;max-width:250px}
+  .prov{display:inline-block;margin-top:4px;font-size:11px;font-weight:700;color:#8a6100;
+        background:var(--ambar-suave);border:1px solid #e8d3a2;border-radius:4px;padding:2px 7px}
+  .fecha{font-size:13px;white-space:nowrap}
+  .fecha small{display:block;color:var(--tinta-suave);font-size:11.5px}
+  .estado{font-size:12.5px;white-space:nowrap}
+  .estado small{display:block;color:var(--tinta-suave);font-size:11.5px}
+  .candado{display:inline-block;font-size:11px;font-weight:700;color:#4a525a;
+           background:var(--gris-suave);border:1px solid var(--linea);border-radius:4px;padding:2px 7px;margin-top:4px}
+  .ir{display:inline-block;border:1px solid var(--linea);border-radius:7px;padding:7px 13px;
+      font-size:13px;font-weight:600;text-decoration:none;color:var(--tinta);background:#fff;white-space:nowrap}
+  .pie{margin-top:18px;font-size:12.5px;color:var(--tinta-suave);line-height:1.7}
+  .pie code{background:var(--gris-suave);padding:1px 5px;border-radius:4px;font-size:12px}
+  .estados-extra{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:22px}
+  .caja{background:var(--panel);border:1px solid var(--linea);border-radius:10px;padding:14px 16px}
+  .caja h3{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--tinta-suave)}
+  .esqueleto{height:12px;border-radius:6px;background:linear-gradient(90deg,#eceef1,#f6f7f9,#eceef1);margin:9px 0}
+  .err{background:var(--rojo-suave);border:1px solid #f1c4c0;border-left:5px solid var(--rojo);
+       border-radius:8px;padding:11px 14px;font-size:13px;color:#7d1c16}
+  .err code{background:#fff;color:var(--rojo)}
+</style>
+</head>
+<body>
+
+<div class="aviso-mockup">
+  <b>MOCKUP — referencia visual de disposición y flujo. NO ES CÓDIGO BASE.</b>
+  No se copia a <code>front/workspace/</code>: no tiene accesibilidad, ni estados reales, ni el sistema de
+  diseño de <code>front/compartido/</code>. El contrato es
+  <b>docs/front/pantallas/T-REV-cola.md</b>; <b>si el mockup y la spec discrepan, manda la spec</b>.
+  Datos de los siete casos sintéticos del banco de pruebas.
+</div>
+
+<div class="marco">
+
+  <header class="app">
+    <h1>Cola de revisión</h1>
+    <span class="chip rol">Actuando como Revisor técnico</span>
+    <span class="crecer"></span>
+    <span class="origen">DATOS SINTÉTICOS — SOLO PRUEBAS</span>
+  </header>
+
+  <div class="banda-degradado">
+    <b>Cola en modo degradado.</b> La lista y el orden de prioridad todavía no los sirve la API
+    (<code>GAP-COLA-01</code>): las filas se muestran en el orden en que llegan y esta pantalla no las reordena.
+  </div>
+
+  <div class="filtros">
+    <span class="et">Motivo:</span>
+    <span class="filtro" aria-pressed="true">Todos (7)</span>
+    <span class="filtro">Conflicto (1)</span>
+    <span class="filtro">Escalado (0)</span>
+    <span class="filtro">Corrección pendiente (2)</span>
+    <span class="filtro">Tarea de la plataforma (1)</span>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Actuación</th><th>Veredicto</th><th>Por qué está aquí</th>
+        <th>Ahorro prevalidado</th><th>Esperando desde</th><th>Estado</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <tr>
+        <td class="cod">EXP001-C_contradictorio<small>IND240 · 11 documentos</small></td>
+        <td><span class="vd"><span class="pt r"></span>BLOQUEADO</span></td>
+        <td>
+          <span class="motivo m-conf">Conflicto en PM · motor MTR-SYN-0001</span>
+          <span class="motivo m-corr">Corrección pendiente · R-CON-01 (BLOQUEANTE_DATOS)</span>
+        </td>
+        <td>
+          <span class="sindato">SIN DATO</span>
+          <span class="porque">Conflicto entre fuentes fiables en PM: el motor no elige valor ni calcula.</span>
+        </td>
+        <td class="fecha">17/09/2026 09:12<small>hace 2 días</small></td>
+        <td class="estado">EVALUADA<small>plataforma: SIN DATO</small></td>
+        <td><a class="ir" href="T-REV-revision.html">Revisar →</a></td>
+      </tr>
+
+      <tr>
+        <td class="cod">EXP001-B_falta_registro<small>IND240 · 10 documentos</small></td>
+        <td><span class="vd"><span class="pt a"></span>SUBSANABLE</span></td>
+        <td>
+          <span class="motivo m-corr">Corrección pendiente · 2 carencias SUBSANABLE</span>
+          <span class="motivo m-tarea">R-DOC-01 · R-EVD-04 — falta el registro de funcionamiento</span>
+        </td>
+        <td>
+          <span class="cifra">305.829,6 kWh/año</span>
+          <span class="prov">ESTIMACIÓN NO ACREDITADA</span>
+          <span class="rotulo">Cifra prevalidada por el motor: no son CAE emitidos.</span>
+        </td>
+        <td class="fecha">16/09/2026 17:40<small>hace 3 días</small></td>
+        <td class="estado">EVALUADA<small>plataforma: SIN DATO</small></td>
+        <td><a class="ir" href="T-REV-revision.html">Revisar →</a></td>
+      </tr>
+
+      <tr>
+        <td class="cod">EXP001-D_fuera_ambito<small>IND240 · 11 documentos</small></td>
+        <td><span class="vd"><span class="pt r"></span>NO_ELEGIBLE</span></td>
+        <td>
+          <span class="motivo m-conf">Fuera de ámbito · R-AMB-01 (BLOQUEANTE_AMBITO)</span>
+          <span class="motivo m-corr">Pendiente de confirmar el descarte</span>
+        </td>
+        <td>
+          <span class="sindato">SIN DATO</span>
+          <span class="porque">No se calcula un ahorro de una actuación fuera del ámbito de la ficha.</span>
+        </td>
+        <td class="fecha">16/09/2026 11:05<small>hace 3 días</small></td>
+        <td class="estado">EVALUADA<small>plataforma: SIN DATO</small></td>
+        <td><a class="ir" href="T-REV-revision.html">Revisar →</a></td>
+      </tr>
+
+      <tr>
+        <td class="cod">EXP001-G_desordenado<small>IND240 · 13 documentos</small></td>
+        <td><span class="vd"><span class="pt v"></span>PREVALIDADO</span></td>
+        <td>
+          <span class="motivo m-req">Requerimiento abierto · REQ-2026-014</span>
+          <span class="motivo m-tarea">Tarea de la plataforma · subsanación solicitada</span>
+        </td>
+        <td>
+          <span class="cifra">305.829,6 kWh/año</span>
+          <span class="rotulo">Cifra prevalidada por el motor: no son CAE emitidos.</span>
+        </td>
+        <td class="fecha">12/09/2026 08:30<small>hace 7 días</small></td>
+        <td class="estado">EN_PLATAFORMA<small>plataforma: REQUERIDO_GA</small>
+          <span class="candado">Escritura abierta: requerimiento</span>
+        </td>
+        <td><a class="ir" href="T-REV-revision.html">Revisar →</a></td>
+      </tr>
+
+      <tr>
+        <td class="cod">EXP001-E_dos_motores<small>IND240 · 16 documentos · 2 unidades</small></td>
+        <td><span class="vd"><span class="pt v"></span>PREVALIDADO</span></td>
+        <td><span class="motivo m-tarea">Lista para aprobar · sin bloqueantes</span></td>
+        <td>
+          <span class="cifra">470.791 kWh</span>
+          <span class="rotulo">Truncado a kWh entero (INT-06). Cifra prevalidada por el motor: no son CAE emitidos.</span>
+        </td>
+        <td class="fecha">15/09/2026 13:20<small>hace 4 días</small></td>
+        <td class="estado">EVALUADA<small>plataforma: SIN DATO</small></td>
+        <td><a class="ir" href="T-REV-revision.html">Revisar →</a></td>
+      </tr>
+
+      <tr>
+        <td class="cod">EXP001-F_tres_motores<small>IND240 · 21 documentos · 3 unidades</small></td>
+        <td><span class="vd"><span class="pt v"></span>PREVALIDADO</span></td>
+        <td><span class="motivo m-tarea">Lista para aprobar · sin bloqueantes</span></td>
+        <td>
+          <span class="cifra">832.770 kWh</span>
+          <span class="rotulo">Truncado a kWh entero (INT-06). Cifra prevalidada por el motor: no son CAE emitidos.</span>
+        </td>
+        <td class="fecha">15/09/2026 10:02<small>hace 4 días</small></td>
+        <td class="estado">EVALUADA<small>plataforma: SIN DATO</small></td>
+        <td><a class="ir" href="T-REV-revision.html">Revisar →</a></td>
+      </tr>
+
+      <tr>
+        <td class="cod">EXP001-A_completo<small>IND240 · 11 documentos</small></td>
+        <td><span class="vd"><span class="pt v"></span>PREVALIDADO</span></td>
+        <td><span class="motivo m-tarea">Lista para aprobar · sin bloqueantes</span></td>
+        <td>
+          <span class="cifra">305.829,6 kWh/año</span>
+          <span class="rotulo">Cifra prevalidada por el motor: no son CAE emitidos.</span>
+        </td>
+        <td class="fecha">14/09/2026 12:00<small>hace 5 días</small></td>
+        <td class="estado">EVALUADA<small>plataforma: SIN DATO</small></td>
+        <td><a class="ir" href="T-REV-revision.html">Revisar →</a></td>
+      </tr>
+
+    </tbody>
+  </table>
+
+  <div class="pie">
+    Los encabezados <b>no ordenan</b>: el orden de prioridad lo decide el servidor
+    (<code>ADR-012</code> §3, regla 3 del contrato C18). · Ninguna celda de ahorro queda vacía ni a cero
+    (<code>R-UI-07</code>). · La cola no muestra valores extraídos, así que no hay ningún dato sin cita
+    (<code>R-UI-09</code>). · Ningún control de esta pantalla fija un veredicto (<code>R-UI-02</code>).
+  </div>
+
+  <div class="estados-extra">
+    <div class="caja">
+      <h3>Cargando</h3>
+      <div class="esqueleto" style="width:70%"></div>
+      <div class="esqueleto" style="width:45%"></div>
+      <div class="esqueleto" style="width:85%"></div>
+      <p style="font-size:12.5px;color:var(--tinta-suave);margin:6px 0 0">
+        Hueco de carga, distinto de <b>SIN DATO</b>. Ninguna cifra se pinta todavía.</p>
+    </div>
+    <div class="caja">
+      <h3>Vacío</h3>
+      <p style="margin:0;font-size:14px">No hay nada esperando revisión.</p>
+      <p style="font-size:12.5px;color:var(--tinta-suave);margin:6px 0 0">
+        La lectura respondió y no hay filas. No es un error y no es un cero.</p>
+    </div>
+    <div class="caja">
+      <h3>Error del servidor</h3>
+      <div class="err">
+        El servidor no ha concedido esta acción:<br>
+        <code>CAP-03 (Consultar la actuacion completa): no concedida a ['T-OPE']; la tienen ['T-OPE','T-RES','T-REV']</code>
+      </div>
+      <p style="font-size:12.5px;color:var(--tinta-suave);margin:8px 0 0">
+        El mensaje del servidor se muestra literal. Un control que desaparece sin explicación es un control
+        que nadie arregla.</p>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
