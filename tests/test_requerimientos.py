@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 
 from engine.estados import proyectar, tabla_plataforma
-from engine.eventos import Actor, LogEventos
+from engine.eventos import Actor, ErrorEvento, LogEventos
 from engine.reglas import VEREDICTO_PREVALIDADO
 from engine.requerimientos import (
     ALCANCE_DE_ORIGEN,
@@ -489,3 +489,38 @@ def test_el_modulo_no_importa_la_periferia():
     fuente = FUENTE.read_text(encoding="utf-8")
     for paquete in ("agentes", "salida", "generator", "tests"):
         assert not re.search(rf"^\s*(from|import)\s+{paquete}\b", fuente, re.MULTILINE)
+
+
+# ---------------------------------------------------------------------------
+# R-REQ-02 en el catalogo: la puerta no se rodea escribiendo el evento a mano
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("clase", ["motor", "agente"])
+def test_ningun_componente_automatico_nuestro_reabre_una_actuacion(clase: str) -> None:
+    """El agujero que encontro la revision de S3.5 (`ADR-010` §5 quater, hallazgo 1).
+
+    `reabrir` exige confirmacion humana, pero un `RequerimientoRecibido` escrito **directamente** al log
+    movia la actuacion a `PENDIENTE_SUBSANACION` sin interpretacion ni confirmacion. La puerta estaba en la
+    funcion, no en el catalogo, asi que se rodeaba saltandose la funcion.
+    """
+    log = LogEventos("ACT-99")
+    payload: dict[str, object] = {"origen": "GA", "requerimiento_ref": "REQ-9"}
+    if clase == "agente":  # un evento de agente declara ademas su traza (`docs/03` §11.2)
+        payload |= {"coste": "0", "latencia": "0", "modelo": "x", "version_prompt": "v1"}
+    with pytest.raises(ErrorEvento, match="ningun componente automatico"):
+        log.anadir("RequerimientoRecibido", payload, actor=(clase, f"{clase}@test"))
+
+
+@pytest.mark.parametrize("clase", ["humano", "plataforma"])
+def test_quien_si_puede_escribir_un_requerimiento(clase: str) -> None:
+    """Un humano (tras confirmar) y la plataforma (el contagio de GA/CN): nadie mas."""
+    log = LogEventos("ACT-99")
+    log.anadir("ActuacionAbierta", {}, actor=("motor", "engine@test"))
+    evento = log.anadir(
+        "RequerimientoRecibido",
+        {"origen": "GA", "requerimiento_ref": "REQ-9"},
+        actor=(clase, f"{clase}@test"),
+    )
+    assert evento.actor.clase == clase
+    log.verificar()

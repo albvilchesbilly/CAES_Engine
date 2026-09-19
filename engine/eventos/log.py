@@ -49,6 +49,7 @@ from engine.eventos.canonico import (
     texto_instante,
 )
 from engine.eventos.catalogo import (
+    ACTORES_ADMITIDOS,
     CAMPOS_AGENTE,
     CLASES_ACTOR,
     CONFIRMACIONES_SOLO_HUMANO,
@@ -166,6 +167,12 @@ def _validar_tipo(tipo: object) -> str:
 
 
 def _validar_actor(tipo: str, actor: Actor, payload: Mapping[str, object]) -> None:
+    admitidas = ACTORES_ADMITIDOS.get(tipo)
+    if admitidas is not None and actor.clase not in admitidas:
+        raise ErrorEvento(
+            f"{tipo} solo admite actor de clase {list(admitidas)} y llego {actor.clase!r}: ningun "
+            "componente automatico nuestro reabre una actuacion (`R-REQ-02`, `ADR-010`)"
+        )
     exige_humano = tipo in TIPOS_SOLO_HUMANO
     marca = CONFIRMACIONES_SOLO_HUMANO.get(tipo)
     if marca is not None and payload.get(marca) is True:

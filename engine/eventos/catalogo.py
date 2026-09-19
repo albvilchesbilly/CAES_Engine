@@ -65,6 +65,16 @@ TIPOS_SOLO_HUMANO = ("DatoCorregidoPorHumano", "DesistimientoRegistrado", "Firma
 #: Eventos que exigen actor humano **solo cuando** el payload lleva esa marca a `true` (ver cabecera).
 CONFIRMACIONES_SOLO_HUMANO = {"RequerimientoInterpretado": "confirmada"}
 
+#: Eventos que solo admiten ciertas clases de actor, cuando "solo humano" seria demasiado estrecho.
+#:
+#: `RequerimientoRecibido` mueve una actuacion a `PENDIENTE_SUBSANACION`, incluida una ya firmada. La puerta
+#: de `R-REQ-02` (una interpretacion no reabre sola: la confirma un humano) vive en
+#: `engine.requerimientos.reabrir`, pero un evento escrito **directamente** al log la rodearia. No se puede
+#: exigir actor humano, porque el contagio de un requerimiento de GA o CN a las companeras del expediente lo
+#: escribe la plataforma (`docs/02` §5.6). Lo que si se puede exigir es que no lo escriba el motor ni un
+#: agente: **ningun componente automatico nuestro reabre una actuacion**. (`ADR-010` §5 quater, hallazgo 1.)
+ACTORES_ADMITIDOS: dict[str, tuple[str, ...]] = {"RequerimientoRecibido": ("humano", "plataforma")}
+
 #: Lo que un evento de actor `agente` tiene que traer siempre en el payload (`docs/03` §11.2 punto 6).
 CAMPOS_AGENTE = ("coste", "latencia", "modelo", "version_prompt")
 
@@ -73,6 +83,7 @@ ORIGENES_SUBSANACION = ("interno", "verificador", "GA", "CN")
 
 
 __all__ = [
+    "ACTORES_ADMITIDOS",
     "CAMPOS_AGENTE",
     "CLASES_ACTOR",
     "CONFIRMACIONES_SOLO_HUMANO",
