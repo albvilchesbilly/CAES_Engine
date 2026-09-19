@@ -6,7 +6,7 @@ Este documento dice **qué carpetas y ficheros tiene el repositorio, para qué s
 
 **Punto de partida (18/09/2026): el repositorio arranca vacío de código.** Solo existen documentación (`docs/`), la spec `spec/IND240_v1.1.yaml`, las propuestas en `spec/propuestas/` y la configuración de agentes (`.claude/`, `.github/`). El Engine 0.1 (Sprints 1 y 2) se reconstruye en la Fase 0 de `docs/06-plan-de-construccion.md` con los criterios de aceptación de `docs/05-evaluacion-y-banco-de-pruebas.md`.
 
-**Marcas de fase**: `DOC` existe ya (documentación o configuración) · `F0` se crea en la Fase 0 (reconstrucción del Engine 0.1) · `S3` Sprint 3 · `S4` Sprint 4 · `RM` roadmap.
+**Marcas de fase**: `DOC` existe ya (documentación o configuración) · `F0` se creaba en la Fase 0 (reconstrucción del Engine 0.1, **cerrada el 19/09/2026**; hoy todas son `EXISTE`) · `S3` Sprint 3 · `S4` Sprint 4 · `RM` roadmap.
 
 ---
 
@@ -15,9 +15,9 @@ Este documento dice **qué carpetas y ficheros tiene el repositorio, para qué s
 ```
 cae-engine/
 ├── CLAUDE.md                        DOC  Entrada para Claude Code: reglas, vocabulario, orden de lectura
-├── README.md                        F0   Cómo instalar, ejecutar y probar (lo escribe Claude Code en Fase 0)
-├── pyproject.toml                   F0   Paquete, dependencias, pytest, ruff
-├── .gitignore                       F0   informes/, .venv/, __pycache__/, *.egg-info, .pytest_cache/
+├── README.md                        EXISTE  Cómo instalar, ejecutar y probar (Windows y Linux)
+├── pyproject.toml                   EXISTE  Paquete, dependencias, pytest (marcador `ocr`), ruff
+├── .gitignore                       EXISTE  informes/, .venv/, __pycache__/, *.egg-info, .pytest_cache/
 ├── .github/
 │   └── copilot-instructions.md      DOC  Misma verdad que CLAUDE.md, para GitHub Copilot
 ├── .claude/
@@ -36,21 +36,21 @@ cae-engine/
 │       ├── cabecera_v1.yaml              Spec transversal común a todas las fichas (S3, tras aprobación)
 │       └── IND240_v1.2.diff.md           Diff v1.1 → v1.2 (R-TMP-03, INT-08, INT-09, R-DOC-01)
 ├── mapping/                         S3   Modelo canónico → destino, por ficha (handoff, api, manifiesto)
-├── data/                            F0   Tablas de referencia con fuente, verificación y vigencia
+├── data/                            EXISTE  Tablas de referencia con fuente, verificación y vigencia
 │   ├── README.md                    DOC  Cómo se transcribe una tabla y qué está verificado
 │   ├── reg_2019_1781_cuadro6.csv    F0   Cuadro 6 del Reg. (UE) 2019/1781 (transcribir del DOUE)
 │   └── reg_2019_1781_cuadro6.meta.yaml  F0  Fuente, método de transcripción, verificación, vigencia, clave/valor y restricciones
 │
-├── engine/                          F0   Núcleo determinista. No importa de agentes/ ni de salida/
+├── engine/                          EXISTE  Núcleo determinista. No importa de agentes/ ni de salida/
 ├── agentes/                         S3   Periferia con LLM. Nunca el núcleo
 ├── salida/                          S3   Puerto de salida y adaptadores (handoff, simulador, API)
-├── generator/                       F0   Generador del paquete sintético (modelo de datos → documentos)
-├── expedientes/                     F0   Carpetas de entrada de los casos de prueba (salida del generator)
+├── generator/                       EXISTE  Generador del paquete sintético (modelo de datos → documentos)
+├── expedientes/                     EXISTE  Carpetas de entrada de los casos de prueba (salida del generator)
 │   ├── EXP001-A_completo/ … EXP001-G_desordenado/
 │   └── _resultados_esperados/            GROUND TRUTH. Nunca se entrega al Engine. Solo cambia con ADR
-├── informes/                        F0   Salida generada (markdown + JSON). No se commitea
-├── tests/                           F0   Pruebas: cálculo, spec, paquete, Engine end-to-end, metamórficas
-└── evaluar_casos.py                 F0   Matriz esperado/obtenido sobre los casos de expedientes/
+├── informes/                        EXISTE  Salida generada (markdown + JSON). No se commitea
+├── tests/                           EXISTE  Pruebas: cálculo, spec, paquete, Engine end-to-end, metamórficas
+└── evaluar_casos.py                 EXISTE  Matriz esperado/obtenido sobre los casos de expedientes/
 ```
 
 **Regla de dependencias (no negociable):** las importaciones apuntan hacia dentro.
@@ -104,7 +104,7 @@ spec/
 - El Spec Registry (`engine/spec_registry.py`) **solo carga `spec/*.yaml`**, nunca `spec/propuestas/`. Cuando Billy aprueba una propuesta, se mueve (no se copia) a `spec/` y se registra un ADR.
 - Función desconocida en `logica` o `formula` = error de carga; la ficha no se activa.
 
-### 3.2 `data/` — tablas de referencia (`F0`)
+### 3.2 `data/` — tablas de referencia (`EXISTE`; 38 de 39 filas pendientes de verificación humana)
 
 ```
 data/
@@ -115,24 +115,27 @@ data/
 
 Toda tabla son **dos ficheros con el mismo nombre base** (`.csv` + `.meta.yaml`); `engine/tablas.py` los lee juntos y `cargar_tabla(id)` resuelve el fichero por el `id` del meta, sin leer la spec. El motor es genérico: el esquema (columnas, columna `clave` de búsqueda, columna `valor` que devuelve `buscar` e interpola según INT-02, `restricciones`) es dato del `.meta.yaml`, nunca código. El `.meta.yaml` lleva fuente oficial (URL), fecha y método de transcripción (`doue` / `boe` / `memoria_agente`), quién la verificó y contra qué, y vigencia (`desde`, `hasta`); `README.md` lo explica en prosa. **Valor verificado que hay que reproducir**: 110 kW → 5,55 kW de pérdidas de referencia. El resto de filas se marcan `verificado: pendiente` hasta que Billy las contraste contra el DOUE (ver `data/README.md`; a 18/09/2026 la transcripción es de memoria del agente porque el proxy de la sesión bloqueó BOE y EUR-Lex).
 
-### 3.3 `engine/` — núcleo determinista (`F0`, ampliado en `S3`/`S4`)
+### 3.3 `engine/` — núcleo determinista (`EXISTE` tras la Fase 0, ampliado en `S3`/`S4`)
 
 ```
 engine/
   __init__.py
-  spec_registry.py      F0  N1  Carga y valida specs; versiones; garantía NO_EVALUABLE→SUBSANABLE
-  expresiones.py        F0  —   Parser de lista blanca para `logica` y `formula`. Nada de eval()
-  calculo.py            F0  N3  Calculation Engine: Decimal, fórmula del YAML, traza, controles físicos
-  tablas.py             F0  N3  Carga de data/*.csv con vigencia; búsqueda por clave; INT-02 (sin fila)
-  ingesta.py            F0  S1  PDF nativo, OCR, xlsx, EXIF, separación de PDF combinados, SHA-256 de TODO
-  clasificacion.py      F0  A1  Clasificación léxica por tipo de documento con confianza
-  extraccion.py         F0  A2  Interfaz `Extractor` + implementación por reglas (tablas antes que texto)
-  registro_xlsx.py      F0  —   Lector del registro SCADA: N2, P_prom, h_despues, huella
-  evidencias.py         F0  N4  Evidence Store en memoria: tres capas por dato, consolidación, conflictos
-  reglas.py             F0  N2  Rules Engine: fases, severidades, CUMPLE/FALLA/NO_EVALUABLE, veredicto
-  motor.py              F0  S3  Orquestador lineal: ingesta → extracción → consolidación → reglas → cálculo
-  informe.py            F0  —   Informe de prevalidación (markdown + JSON)
-  cli.py                F0  —   `python -m engine.cli <carpeta> --md … --json …`
+  spec_registry.py      EXISTE N1  Carga y valida specs; versiones; garantía NO_EVALUABLE→SUBSANABLE;
+                                  valida el bloque `calculo` con `calculo.planificar` al cargar
+  expresiones.py        EXISTE —   Parser de lista blanca para `logica` y `formula`. Nada de eval()
+  calculo.py            EXISTE N3  Calculation Engine: Decimal, fórmula del YAML, traza, controles físicos;
+                                  `planificar()` valida y compila lo que la spec declara
+  tablas.py             EXISTE N3  Carga de data/*.csv + .meta.yaml con vigencia; clave y valor del meta; INT-02
+  ingesta.py            EXISTE S1  PDF nativo, OCR, xlsx, EXIF, separación de PDF combinados, SHA-256 de TODO
+  clasificacion.py      EXISTE A1  Clasificación léxica por tipo de documento con confianza
+  extraccion.py         EXISTE A2  Interfaz `Extractor` + implementación por reglas (tablas antes que texto)
+  registro_xlsx.py      EXISTE —   Lector del registro SCADA: N2, P_prom, h_despues, huella
+  evidencias.py         EXISTE N4  Evidence Store en memoria: tres capas por dato, consolidación, conflictos
+  reglas.py             EXISTE N2  Rules Engine: fases, severidades, CUMPLE/FALLA/NO_EVALUABLE, veredicto
+  motor.py              EXISTE S3  Orquestador lineal: ingesta → clasificación → extracción → consolidación
+                                  → reglas → cálculo; devuelve `Actuacion`
+  informe.py            EXISTE —   Informe de prevalidación (markdown + JSON)
+  cli.py                EXISTE —   `python -m engine.cli <carpeta> --md … --json … [--sin-ocr] [--fecha]`
   modelo/               S3  N7  Actuacion, GrupoActuaciones, Expediente, Verificador, Tenant (JSON Schema)
   eventos/              S3  N8  Log solo-añadir, hash encadenado, JSON canónico, replay
   estados.py            S3  N6  Cuatro niveles de estado, contagio, inalterabilidad post-firma
@@ -147,15 +150,19 @@ Reglas de la carpeta:
 - `motor.py` en Fase 0 es lineal y síncrono; en Sprint 3 pasa a emitir eventos (`eventos/`) sin cambiar su interfaz pública.
 - El código llama `Actuacion` a la unidad de trabajo desde la Fase 0 (no hay tests antiguos que proteger: se adopta el vocabulario de la plataforma oficial directamente, decisión D1 de `docs/02`). `Expediente` queda reservado para la agregación oficial.
 
-### 3.4 `generator/` — fábrica de casos sintéticos (`F0`)
+### 3.4 `generator/` — fábrica de casos sintéticos (`EXISTE`)
 
 ```
 generator/
   __init__.py
   modelo_caso.py        Modelo de datos de un caso (empresa, motores, fechas, valores) → dataclasses
   casos.py              Definición de los 7 casos A–G como variaciones de un caso base
-  documentos/           Un render por tipo de documento (factura, ficha técnica, certificado, convenio…)
+  documentos/           Un render por tipo de documento (factura, ficha técnica, certificado, convenio…),
+                        más `base.py` (utilidades de maquetación), `imagenes.py` (fotos y placa para OCR),
+                        `escaneo.py` (el escaneo girado del caso G) e `irrelevantes.py`
   marcas.py             Marca "DOCUMENTO SINTÉTICO – SOLO PRUEBAS" en cada página; EXIF en fotos
+  calculo_caso.py       Llama a `engine.calculo` para obtener el AETOTAL de cada caso (nunca a mano)
+  ground_truth.py       Compone el JSON de `_resultados_esperados/` desde el mismo modelo de datos
   generar.py            `python -m generator.generar` → expedientes/EXP001-*/ + _resultados_esperados/
 ```
 
@@ -163,7 +170,7 @@ generator/
 - Todo nombre, NIF, nº de serie, coordenada y empresa es inventado. Nunca datos reales.
 - En Sprint 3 se amplía a **fábrica de casos**: mismas variables, plantillas y calidades de escaneo distintas, con un conjunto reservado que nunca se usa para ajustar el extractor.
 
-### 3.5 `expedientes/` — entradas de prueba (`F0`, generadas)
+### 3.5 `expedientes/` — entradas de prueba (`EXISTE`, generadas)
 
 ```
 expedientes/
@@ -179,7 +186,7 @@ expedientes/
 
 Se regeneran con `python -m generator.generar`; se commitean para que los tests no dependan de reportlab/pillow. **Nota sobre E y F**: los totales proceden del Engine 0.1 original; los parámetros exactos de los motores 2 y 3 no están documentados fuera de aquel código, así que el generator reconstruido fija los suyos y el ground truth de E y F se recalcula y se registra en ADR (`docs/05` §2). El caso A sí es reproducible exactamente: 110 kW, 1.485 → 1.188 rpm, 6.000 h, p = 5,55/110.
 
-### 3.6 `tests/` — banco de pruebas (`F0`)
+### 3.6 `tests/` — banco de pruebas (`EXISTE`: 999 tests al cerrar la Fase 0)
 
 ```
 tests/
@@ -191,11 +198,19 @@ tests/
   test_reglas.py                 Por regla: un caso que cumple y uno que falla; fases; veredicto
   test_evidencias.py             Tres capas; conflicto → null; OCR 0,75; normalización S.L./SL
   test_ingesta.py                SHA-256 de todo; separación de PDF; vinculación por hash no por nombre
+  test_extraccion.py             Cobertura de variables por caso; cita obligatoria; trampas; la spec manda
+  test_motor.py                  Encadenado completo y `Actuacion`; los 7 casos contra el ground truth
+  test_informe.py                Markdown y JSON: tres capas, traza, descargo de la spec, provisional
   test_generator.py              Los 7 casos se generan; marca sintética en cada página; ground truth coherente
   test_engine_e2e.py             7/7 veredictos; A/E/F/G ahorro esperado; tiempos razonables
   test_metamorficas.py           Renombrar/reordenar/duplicar/añadir irrelevante no cambia nada; alterar PM → BLOQUEADO
-  test_modo_degradado.py         Con agentes/ y salida/ ausentes, engine/ produce veredicto
+  test_modo_degradado.py         Con agentes/ y salida/ ausentes, engine/ produce veredicto (en subproceso)
+  test_qa_hallazgos_f03.py       Defectos que encontró la revisión QA del cálculo; se conservan como regresión
+  test_qa_hallazgos_f04.py       Ídem para el Spec Registry
 ```
+
+Los tests que necesitan `tesseract` llevan `@pytest.mark.ocr` y se saltan si no está instalado: en un clon sin OCR
+la suite queda en 976 pasados y 23 saltados, y `evaluar_casos.py` sigue dando 7/7.
 
 Definición de hecho para cualquier cambio: `pytest -q` en verde, `evaluar_casos.py` 7/7, caso A en 305.829,6 kWh/año. Un test que rompe no se borra ni se relaja: se explica.
 
@@ -245,7 +260,7 @@ mapping/
 
 Declarativo. Si un cambio en la API oficial exige tocar `engine/`, el diseño está mal.
 
-### 3.10 `informes/` (`F0`, no se commitea)
+### 3.10 `informes/` (`EXISTE`, no se commitea)
 
 Salida de `engine/cli.py` y `evaluar_casos.py`. En `.gitignore`. Los informes que valen como referencia se copian a `docs/decisiones/` o a un ADR, nunca se dejan aquí.
 
@@ -285,7 +300,7 @@ Los agentes son **roles con permisos de escritura acotados** (columna "carpetas 
 | Nombres | Módulos, funciones y variables en **español sin tildes** (`evaluar_actuacion`, `hash_reglas`), igual que las specs. Clases en CamelCase (`Actuacion`, `DatoConsolidado`) |
 | Vocabulario | `Actuacion` (unidad de trabajo) · `GrupoActuaciones` · `Expediente` (agregación oficial). Nunca "expediente" para lo que se prepara y envía. Ver `docs/00` §4 |
 | Estados | Cuatro niveles distintos, nunca mezclados: veredicto, estado de ciclo, estado de plataforma (actuación), estado de plataforma (expediente). Ver `docs/03` |
-| Marcas en docs | `F0` (existió en Engine 0.1; se reconstruye en Fase 0) · `NUEVO` (nunca implementado) · `EXISTE` / `PARCIAL` (implementado en este repo) · `NO DOCUMENTADO` (→ `TODO(API-xx)`). `A CONFIRMAR` ya no se usa. Se actualizan en la misma sesión en que cambia el código |
+| Marcas en docs | `F0` (existió en Engine 0.1; se reconstruía en Fase 0, ya cerrada) · `NUEVO` (nunca implementado) · `EXISTE` / `PARCIAL` (implementado en este repo) · `NO DOCUMENTADO` (→ `TODO(API-xx)`). `A CONFIRMAR` ya no se usa. Se actualizan en la misma sesión en que cambia el código |
 | Huecos de API | En código: `# TODO(API-07): ver docs/HUECOS.md`. Nunca un valor inventado |
 | Interpretaciones | En spec: `interpretacion: INT-xx`. En código: se lee de la spec, nunca se hardcodea un criterio |
 | Tests | `pytest`; un fichero por módulo; nombres `test_<que>_<condicion>`; ground truth solo desde `_resultados_esperados/` |

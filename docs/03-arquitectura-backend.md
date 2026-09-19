@@ -14,10 +14,10 @@
 
 | Marca | Significado |
 |---|---|
-| `F0` | Existió en el Engine 0.1 con diseño probado; se reconstruye en la Fase 0 de `docs/06` |
+| `F0` | Existió en el Engine 0.1 con diseño probado; se reconstruía en la Fase 0 de `docs/06`. **Cerrada el 19/09/2026**: ya no queda ningún módulo con esta marca |
 | `NUEVO` | Diseño aprobado, nunca implementado; entra en el sprint indicado |
-| `EXISTE` | Implementado en este repositorio (al arrancar, ninguno) |
-| `PARCIAL` | Implementado en parte en este repositorio; se indica cuál (al arrancar, ninguno) |
+| `EXISTE` | Implementado en este repositorio. Tras la Fase 0 (19/09/2026): todo el núcleo determinista |
+| `PARCIAL` | Implementado en parte en este repositorio; se indica cuál |
 | `NO DOCUMENTADO` | La plataforma oficial no lo ha publicado; se modela como hueco `TODO(API-xx)` en `docs/HUECOS.md`, nunca como suposición |
 
 La marca antigua `A CONFIRMAR` desaparece: no hay repositorio previo contra el que confirmar. Lo que era duda de implementación es ahora una decisión de diseño de la Fase 0 y está resuelta en §14 de este documento o en `docs/04`. Las marcas se actualizan en la misma sesión en que cambia el código (`/contrastar`).
@@ -66,7 +66,7 @@ Los siete primeros vienen del diseño original; los tres últimos, de la confron
 
 ## 3. Mapa de módulos
 
-Rutas según `docs/01` §3. La columna Estado describe el arranque desde cero: `F0` se reconstruye en la Fase 0 con el alcance indicado; `NUEVO` entra en el sprint indicado.
+Rutas según `docs/01` §3. La columna Estado, tras cerrar la Fase 0 (19/09/2026): `EXISTE` está implementado y cubierto por tests en este repositorio; `NUEVO` entra en el sprint indicado.
 
 ### 3.1 Núcleo determinista (`engine/`)
 
@@ -74,27 +74,27 @@ Rutas según `docs/01` §3. La columna Estado describe el arranque desde cero: `
 |---|---|---|---|---|
 | N1 | Spec Registry | Carga y valida fichas YAML versionadas; solo `spec/*.yaml`, nunca `spec/propuestas/`; garantía `NO_EVALUABLE` → `SUBSANABLE` al cargar; resuelve qué versión aplica por fecha | `engine/spec_registry.py` | `EXISTE` (18/09/2026, F0.4): una ficha (IND240), rechazo de `propuestas/`, garantía de carga estática, `hash_reglas`, varias versiones; criterio de vigencia sin decidir · `NUEVO` S3: spec transversal de cabecera, vigencias de versiones, coeficientes (art. 18 bis) cuando existan |
 | — | Parser de expresiones | Lista blanca para `logica` y `formula`. Nada de `eval()` | `engine/expresiones.py` | `EXISTE` (18/09/2026, F0.1; decisión §14 a) |
-| N2 | Rules Engine | Evalúa reglas por fases con tres resultados y fija el veredicto; **tres niveles** (actuación/unidad, grupo, expediente) | `engine/reglas.py` | `F0` nivel actuación/unidad · `NUEVO` S4: grupo y expediente (con N9) |
+| N2 | Rules Engine | Evalúa reglas por fases con tres resultados y fija el veredicto; **tres niveles** (actuación/unidad, grupo, expediente) | `engine/reglas.py` | `EXISTE` (F0.9) nivel actuación/unidad · `NUEVO` S4: grupo y expediente (con N9) |
 | N3 | Calculation Engine + tablas | Fórmula leída del YAML, `Decimal`, traza, controles físicos; tablas de `data/` con vigencia y búsqueda por clave (`INT-02`); **control cruzado** con el valor de la plataforma | `engine/calculo.py`, `engine/tablas.py` | `EXISTE` (18/09/2026, F0.2 y F0.3): cálculo genérico desde la spec y cuadro 6 con vigencia e INT-02 · `NUEVO` S3: control cruzado (necesita sandbox) |
-| N4 | Evidence Store | Grafo de evidencias, tres capas por dato, consolidación, conflictos, `tratable_por_plataforma` | `engine/evidencias.py` | `F0` en memoria con serialización JSON (§14 e) · `NUEVO` S3: persistencia junto al log |
-| N5 | Integridad | SHA-256 de **todo** fichero en ingesta + manifiesto interno | `engine/ingesta.py` (hash) · `salida/constructor/` (manifiesto) | `F0` hash total desde la Fase 0 (§14 d) · `NUEVO` S3: manifiesto interno |
+| N4 | Evidence Store | Grafo de evidencias, tres capas por dato, consolidación, conflictos, `tratable_por_plataforma` | `engine/evidencias.py` | `EXISTE` (F0.8) en memoria con serialización JSON (§14 e) · `NUEVO` S3: persistencia junto al log |
+| N5 | Integridad | SHA-256 de **todo** fichero en ingesta + manifiesto interno | `engine/ingesta.py` (hash) · `salida/constructor/` (manifiesto) | `EXISTE` (F0.6) hash total de todo fichero (§14 d) · `NUEVO` S3: manifiesto interno |
 | N6 | Máquina de estados | Cuatro niveles de estado, contagio, inalterabilidad post-firma; es el A0 (coordinador) hecho código | `engine/estados.py` | `NUEVO` S3 |
 | N7 | Modelo canónico | `Actuacion`, `GrupoActuaciones`, `Expediente`, `Verificador`, `Tenant`; validado con JSON Schema | `engine/modelo/` | `NUEVO` S3 |
 | N8 | Log de eventos | Solo-añadir, hash encadenado, JSON canónico, replay | `engine/eventos/` | `NUEVO` S3 |
 | N9 | Compositor de expedientes | Propone grupos y expedientes válidos a partir de `R-GRP` / `R-EXP` | `engine/compositor.py` | `NUEVO` S4 (Expediente Builder, decisión de Billy) |
 
-Módulos de `engine/` sin ID propio en este mapa (`docs/01` §3.3): `motor.py` (S3), `informe.py` e `cli.py` (informe de prevalidación markdown + JSON y línea de comandos, `F0`), `ingesta.py`, `clasificacion.py`, `extraccion.py`, `registro_xlsx.py` (S1 y extractor por reglas, `F0`).
+Módulos de `engine/` sin ID propio en este mapa (`docs/01` §3.3): `motor.py` (S3), `informe.py` e `cli.py` (informe de prevalidación markdown + JSON y línea de comandos, `EXISTE` desde F0.10), `ingesta.py`, `clasificacion.py`, `extraccion.py`, `registro_xlsx.py` (S1 y extractor por reglas, `EXISTE` desde F0.6/F0.7).
 
 ### 3.2 Servicios
 
 | ID | Módulo | Función | Fichero | Estado |
 |---|---|---|---|---|
-| S1 | Ingesta | PDF nativo, OCR, xlsx, EXIF, separación de PDF combinados, clasificación léxica con confianza, extractor por reglas detrás de la interfaz `Extractor`, lector del registro SCADA; hash de todo | `engine/ingesta.py`, `engine/clasificacion.py`, `engine/extraccion.py`, `engine/registro_xlsx.py` | `F0` |
+| S1 | Ingesta | PDF nativo, OCR, xlsx, EXIF, separación de PDF combinados, clasificación léxica con confianza, extractor por reglas detrás de la interfaz `Extractor`, lector del registro SCADA; hash de todo | `engine/ingesta.py`, `engine/clasificacion.py`, `engine/extraccion.py`, `engine/registro_xlsx.py` | `EXISTE` (F0.6, F0.7) |
 | S2 | Agent Runtime | El contrato común de agentes hecho código una sola vez (§11) | `agentes/runtime/` | `NUEVO` S3 |
-| S3 | Orquestador | Workflow por eventos con tareas humanas; la máquina de estados (N6) hace de A0 | `engine/motor.py` | `F0` lineal y síncrono (ingesta → extracción → consolidación → reglas → cálculo) · `NUEVO` S3: emite eventos sin cambiar su interfaz pública |
+| S3 | Orquestador | Workflow por eventos con tareas humanas; la máquina de estados (N6) hace de A0 | `engine/motor.py` | `EXISTE` (F0.10) lineal y síncrono (ingesta → clasificación → extracción → consolidación → reglas → cálculo) · `NUEVO` S3: emite eventos sin cambiar su interfaz pública |
 | S4 | Consola de revisión | Escalados, conflictos, correcciones del profesional, tareas pendientes de la plataforma; centrada en lo previo a la firma | — (S4, `docs/06`) | `NUEVO` S4 |
 | S5 | Salida | Puerto + adaptadores handoff / simulador / API; transporte separado de la firma humana (§10) | `salida/` | `NUEVO` S3 |
-| S6 | Evaluación | Banco de pruebas, fábrica de casos, metamórficas, batería `INT-xx` contra sandbox | `generator/`, `expedientes/`, `tests/`, `evaluar_casos.py` | `F0` 7 casos, ground truth, tests y `evaluar_casos.py` · `NUEVO` S3: fábrica de casos y batería `INT-xx` |
+| S6 | Evaluación | Banco de pruebas, fábrica de casos, metamórficas, batería `INT-xx` contra sandbox | `generator/`, `expedientes/`, `tests/`, `evaluar_casos.py` | `EXISTE` (F0.5, F0.11): 7 casos, ground truth, 999 tests y `evaluar_casos.py` · `NUEVO` S3: fábrica de casos y batería `INT-xx` |
 | S7 | Seguridad y tenencia | Aislamiento por tenant (delegado u obligado directo), enmascarado, anonimización (§12) | transversal | `NUEVO` S3 |
 | S8 | Vigilancia normativa (A6) | Fuera de línea; propone diffs sobre YAML en `spec/propuestas/`; sigue RD 36/2023, órdenes y plataforma | fuera de código | `NUEVO` (hoy vigilancia manual; sin diff automático) |
 
@@ -243,7 +243,7 @@ Vive en `engine/estados.py`. Es el A0 (coordinador): código, no un LLM.
 
 | Nivel | Valores | Quién lo fija | Estado documental |
 |---|---|---|---|
-| Veredicto (calidad de la actuación) | `NO_ELEGIBLE` > `BLOQUEADO` > `SUBSANABLE` > `PREVALIDADO` | Rules Engine | `F0` |
+| Veredicto (calidad de la actuación) | `NO_ELEGIBLE` > `BLOQUEADO` > `SUBSANABLE` > `PREVALIDADO` | Rules Engine | `EXISTE` |
 | Estado de ciclo (nuestro trabajo) | §7.2 | Máquina de estados | `NUEVO` |
 | Estado de plataforma — actuación (fase 1) | `BORRADOR`, `COMPLETA`, `ENVIADA_A_VERIFICACION`, `PDTE_RECTIFICACION_VER`, `VERIFICACION_EN_PROCESO`, `VERIFICADA_FAVORABLE`, `VERIFICADA_DESFAVORABLE`, `NO_PUEDE_EMITIR_DICTAMEN` | La plataforma; nosotros solo lo reflejamos | Confirmado (presentación OMIE/MIBGAS 30/06/2026, `docs/02`) |
 | Estado de plataforma — expediente (fases 2–4) | Provisionales: `BORRADOR_SOLICITUD`, `PRESENTADO`, `EN_VALIDACION_TECNICA`, `REQUERIDO_GA`, `VALIDADO_GA`, `EN_REVISION_FORMAL`, `REQUERIDO_CN`, `RESUELTO_FAVORABLE`, `RESUELTO_DESFAVORABLE`, `INSCRITO`, `DESISTIDO` | La plataforma; **nombres nuestros, no oficiales** | `NO DOCUMENTADO` → `TODO(API-03)` |
@@ -281,13 +281,13 @@ Cómo se pasa de N evidencias a un `valor_consumido`. Vive en `engine/evidencias
 
 | Paso | Qué hace | Estado |
 |---|---|---|
-| 1. Agrupar | Evidencias por variable y por unidad. Clave de unión: números de serie. El registro SCADA se vincula por SHA-256, nunca por nombre de fichero | `F0` |
-| 2. Normalizar | Según `cruce` de la spec: `exacto` o `normalizado` (mayúsculas, puntuación, "S.L." vs "SL") | `F0` |
-| 3. Comparar | Todas las fuentes presentes; se aplica `tolerancia_cruce_*` cuando la spec la defina | `F0` |
-| 4. OCR | Evidencias de foto o escaneo entran con confianza 0,75. Si discrepan de una fuente fiable no bloquean: se marcan como posible error de OCR | `F0` |
-| 5. Conflicto entre fuentes fiables | `valor_consumido = null`, evento `ConflictoDetectado` con las dos evidencias. El motor **no elige** (regla de oro 6) | `F0` |
+| 1. Agrupar | Evidencias por variable y por unidad. Clave de unión: números de serie. El registro SCADA se vincula por SHA-256, nunca por nombre de fichero | `EXISTE` |
+| 2. Normalizar | Según `cruce` de la spec: `exacto` o `normalizado` (mayúsculas, puntuación, "S.L." vs "SL") | `EXISTE` |
+| 3. Comparar | Todas las fuentes presentes; se aplica `tolerancia_cruce_*` cuando la spec la defina | `EXISTE` |
+| 4. OCR | Evidencias de foto o escaneo entran con confianza 0,75. Si discrepan de una fuente fiable no bloquean: se marcan como posible error de OCR | `EXISTE` |
+| 5. Conflicto entre fuentes fiables | `valor_consumido = null`, evento `ConflictoDetectado` con las dos evidencias. El motor **no elige** (regla de oro 6) | `EXISTE` |
 | 6. Doble extracción | Extractor de reglas y extractor LLM sobre el mismo documento. Coinciden → confianza alta. Discrepan → no es un conflicto documental sino un desacuerdo de lectura: `DesacuerdoExtractores`, se escala a revisión humana y se registra como métrica (tasa de desacuerdo, `docs/05`) | `NUEVO` S3 (con S2 y A2 LLM) |
-| 7. Declarado ≠ demostrado | Si una variable exige `derivado` o `demostrado` y solo hay valor declarado, el dato entra marcado como tal y lo recoge la regla de evidencia correspondiente (`R-EVD-04` en IND240) | `F0` |
+| 7. Declarado ≠ demostrado | Si una variable exige `derivado` o `demostrado` y solo hay valor declarado, el dato entra marcado como tal y lo recoge la regla de evidencia correspondiente (`R-EVD-04` en IND240) | `EXISTE` |
 
 El consolidador es determinista y no llama a modelos. Lo que A4 aporta en P4 es la explicación del conflicto para el profesional, nunca su resolución.
 
@@ -446,23 +446,23 @@ Visto desde el producto. Cada línea dice qué producto la vende, qué proceso l
 
 | ID | Funcionalidad | Producto | Proceso / módulo | ¿Diferencial? | Estado |
 |---|---|---|---|---|---|
-| F-01 | Ingesta de documentación desordenada (PDF, escaneos, xlsx, fotos, PDF combinados) con hash de todo | CAE Check | P1 / S1, N5 | Sí | `F0` (hash total desde la Fase 0) |
-| F-02 | Clasificación documental con confianza | CAE Check | P1 / A1 | Sí | `F0` (reglas léxicas) · LLM `NUEVO` S3 |
-| F-03 | Extracción de variables con evidencia (documento, página, texto, método, confianza) | CAE Check | P2 / A2, N4 | Sí | `F0` reglas · LLM `NUEVO` S3 |
-| F-04 | Cruce de **contenido** entre documentos y detección de contradicciones con ambas evidencias | CAE Check | P4 / R-CON, A4 | **Sí, el núcleo del diferencial** | `F0` |
-| F-05 | Comprobación de ámbito y exclusiones de la ficha | CAE Check | P3 / R-AMB | Parcial (la plataforma valida lo tratable; el ámbito exige leer documentos) | `F0` |
-| F-06 | Comprobación de presencia documental | CAE Check | R-DOC-01 | **No** (la plataforma lo hace); se mantiene como control previo | `F0` |
-| F-07 | Comprobación de evidencia demostrada vs. declarada (registro ≥ 30 días, inalterabilidad) | CAE Check | R-EVD | Sí | `F0` |
-| F-08 | Cálculo determinista con traza | CAE Check | P5 / N3 | No como producto; sí como **control cruzado** | `F0` |
+| F-01 | Ingesta de documentación desordenada (PDF, escaneos, xlsx, fotos, PDF combinados) con hash de todo | CAE Check | P1 / S1, N5 | Sí | `EXISTE` (hash total de todo fichero) |
+| F-02 | Clasificación documental con confianza | CAE Check | P1 / A1 | Sí | `EXISTE` (reglas léxicas) · LLM `NUEVO` S3 |
+| F-03 | Extracción de variables con evidencia (documento, página, texto, método, confianza) | CAE Check | P2 / A2, N4 | Sí | `EXISTE` reglas · LLM `NUEVO` S3 |
+| F-04 | Cruce de **contenido** entre documentos y detección de contradicciones con ambas evidencias | CAE Check | P4 / R-CON, A4 | **Sí, el núcleo del diferencial** | `EXISTE` |
+| F-05 | Comprobación de ámbito y exclusiones de la ficha | CAE Check | P3 / R-AMB | Parcial (la plataforma valida lo tratable; el ámbito exige leer documentos) | `EXISTE` |
+| F-06 | Comprobación de presencia documental | CAE Check | R-DOC-01 | **No** (la plataforma lo hace); se mantiene como control previo | `EXISTE` |
+| F-07 | Comprobación de evidencia demostrada vs. declarada (registro ≥ 30 días, inalterabilidad) | CAE Check | R-EVD | Sí | `EXISTE` |
+| F-08 | Cálculo determinista con traza | CAE Check | P5 / N3 | No como producto; sí como **control cruzado** | `EXISTE` |
 | F-09 | Control cruzado con el cálculo de la plataforma; bloqueo ante discrepancia | CAE Check / Platform | P5, P8 / N3, R-XCK | Sí | `NUEVO` S3 (necesita sandbox) |
-| F-10 | "Qué te falta": lista de carencias por regla, en lenguaje llano, con documentos concretos | CAE Check | P7 / campo `subsanacion`, A5 | Sí | `F0` carencias por regla fallada · campo `subsanacion` y redacción A5 `NUEVO` S4 |
+| F-10 | "Qué te falta": lista de carencias por regla, en lenguaje llano, con documentos concretos | CAE Check | P7 / campo `subsanacion`, A5 | Sí | `EXISTE` carencias por regla fallada con documentos derivados · redacción A5 `NUEVO` S4 |
 | F-11 | Cabecera común completa (precio de cesión, inversión, localización, propietario, subvención…) extraída de documentos | CAE Platform | P3 / `cabecera_v1.yaml`, R-CAB | Sí (la plataforma la pide; nosotros la rellenamos con evidencia) | `NUEVO` S3 (tras aprobación de Billy) |
 | F-12 | Payload de actuación (cabecera + detalle + manifiesto) listo para `BORRADOR` → `COMPLETA` | CAE Platform | P8 / S5 constructor | Sí | `NUEVO` S3 |
 | F-13 | Handoff al tenant (carpeta + manifiesto + informe) por el cauce vigente | CAE Platform | S5 handoff | Sí | `NUEVO` S3 |
 | F-14 | Consumo de notificaciones y **tareas pendientes** de la plataforma; cola priorizada por tenant | CAE Platform | P9 / S4 | Sí | `NUEVO` S3 (simulador) · S4 (consola) |
 | F-15 | Interpretación de requerimientos de verificador, GA y CN → reglas y documentos; reapertura de subsanación con contagio | CAE Platform | P9, P7 / A9, N6 | Sí | `NUEVO` S3 |
 | F-16 | **Expediente Builder**: propuesta de grupos y expedientes válidos (CCAA + año + sector + verificador), avisos de huérfanas y de contagio | CAE Platform | P10 / N9, R-GRP, R-EXP | Sí | `NUEVO` S4 (decisión de Billy) |
-| F-17 | Informe de prevalidación por destinatario (cliente, instalador, tenant) | CAE Check / Platform | A7, `engine/informe.py` | Sí | `F0` markdown/JSON único · por destinatario `NUEVO` S4 |
+| F-17 | Informe de prevalidación por destinatario (cliente, instalador, tenant) | CAE Check / Platform | A7, `engine/informe.py` | Sí | `EXISTE` markdown/JSON único · por destinatario `NUEVO` S4 |
 | F-18 | Revisor sombra (A8): observaciones sin alterar el veredicto; promoción a regla cuando anticipe rectificaciones | CAE Platform | P6 | Sí | `NUEVO` |
 | F-19 | Preparación de actuaciones singulares y vinculación a CVP | Roadmap | — | Sí | Decisión de Billy · fase II de la plataforma |
 | F-20 | Registro de resultado real (dictamen, resolución) como etiqueta para el banco de pruebas | CAE Monetization | P9 / S6 | Sí (activo defendible) | `NUEVO` S3 |

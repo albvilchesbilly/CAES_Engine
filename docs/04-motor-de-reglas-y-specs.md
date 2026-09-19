@@ -8,7 +8,7 @@ Este documento se lee **antes de tocar** `engine/reglas.py`, `engine/expresiones
 
 **Precedencia cuando dos fuentes discrepan** (de mayor a menor): BOE → plataforma oficial (lo publicado) → catálogo MITECO → `spec/*.yaml` activa → `docs/00` → este documento → código. Si este documento contradice una regla de oro de `docs/00` o la spec activa, este documento está mal y se arregla en la misma sesión.
 
-**Marcas de estado**: `F0` (existió en el Engine 0.1 con diseño probado; se reconstruye en la Fase 0) · `NUEVO` (diseño aprobado o propuesto, nunca implementado) · `EXISTE` / `PARCIAL` (implementado en este repo; al arrancar no hay ninguno) · `NO DOCUMENTADO` (la plataforma oficial no lo ha publicado → `TODO(API-xx)` en `docs/HUECOS.md`). Las marcas se actualizan en la misma sesión en que cambia el código.
+**Marcas de estado**: `F0` (existió en el Engine 0.1; se reconstruía en la Fase 0, **cerrada el 19/09/2026**: ya no queda ninguna) · `NUEVO` (diseño aprobado o propuesto, nunca implementado) · `EXISTE` / `PARCIAL` (implementado en este repo y cubierto por tests) · `NO DOCUMENTADO` (la plataforma oficial no lo ha publicado → `TODO(API-xx)` en `docs/HUECOS.md`). Las marcas se actualizan en la misma sesión en que cambia el código.
 
 **Fuera de este documento**: modelo canónico, log de eventos, máquina de estados, salida, agentes y seguridad viven en `docs/03-arquitectura-backend.md`. Los casos de prueba y el ground truth, en `docs/05-evaluacion-y-banco-de-pruebas.md`. La plataforma oficial, en `docs/02-plataforma-oficial.md`.
 
@@ -26,7 +26,7 @@ evaluar_grupo(grupo, actuaciones_evaluadas)                     → { resultados
 evaluar_expediente(expediente, actuaciones_evaluadas)           → { resultados[], valido: bool, avisos_contagio[] }
 ```
 
-- `evaluar_actuacion` es `F0`. Es la única que se reconstruye en la Fase 0 y la única que produce un **veredicto de calidad** (`NO_ELEGIBLE` … `PREVALIDADO`).
+- `evaluar_actuacion` es `EXISTE` (F0.9). Es la única implementada y la única que produce un **veredicto de calidad** (`NO_ELEGIBLE` … `PREVALIDADO`).
 - `evaluar_grupo` y `evaluar_expediente` son `NUEVO` (Sprint 4). No producen veredicto de calidad sino **validez de composición** y **avisos**; la calidad sigue viviendo en cada actuación.
 
 Lo que el motor de reglas **no es**:
@@ -94,7 +94,7 @@ Al cargar una spec, el registro falla (la ficha **no se activa**) si:
 
 ## 3. Anatomía de una regla
 
-### 3.1 Campos reales de `IND240_v1.1.yaml` (`F0`)
+### 3.1 Campos reales de `IND240_v1.1.yaml` (`EXISTE`)
 
 Las 26 reglas activas usan exactamente estos campos:
 
@@ -146,7 +146,7 @@ Se añaden a la anatomía. **Si faltan se aplican valores por defecto**; una spe
 
 ## 4. Severidades, veredicto y resultado de regla
 
-### 4.1 Severidades y veredicto (`F0`)
+### 4.1 Severidades y veredicto (`EXISTE`)
 
 | Severidad | Efecto si falla | ¿Calcula? |
 |---|---|---|
@@ -157,7 +157,7 @@ Se añaden a la anatomía. **Si faltan se aplican valores por defecto**; una spe
 
 Prioridad del veredicto: `NO_ELEGIBLE` > `BLOQUEADO` > `SUBSANABLE` > `PREVALIDADO`. `PREVALIDADO` significa "no falla ninguna regla salvo `AVISO`". Ningún veredicto significa CAE garantizado (descargo de la spec, `estados.descargo`).
 
-### 4.2 Resultado de una regla: tres valores (`F0`)
+### 4.2 Resultado de una regla: tres valores (`EXISTE`)
 
 | Resultado | Cuándo |
 |---|---|
@@ -193,11 +193,11 @@ Principio: **nunca se publica un ahorro apoyado en datos incoherentes.** Primero
 | Fase | Reglas | Si falla | Estado |
 |---|---|---|---|
 | 0. Cabecera | `R-CAB-01, 02, 08` (bloqueantes) | `BLOQUEADO`; el resto de `R-CAB` se evalúa en fase 5 | `NUEVO` |
-| 1. Ámbito | `R-AMB-*` | `NO_ELEGIBLE`. **Se detiene**: no se calcula aunque ficha o convenio declaren ahorro (caso D) | `F0` |
-| 2. Consistencia previa | `R-CON-01..05, 07` · `R-TMP-01` · `R-CAL-01, 04` · `R-CAL-02` (aviso) | `BLOQUEADO`. No se elige valor ni se calcula (caso C) | `F0` |
-| 3. Cálculo | — (N3, §7) | — | `F0` |
-| 4. Posterior al cálculo | `R-CAL-03` (controles físicos) · `R-CON-06` (convenio vs. `AETOTAL`) | `R-CAL-03` bloquea y **retira** el resultado; `R-CON-06` es subsanable | `F0` |
-| 5. Resto | `R-DOC-*` · `R-EVD-*` · `R-TMP-02, 03` · `R-CAB-03..07, 09..13` | `SUBSANABLE` o aviso | `F0` (ficha) · `NUEVO` (cabecera) |
+| 1. Ámbito | `R-AMB-*` | `NO_ELEGIBLE`. **Se detiene**: no se calcula aunque ficha o convenio declaren ahorro (caso D) | `EXISTE` |
+| 2. Consistencia previa | `R-CON-01..05, 07` · `R-TMP-01` · `R-CAL-01, 04` · `R-CAL-02` (aviso) | `BLOQUEADO`. No se elige valor ni se calcula (caso C) | `EXISTE` |
+| 3. Cálculo | — (N3, §7) | — | `EXISTE` |
+| 4. Posterior al cálculo | `R-CAL-03` (controles físicos) · `R-CON-06` (convenio vs. `AETOTAL`) | `R-CAL-03` bloquea y **retira** el resultado; `R-CON-06` es subsanable | `EXISTE` |
+| 5. Resto | `R-DOC-*` · `R-EVD-*` · `R-TMP-02, 03` · `R-CAB-03..07, 09..13` | `SUBSANABLE` o aviso | `EXISTE` (ficha) · `NUEVO` (cabecera) |
 | 6. Control cruzado (solo en P8, con simulador o sandbox) | `R-XCK-*` | Bloquea el envío | `NUEVO` |
 | 7. Composición (solo en P10) | `R-GRP-*`, `R-EXP-*` | `INVALIDO` o `AVISO_CONTAGIO` | `NUEVO` |
 | Transversal | `R-REQ-*` | Invariantes del ciclo | `NUEVO` |
@@ -354,19 +354,19 @@ Cómo se pasa de N evidencias a un `valor_consumido` (agrupación por clave de u
 
 | Familia | Nivel | Qué comprueba | Quién la declara | Estado |
 |---|---|---|---|---|
-| `R-AMB` | unidad / actuación | Ámbito y exclusiones de la ficha | Ficha | `F0` (3) |
-| `R-DOC` | actuación | Presencia y contenido mínimo de documentos | Ficha | `F0` (5); `R-DOC-01` propuesto como `diferencial: false` (§11) |
-| `R-EVD` | unidad | Evidencia demostrada: registro, inalterabilidad, derivación | Ficha | `F0` (4) |
-| `R-CON` | unidad / actuación | Consistencia entre fuentes | Ficha | `F0` (7) |
-| `R-TMP` | actuación | Fechas y plazos de procedimiento | Ficha (o cabecera si es común) | `F0` (3); `R-TMP-03` con corrección propuesta (§11) |
-| `R-CAL` | unidad | Precondiciones y controles físicos del cálculo | Ficha | `F0` (4) |
+| `R-AMB` | unidad / actuación | Ámbito y exclusiones de la ficha | Ficha | `EXISTE` (3) |
+| `R-DOC` | actuación | Presencia y contenido mínimo de documentos | Ficha | `EXISTE` (5); `R-DOC-01` propuesto como `diferencial: false` (§11) |
+| `R-EVD` | unidad | Evidencia demostrada: registro, inalterabilidad, derivación | Ficha | `EXISTE` (4) |
+| `R-CON` | unidad / actuación | Consistencia entre fuentes | Ficha | `EXISTE` (7) |
+| `R-TMP` | actuación | Fechas y plazos de procedimiento | Ficha (o cabecera si es común) | `EXISTE` (3); `R-TMP-03` con corrección propuesta (§11) |
+| `R-CAL` | unidad | Precondiciones y controles físicos del cálculo | Ficha | `EXISTE` (4) |
 | `R-CAB` | actuación | Cabecera común: presencia, fuente y coherencia de los campos transversales | `spec/propuestas/cabecera_v1.yaml` | `NUEVO` (§10.1) |
 | `R-GRP` | grupo | Composición válida de un grupo de actuaciones | `spec/propuestas/composicion_v1.yaml` | `NUEVO` (§10.2) |
 | `R-EXP` | expediente | Composición válida de un expediente y avisos de contagio | `spec/propuestas/composicion_v1.yaml` | `NUEVO` (§10.2) |
 | `R-XCK` | actuación | Control cruzado con la plataforma (cálculo y validaciones tratables) | `spec/propuestas/cabecera_v1.yaml` + `mapping/` | `NUEVO` (§10.3); necesita sandbox |
 | `R-REQ` | actuación / expediente | Coherencia de la respuesta a un requerimiento oficial | `spec/propuestas/composicion_v1.yaml` | `NUEVO` (§10.4) |
 
-`F0`: 3 + 5 + 4 + 7 + 3 + 4 = **26 reglas**, las de `spec/IND240_v1.1.yaml`.
+`EXISTE`: 3 + 5 + 4 + 7 + 3 + 4 = **26 reglas**, las de `spec/IND240_v1.1.yaml`, todas evaluadas desde su `logica` y cubiertas por un test que cumple y otro que falla.
 
 ---
 
