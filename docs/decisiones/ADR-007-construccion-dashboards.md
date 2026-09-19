@@ -1,4 +1,4 @@
-# ADR-006 — Construcción de los dashboards operativo y técnico
+# ADR-007 — Construcción de los dashboards operativo y técnico
 
 **Estado**: PROPUESTA
 **Fecha**: 2026-09-19
