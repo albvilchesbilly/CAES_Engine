@@ -56,6 +56,19 @@ Se tomaron para que los documentos fueran coherentes entre sí y ejecutables por
 
 ---
 
+## 2 bis. Decisiones de Billy ya tomadas (fecha y efecto)
+
+Lo que sale de §3 cuando Billy decide. Se registra aquí con fecha para que `/contrastar` distinga "nunca se
+decidió" de "se decidió y esto es lo que implicó".
+
+| Fecha | Decisión | Efecto inmediato |
+|---|---|---|
+| 19/09/2026 | **C1 (`ADR-050`) · Stack de presentación**: un solo stack web (React con TypeScript) para las cuatro superficies | Desbloquea `FR0`. Cierra también **B1 de `ADR-007`**, que preguntaba lo mismo |
+| 19/09/2026 | **C7 (`ADR-050`) · Superficies y orden**: cuatro superficies adaptadas por capacidades y orden `FR0` → `FR6` | Desbloquea el plan FR completo; `S4.4` queda absorbida por `FR1` |
+| 19/09/2026 | **El contrato antes que las pantallas no es negociable** (reafirmado por Billy como práctica establecida) | `api/` primero; `front/` solo consume el contrato. `R-UI-11` pasa de regla de interfaz a criterio de aceptación de todo el plan FR |
+
+---
+
 ## 3. Decisiones abiertas de Billy (no las toma Claude)
 
 **Aviso de nomenclatura** (19/09/2026): los identificadores de esta tabla los pone cada ADR de origen, y ya
@@ -88,13 +101,11 @@ que abra una serie debería usar una letra libre (`D`, `E`…) en vez de reutili
 | Umbrales de las métricas del catálogo (`umbral: POR DEFINIR`) | — | Dashboards | `ADR-007` |
 | Interfaz o herramienta de los dashboards (DB5); si es BI externa, se alimenta de la API de lectura | — | DB5 | `ADR-007` |
 | **Revisión jurídica de la monitorización de trabajadores** (CAP-31 y CAP-36) antes del primer cliente | Obligatoria | Perfiles de tenant | `ADR-006` |
-| C1 (`ADR-050`) · Stack de presentación del front (**subsume B1 de `ADR-007`**) | Recomendación: un solo stack web (React + TypeScript) para las cuatro superficies | FR0 y todo el plan FR | `ADR-050` |
 | C2 (`ADR-050`) · Rol ejercido en el workspace: inferido por capacidad y contexto, o cambio explícito | Recomendación: inferido, visible siempre y resuelto en servidor | `actor.rol` de todo evento humano | `ADR-050` |
 | C3 (`ADR-050`) · Forma del portal externo | Depende de A1 y A2 | FR4 | `ADR-050` |
 | C4 (`ADR-050`) · Aprobar el agente de front en `.claude/agents/` | — | FR0 en adelante | `ADR-050` |
 | C5 (`ADR-050`) · `ADM-MOD` en solo lectura hasta tener clientes | Recomendación: sí | FR6 | `ADR-050` |
 | C6 (`ADR-050`) · Idiomas de la interfaz y nivel de accesibilidad exigido | — | Todo el plan FR | `ADR-050` |
-| C7 (`ADR-050`) · Aprobar las cuatro superficies y el orden FR0–FR6 | — | Todo el plan FR | `ADR-050` |
 
 ---
 

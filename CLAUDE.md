@@ -171,11 +171,13 @@ De la Fase 0 y de la revisión normativa (`ADR-002` §6, `ADR-003`): **fila de 1
 verificación de las 38 filas `pendiente` · INT-10 a INT-15 · severidad de `R-CON-07` y desdoble de `R-AMB-01` ·
 `instalacion_personal_propio` · léxicos de lectura a la spec v1.2.
 
-Del front por perfil (`ADR-050`, en `PROPUESTA`): **C1 stack de presentación** (subsume B1 de `ADR-007`) ·
-C2 rol inferido frente a cambio explícito · C3 forma del portal externo (depende de A1 y A2) · C4 agente de
-front en `.claude/agents/` · C5 `ADM-MOD` en solo lectura hasta tener clientes · C6 idiomas y accesibilidad ·
-C7 aprobar las cuatro superficies y el orden FR0–FR6. Nada de `api/` ni de `front/` se construye antes de C1
-y C7: el contrato va primero (`FR0`) para que la lógica de negocio no acabe en la interfaz.
+Del front por perfil (`ADR-050`): **C1 (stack) y C7 (superficies y orden) los aprobó Billy el 19/09/2026** —
+un solo stack web con React y TypeScript, cuatro superficies adaptadas por capacidades, orden FR0 → FR6—, y
+con ellos se cierra B1 de `ADR-007`. Siguen abiertas: C2 rol inferido frente a cambio explícito · C3 forma
+del portal externo (depende de A1 y A2) · C4 agente de front en `.claude/agents/` · C5 `ADM-MOD` en solo
+lectura hasta tener clientes · C6 idiomas y accesibilidad.
+**El contrato antes que las pantallas no es negociable** (Billy, 19/09/2026): `api/` primero, y el front solo
+consume el contrato. Un front que calcula, evalúa una regla o decide una transición es un defecto (`R-UI-11`).
 
 De perfiles y dashboards (`ADR-005`, `ADR-006` §"Pendiente", `ADR-007`): A1 a A8 (instalador, cliente,
 reasignación, vistas, doble función, firma manual con API activa, y si las capacidades se modelan ya) · umbrales

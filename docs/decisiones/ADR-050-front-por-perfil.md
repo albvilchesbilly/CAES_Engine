@@ -1,6 +1,6 @@
 # ADR-050 — Front por perfil: cuatro superficies adaptadas por capacidades
 
-**Estado**: PROPUESTA
+**Estado**: ACEPTADA en C1 y C7 (Billy, 19/09/2026) · PROPUESTA en C2 a C6
 **Fecha**: 2026-09-19
 **Decide**: Billy (superficies, stack de presentación, inferencia del rol, portal externo, orden de construcción) · Claude (arquitectura técnica del front y reglas de interfaz derivadas de las reglas de oro)
 **Ámbito**: `api/` (nuevo), `front/` (nuevo), `docs/front/` (nuevo), `docs/01`, `docs/06`, `CLAUDE.md` §6, `.claude/agents/` (agente de front, propuesto), `tests/test_api_*.py`, `front/**/tests/`
@@ -152,13 +152,16 @@ Si el mockup y la spec discrepan, manda la spec.
   - Consola `ADM-MOD` que duplica el flujo del repositorio. Mitigación: FR6 en solo lectura.
   - Portal externo expuesto a más datos de los necesarios. Mitigación: R-UI-12 en servidor.
 - **Pendiente (Billy)**:
-  - C1 · Stack de presentación (ADR-006 B1). Recomendación: opción F.
+  - ~~C1 · Stack de presentación~~ → **APROBADO por Billy el 19/09/2026: opción F**, un solo stack web
+    (React con TypeScript) para las cuatro superficies. Cierra también B1 de `ADR-007`.
   - C2 · Inferencia del rol en el workspace (opción E) frente a cambio explícito (opción D). Recomendación: E.
   - C3 · Forma del portal externo: depende de ADR-005 A1 y A2.
   - C4 · Aprobar el agente de front en `.claude/agents/`.
   - C5 · FR6 en solo lectura hasta tener clientes.
   - C6 · Idiomas de la interfaz y nivel de accesibilidad exigido.
-  - C7 · Aprobar las superficies (opción B) y el orden FR0 a FR6.
+  - ~~C7 · Aprobar las superficies y el orden~~ → **APROBADO por Billy el 19/09/2026**: opción B (cuatro
+    superficies adaptadas por capacidades) y el orden FR0 → FR6. Billy reafirma además que **el contrato
+    antes que las pantallas no es negociable**: es práctica establecida, no una preferencia de este proyecto.
 
 ## Verificación
 

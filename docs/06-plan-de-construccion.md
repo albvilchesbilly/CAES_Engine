@@ -116,18 +116,19 @@ Billy añadió una cuarta decisión externa: **cómo es la interfaz de cada perf
 lo cierra con **cuatro superficies que se adaptan a las capacidades del usuario**, no ocho aplicaciones.
 **El plan detallado vive en `ADR-050`; aquí solo el resumen y las dependencias, para que no haya dos planes.**
 
-El ADR está en estado `PROPUESTA`: siete decisiones (C1 a C7) siguen siendo de Billy, entre ellas el stack y
-si se aprueban las superficies y el orden. Las líneas de abajo nacen `BLOQUEADO` o `PENDIENTE` en consecuencia.
+**Billy aprobó C1 y C7 el 19/09/2026**: un solo stack web (React con TypeScript) y las cuatro superficies con
+el orden `FR0` → `FR6`. Con eso `FR0` queda desbloqueado y el resto del plan depende solo de él. Siguen
+abiertas C2 a C6 (`ADR-050` §Pendiente), ninguna de las cuales bloquea `FR0`.
 
 | # | Entregable | Depende de | Estado |
 |---|---|---|---|
-| FR0 | Contrato de comandos y lecturas por capacidad en `api/`; sistema de diseño mínimo en `front/compartido/` | S3.1 (HECHO) · A8 de `ADR-005` · stack (C1) | BLOQUEADO (decisión) |
-| FR1 | Workspace `T-REV`: cola y vista de revisión. **Absorbe `S4.4`** | FR0, S3.5 (HECHO) | BLOQUEADO (depende de FR0) |
-| FR2 | Workspace `T-OPE`: bandeja, alta, subida y "qué te falta" | FR0 | BLOQUEADO (depende de FR0) |
-| FR3 | Workspace `T-RES`: pendiente de mí, registro de firma, equipo, `O-FUN` | FR0, DB1 | BLOQUEADO (depende de FR0) |
+| FR0 | Contrato de comandos y lecturas por capacidad en `api/`; sistema de diseño mínimo en `front/compartido/` | S3.1 (HECHO) · stack C1 (**APROBADO**) · A8 de `ADR-005` para persistir `actor.rol` | **EN CURSO** (19/09/2026, `ADR-011`) |
+| FR1 | Workspace `T-REV`: cola y vista de revisión. **Absorbe `S4.4`** | FR0, S3.5 (HECHO) | PENDIENTE (espera FR0) |
+| FR2 | Workspace `T-OPE`: bandeja, alta, subida y "qué te falta" | FR0 | PENDIENTE (espera FR0) |
+| FR3 | Workspace `T-RES`: pendiente de mí, registro de firma, equipo, `O-FUN` | FR0, DB1 | PENDIENTE (espera FR0 y DB1) |
 | FR4 | Portal externo (`EXT-INS`, `EXT-CLI`) | FR0 · A1 y A2 de `ADR-005` | BLOQUEADO (decisión) |
 | FR5 | Consola `ADM-OPS` | FR0 · primer tenant real | BLOQUEADO (externo) |
-| FR6 | Consola `ADM-MOD`, **en solo lectura** | FR0, DB0 | BLOQUEADO (depende de FR0) |
+| FR6 | Consola `ADM-MOD`, **en solo lectura** | FR0, DB0 | PENDIENTE (espera FR0 y DB0) |
 
 Tres reglas del ADR que condicionan todo lo demás y que no se reabren en una pantalla:
 
