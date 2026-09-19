@@ -143,6 +143,11 @@ Los nombres provisionales de fases 2–4 viven en una **tabla de mapeo YAML** (`
 equivalente), nunca como literales dispersos por el código: cuando llegue el diccionario oficial, cambiar nombres
 es cambiar YAML (`docs/03` §7.1).
 
+**Añadido en S3.4** (`ADR-009` §5 ter punto 2): la tabla declara además `inicial` y `validacion_automatica`, y
+la carga garantiza que hay exactamente una fila de cada —y de `exige_firma`—, de nivel actuación. Son las tres
+marcas por las que `salida/simulador/` reconoce los estados **sin nombrarlos y sin depender del orden de las
+filas**; reordenar el fichero ya no puede cambiar el comportamiento en silencio.
+
 ## Consecuencias
 
 - `engine/motor.py` gana la construcción del modelo canónico y la emisión de eventos **sin cambiar su interfaz

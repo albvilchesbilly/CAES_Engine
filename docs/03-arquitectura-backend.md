@@ -94,7 +94,7 @@ Módulos de `engine/` sin ID propio en este mapa (`docs/01` §3.3): `motor.py` (
 | S3 | Orquestador | Workflow por eventos con tareas humanas; la máquina de estados (N6) hace de A0 | `engine/motor.py` | `EXISTE` (F0.10) lineal y síncrono (ingesta → clasificación → extracción → consolidación → reglas → cálculo) · `NUEVO` S3: emite eventos sin cambiar su interfaz pública |
 | S4 | Consola de revisión | Escalados, conflictos, correcciones del profesional, tareas pendientes de la plataforma; centrada en lo previo a la firma. Con `ADR-006`, es donde viven las capacidades `CAP-nn` de los perfiles de tenant | — (S4, `docs/06`) | `NUEVO` S4 |
 | S9 | Métricas y dashboards | Catálogo de métricas en YAML validado, proyecciones sobre el log y la telemetría, filtro por capacidad y tenant, y salida por vista (`O-GLO`, `O-FUN`, `O-EQU`, `T-TEC`) | `metricas/` | `NUEVO` (`ADR-007`, plan DB0–DB5) |
-| S5 | Salida | Puerto + adaptadores handoff / simulador / API; transporte separado de la firma humana (§10) | `salida/` | `NUEVO` S3 |
+| S5 | Salida | Puerto + adaptadores handoff / simulador / API; transporte separado de la firma humana (§10) | `salida/` | `EXISTE` (S3.3 y S3.4): puerto, constructor, mapeo declarativo, handoff, simulador y transporte como frontera · `NUEVO`: `api_oficial/` (S3.7, espera diccionario) |
 | S6 | Evaluación | Banco de pruebas, fábrica de casos, metamórficas, batería `INT-xx` contra sandbox | `generator/`, `expedientes/`, `tests/`, `evaluar_casos.py` | `EXISTE` (F0.5, F0.11): 7 casos, ground truth, 999 tests y `evaluar_casos.py` · `NUEVO` S3: fábrica de casos y batería `INT-xx` |
 | S7 | Seguridad y tenencia | Aislamiento por tenant (delegado u obligado directo), enmascarado, anonimización (§12) | transversal | `NUEVO` S3 |
 | S8 | Vigilancia normativa (A6) | Fuera de línea; propone diffs sobre YAML en `spec/propuestas/`; sigue RD 36/2023, órdenes y plataforma | fuera de código | `NUEVO` (hoy vigilancia manual; sin diff automático) |
@@ -341,18 +341,27 @@ El consolidador es determinista y no llama a modelos. Lo que A4 aporta en P4 es 
 
 ---
 
-## 10. Salida (S5) — `NUEVO` S3
+## 10. Salida (S5) — `EXISTE` en puerto, constructor, handoff, simulador y transporte (S3.3 y S3.4, 19/09/2026)
 
 Vive en `salida/` (`docs/01` §3.8). Nada en `salida/` inventa un campo de la API; lo desconocido es un `TODO(API-xx)` con enlace a `docs/HUECOS.md`.
 
-### 10.1 Puerto de salida (`salida/puerto.py`)
+### 10.1 Puerto de salida (`salida/puerto.py`) — `EXISTE` (S3.4, `ADR-009` C4)
 
 ```
-construir(actuacion, mapping)       → Paquete { payload (cabecera + detalle), manifiesto, adjuntos[] }
-entregar(paquete)                   → Acuse
-consultar_estado(referencia)        → EstadoPlataforma
-consultar_tareas(tenant)            → TareaPendiente[]
+construir(actuacion, mapeo, *, raiz, log)   → Paquete { payload (cabecera + detalle), manifiesto, adjuntos[] }
+entregar(paquete, *, log)                   → Acuse
+consultar_estado(referencia)                → EstadoPlataforma
+consultar_tareas(tenant)                    → TareaPendiente[]
 ```
+
+Es contrato puro: tipos (`Paquete`, `Acuse`, `EstadoPlataforma`, `TareaPendiente`, `Adjunto`) y un `Protocol`,
+sin implementación. **Ninguno de esos tipos pretende ser un campo de la API oficial**: son nuestros y el
+conector de S3.7 traducirá, no heredará (`ADR-009` §1). Cuatro reglas que fija el contrato: el veredicto se
+transporta y no se juzga · el estado de ciclo lo mueve el log, no el adaptador (los eventos P8 solo se emiten
+si se pasa un `log`, y entonces la puerta la pone el invariante 2 de la máquina de estados) · `hash_paquete`
+es el `hash_manifiesto`, no una segunda huella · una operación que esta vía no puede hacer se **niega** con
+`ErrorSalida`, nunca con un vacío ambiguo. Un adaptador que escribe en una carpeta recibe el destino en su
+constructor, para que un llamante genérico del puerto pueda entregar sin saber qué vía es.
 
 El mapeo modelo canónico → destino es **declarativo y por ficha** (`mapping/<FICHA>.<destino>.yaml`, `docs/01` §3.9). Si un cambio en la API oficial exige tocar `engine/`, el diseño está mal.
 
@@ -360,13 +369,17 @@ El mapeo modelo canónico → destino es **declarativo y por ficha** (`mapping/<
 
 | Adaptador | Para qué | Dependencia externa | Cuándo |
 |---|---|---|---|
-| **Handoff** (`salida/handoff/`) | Carpeta ordenada + manifiesto + informe de prevalidación, para que el tenant presente por el cauce vigente | Ninguna | Sprint 3, primero |
-| **Simulador** (`salida/simulador/`) | Reproduce **solo lo documentado** de la plataforma: los 8 estados de fase 1, estados provisionales de fases 2–4 (marcados `NO OFICIAL`), manifiesto con hash, validación de esquema, **firma humana simulada** (paso humano que cambia `COMPLETA` → `ENVIADA_A_VERIFICACION`), tareas pendientes. Permite desarrollar P8 y P9 sin sandbox | Ninguna | Sprint 3, primero |
-| **API oficial** (`salida/api_oficial/`) | Envío, consulta, notificaciones, tareas reales | Diccionario de API (`API-01`) + certificado de usuario + tenant con acceso | Cuando existan ambos |
+| **Handoff** (`salida/handoff/`) `EXISTE` (S3.4) | Carpeta ordenada + manifiesto + informe de prevalidación, para que el tenant presente por el cauce vigente. Árbol y subcarpetas por tipo documental en `mapping/IND240.handoff.yaml`: cambiarlos es cambiar YAML. Tras escribir, **relee la carpeta y verifica cada SHA-256**; si algo no cuadra, el acuse sale `aceptado: False` y la entrega no se declara hecha | Ninguna | Sprint 3, primero |
+| **Simulador** (`salida/simulador/`) `EXISTE` (S3.4) | Reproduce **solo lo documentado** de la plataforma: los 8 estados de fase 1, estados provisionales de fases 2–4 (marcados `NO OFICIAL`), manifiesto con hash, validación de esquema, **firma humana simulada** (paso humano que cambia `COMPLETA` → `ENVIADA_A_VERIFICACION`), tareas pendientes. Permite desarrollar P8 y P9 sin sandbox. **Ni un literal de plataforma en su código**: los estados salen de `engine/estados_plataforma.yaml` y se derivan por las marcas `inicial`, `validacion_automatica` y `exige_firma`, de las que la tabla garantiza al cargar que hay exactamente una de cada | Ninguna | Sprint 3, primero |
+| **API oficial** (`salida/api_oficial/`) `NUEVO` | Envío, consulta, notificaciones, tareas reales | Diccionario de API (`API-01`) + certificado de usuario + tenant con acceso | Cuando existan ambos |
 
 ### 10.3 División transporte / firma
 
 El antiguo componente único "firmante en casa del delegado" se divide en dos cosas de naturaleza distinta, tras la confrontación con la plataforma oficial (`docs/02`): el certificado de **usuario** firma peticiones API; el certificado de **representante** (FNMT) firma actos administrativos y es siempre humano.
+
+`salida/transporte/` `EXISTE` desde S3.4 **como frontera declarada, no como funcionalidad**: declara qué firma
+(certificado de usuario, jamás el de representante) y dónde podría vivir (`UBICACIONES`, decisión de Billy), y
+su única implementación se niega citando `API-01` y `API-09`. Lo que no puede hacerse todavía no se simula.
 
 ```
 salida/

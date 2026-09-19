@@ -234,7 +234,7 @@ agentes/
 - Una salida con resultado calculado se rechaza en el runtime (test).
 - A0 (coordinador) no está aquí: es `engine/estados.py`. A6 (vigía normativo) trabaja fuera de línea y solo produce diffs en `spec/propuestas/`.
 
-### 3.8 `salida/` — puerto y adaptadores (`PARCIAL`: solo `constructor/`, desde S3.3)
+### 3.8 `salida/` — puerto y adaptadores (`PARCIAL`: todo menos `api_oficial/`, desde S3.4)
 
 ```
 salida/
@@ -252,14 +252,15 @@ salida/
 - **No existe `salida/firma/` como código.** La firma es un acto humano con certificado de representante; solo se registra el evento `FirmaRegistrada`.
 - Nada en `salida/` inventa un campo de la API. Lo desconocido se referencia como `TODO(API-xx)` con enlace a `docs/HUECOS.md`.
 
-### 3.9 `mapping/` — modelo canónico → destino (`S3`)
+### 3.9 `mapping/` — modelo canónico → destino (`PARCIAL`: los dos de handoff, desde S3.4)
 
 ```
 mapping/
   README.md
-  IND240.handoff.yaml       Cómo se ordena la carpeta de handoff para IND240
-  IND240.api.yaml           Cuando exista el diccionario (API-08). Hasta entonces, solo huecos
-  manifiesto.handoff.yaml
+  IND240.handoff.yaml       EXISTE (S3.4) campos del payload, subcarpetas por tipo documental y nombres del
+                            árbol de handoff. Dar de alta una ficha en la salida es añadir un YAML
+  IND240.api.yaml           Cuando exista el diccionario (API-08). Hasta entonces, no existe
+  manifiesto.handoff.yaml   EXISTE (S3.4) cómo se renderiza el manifiesto interno dentro del handoff
   manifiesto.api.yaml       Cuando exista (API-02)
 ```
 

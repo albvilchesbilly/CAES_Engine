@@ -1,0 +1,80 @@
+# =====================================================================
+# Manifiesto interno -> handoff. Cómo se PRESENTA el manifiesto dentro de la carpeta del tenant.
+#
+# Contrato C5 de `docs/decisiones/ADR-009` §3; lo carga `salida.mapeo.cargar_manifiesto`.
+#
+# ESTE FICHERO NO CALCULA NADA. El manifiesto, con sus cinco hashes SHA-256, lo produce
+# `salida/constructor/manifiesto.py` (S3.3, `ADR-008`) y se escribe en la carpeta tal cual, byte a byte.
+# Aquí solo se declara el nombre del fichero, el orden de los campos y cómo se llama cada uno para una
+# persona que abre la carpeta sin conocer nuestro esquema.
+#
+# El manifiesto OFICIAL de la plataforma (algoritmo de hash, estructura, campos, cómo se identifica cada
+# adjunto) no está publicado. Su mapeo será `mapping/manifiesto.api.yaml` y no existe:
+#   TODO(API-02): ver docs/HUECOS.md.
+#
+# `origen` es una ruta punteada del manifiesto YA SERIALIZADO (`Manifiesto.a_dict`), no del modelo canónico.
+# =====================================================================
+
+manifiesto:
+  id: manifiesto.handoff
+  destino: handoff
+  version: "1.0"
+  fichero: 01_manifiesto.json
+
+campos:
+  - clave: codigo_identificativo_propio
+    etiqueta: "Código identificativo propio de la actuación"
+    origen: codigo_identificativo_propio
+    obligatorio: true
+  - clave: actuacion_id
+    etiqueta: "Identificador interno de la actuación"
+    origen: actuacion_id
+    obligatorio: true
+  - clave: generado_en
+    etiqueta: "Momento de generación del manifiesto (UTC)"
+    origen: generado_en
+    obligatorio: true
+  - clave: ficha
+    etiqueta: "Ficha de actuación"
+    origen: ficha.codigo
+    obligatorio: true
+  - clave: version_ficha
+    etiqueta: "Versión de la ficha"
+    origen: ficha.version_ficha
+  - clave: modelo_version
+    etiqueta: "Versión del modelo canónico"
+    origen: modelo_version
+    obligatorio: true
+  - clave: manifiesto_version
+    etiqueta: "Versión de nuestro formato de manifiesto"
+    origen: manifiesto_version
+    obligatorio: true
+    nota: "Formato propio. El oficial no está publicado (API-02)."
+  - clave: hash_cabecera
+    etiqueta: "SHA-256 de la cabecera de la actuación"
+    origen: hash_cabecera
+    obligatorio: true
+    nota: "Hoy es el hash de una cabecera vacía: la cabecera común es S3.2."
+  - clave: hash_detalle
+    etiqueta: "SHA-256 del detalle (unidades, variables, evaluación y cálculo)"
+    origen: hash_detalle
+    obligatorio: true
+  - clave: hash_log_eventos
+    etiqueta: "SHA-256 del último eslabón del log de eventos"
+    origen: hash_log_eventos
+    nota: "Vacío si el paquete se construyó sin log."
+  - clave: hash_manifiesto
+    etiqueta: "SHA-256 que sella este manifiesto"
+    origen: hash_manifiesto
+    obligatorio: true
+    nota: >-
+      Se calcula sobre el JSON canónico del manifiesto sin este campo; comprobarlo requiere nuestra
+      canonicalización, mientras que las huellas de cada fichero se comprueban con sha256sum a secas.
+
+# Etiquetas de las columnas de la tabla de ficheros del manifiesto (`Manifiesto.ficheros[]`).
+ficheros:
+  ruta: "Ruta en el paquete que entregó el cliente"
+  tipo: "Tipo documental"
+  sha256: "SHA-256 de los bytes tal y como entraron en ingesta"
+  bytes: "Tamaño en bytes"
+  origen: "PDF combinado del que se separó (si es una parte)"

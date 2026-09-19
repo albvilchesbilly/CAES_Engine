@@ -51,6 +51,35 @@ plataforma con la consulta de `docs/06` §5 X.1.
    fichero por tipo? De ahí depende si nuestras "partes" viajan al manifiesto oficial o se quedan como traza
    interna, y enlaza con `API-04` (si la validación mira contenido o solo presencia por tipo).
 
+**Sobre la salida (API-01, API-03, API-04, API-07, API-08, API-10), planteadas al construir S3.4:**
+
+Ninguna abre hueco nuevo: todas caen dentro de los ya enumerados. Son las que la construcción del puerto, el
+mapeo declarativo, el handoff y el simulador han hecho necesarias.
+
+4. **Identificador de la actuación** (API-01): al crear el borrador, ¿la plataforma devuelve un identificador
+   propio? ¿Con qué formato? ¿Se reconcilia por nuestro `codigo_identificativo_propio` o hay que guardar el
+   suyo? Hoy la referencia es nuestra y lleva marca de serlo.
+5. **Validación automática** (API-01, enlaza con API-04): la validación que lleva de `BORRADOR` a `COMPLETA`,
+   ¿qué comprueba exactamente — esquema, tipos documentales, integridad de adjuntos, coherencia de cabecera y
+   detalle — y **qué devuelve cuando falla**: códigos de error, lista de motivos, referencia al fichero
+   concreto? De esto depende qué puede prevalidar nuestro motor antes de enviar.
+6. **El paso a verificación** (API-01, `docs/02` §6.2): `COMPLETA` → `ENVIADA_A_VERIFICACION`, ¿es solo web con
+   certificado de representante, o existe operación de API? Si existe, ¿qué la autentica?
+7. **Transiciones entre los 8 estados** (API-03, `docs/02` §5.1): la presentación enumera los estados, no el
+   grafo. ¿Qué transiciones están permitidas y cuáles provoca el verificador? El simulador no inventa un grafo.
+8. **Estados y tareas: *pull* o *push*** (API-10): ¿se consultan o hay notificación? ¿Las tareas pendientes
+   traen plazo o fecha límite? Hoy `vence_en` sale siempre vacío.
+9. **Granularidad del detalle** (API-08): el formulario de detalle por ficha, ¿es **por motor** o **agregado
+   por actuación**? Nuestro payload lleva las dos cosas porque IND240 calcula por motor y suma; si la
+   plataforma solo admite el agregado, el detalle por unidad se queda como traza interna.
+10. **Decimales del ahorro** (API-08): ¿en qué formato y con qué precisión se envían — cadena o número, cuántos
+    decimales? Transportamos el valor exacto y el truncado a entero (INT-06) por separado; si la API acepta un
+    solo número, hay que saber cuál.
+11. **CCAA de la actuación** (API-07): ¿cómo se determina y en qué momento se declara, al crear el borrador o
+    al componer el expediente? Hoy sale vacía y la aporta el tenant a mano.
+12. **Número de serie del variador** (API-04, API-08): ¿el formulario lo pide además del número de serie del
+    motor, y admite varios variadores por motor? Nuestro modelo asume uno por unidad.
+
 ---
 
 ## 3. Cómo añadir un hueco

@@ -173,8 +173,10 @@ class Simulador:   # implementa PuertoSalida
 Ocho reglas, cada una con su fuente:
 
 1. **Ni un literal de plataforma en el código del simulador.** Los estados salen de
-   `engine.estados.tabla_plataforma()` (`estados_plataforma.yaml`). Si mañana el diccionario renombra
-   `PDTE_RECTIFICACION_VER`, cambia el YAML y el simulador no se toca (`docs/03` §7.1).
+   `engine.estados.tabla_plataforma()` (`estados_plataforma.yaml`) y se derivan por las marcas `inicial`,
+   `validacion_automatica` y `exige_firma` (§5 ter punto 2), nunca por su nombre ni por su posición en el
+   fichero. Si mañana el diccionario renombra `PDTE_RECTIFICACION_VER`, cambia el YAML y el simulador no se
+   toca (`docs/03` §7.1).
 2. **La firma es lo único que abre `COMPLETA` → `ENVIADA_A_VERIFICACION`**, y exige un `FirmaRegistrada` (o un
    `Actor`) de clase `humano` **y** credencial de perfil `Firma`. Actor `motor`, `agente` o `plataforma` es
    `ErrorSimulador` (`docs/02` §5.6, `CLAUDE.md` §2). El simulador **no firma**: comprueba que alguien firmó.
@@ -211,6 +213,64 @@ Existe como **frontera declarada**, no como funcionalidad: firma peticiones con 
 jamás con el de representante. `docs/01` §3.8: **no existe `salida/firma/` como código** y no lo habrá. Un test
 lo comprueba sobre el árbol de ficheros, no sobre un comentario.
 
+## 5 ter. Decisiones tomadas al construir (19/09/2026)
+
+Lo que la implementación obligó a decidir más allá de los contratos de arriba. Se construyó en dos mitades
+paralelas (mapeo + handoff · simulador + transporte) sobre contratos cerrados de antemano, y la costura entre
+ambas la probó después la revisión adversarial.
+
+**Del puerto y de la costura entre mitades**
+
+1. **El destino de un adaptador va en su constructor.** `AdaptadorHandoff(destino_carpeta=...)`, con la
+   posibilidad de sobrescribirlo en la llamada. Si el destino fuera obligatorio en `entregar`, un llamante
+   genérico del puerto (P9, la consola de S4) no podría entregar sin saber que la vía es un handoff y que un
+   handoff escribe en una carpeta, que es justo lo que el puerto existe para evitar.
+2. **Las marcas de la tabla de estados.** `estados_plataforma.yaml` gana `inicial` y `validacion_automatica`, y
+   `engine/estados.py` garantiza **al cargar** que hay exactamente una fila de cada (y de `exige_firma`), de
+   nivel actuación. Sin ellas, el simulador tendría que distinguir "crear" de "validado" por la **posición** de
+   la fila, y reordenar el YAML habría cambiado el comportamiento en silencio. Una tabla mal marcada es ahora
+   un error de carga, no un estado equivocado en mitad de una entrega.
+
+**Del mapeo (C5)**
+
+3. **Contexto de cálculo en cada unidad.** `calculo.por_unidad[]` vive fuera de `unidades[]`, así que un
+   `detalle_unidad` puro no podía seleccionar el ahorro de su motor. `aplicar` empareja cada unidad con su
+   entrada de cálculo por `num_serie_motor`, que es un campo del **núcleo**, no de ninguna ficha. Es
+   indexación, no cálculo: sin ella el ahorro por motor no llegaba al tenant.
+4. **Rutas con claves que llevan punto** (`convenio.ahorro_kwh`, `registro.dias`): `resolver` prueba la clave
+   más larga que encaje antes de descender. Sigue siendo selección pura.
+5. **Carencias cualificadas** (`detalle.unidades[<clave>].<campo>`), porque sin cualificar dos motores a los
+   que falta lo mismo se confundían en una sola entrada y el tenant no sabía a cuál mirar.
+
+**Del handoff (C6)**
+
+6. **El informe de prevalidación no cabe en el `Paquete` y no se deriva del modelo canónico**: `engine.informe`
+   toma la `Actuacion` del motor. Se renderiza cuando `construir` recibe esa actuación y se guarda indexado por
+   `hash_paquete`. Construido desde una `ActuacionCanonica` suelta **no hay informe**, no se fabrica uno, y el
+   `00_LEEME.md` lo dice con todas las letras. La alternativa (un campo más en `Paquete`) habría metido en el
+   contrato del puerto algo que solo le sirve al handoff.
+7. **Ensayo del evento antes de añadirlo al log**: se proyecta sobre una copia y solo si la máquina de estados
+   lo acepta se escribe en el log del llamante. Sin esto, una actuación rechazada se quedaba con un
+   `PayloadConstruido` que envenena su propia proyección para siempre.
+8. **La verificación posterior a escribir no puede usar `salida.constructor.verificar`**: sus rutas son las del
+   paquete de origen y el handoff reagrupa por tipo documental. Se comprueba lo mismo (SHA-256 fichero a
+   fichero, sello del manifiesto, y que no sobre nada en la carpeta escrita) sobre el árbol ya escrito.
+9. **Colisión de nombres** dentro de una subcarpeta de tipo: el segundo adjunto lleva `-<sha256[:8]>` antes de
+   la extensión. Nunca se sobrescribe un adjunto.
+
+**Del simulador y el transporte (C7, C8)**
+
+10. **El modelo canónico se le pasa aparte al simulador.** El `Paquete` lleva el payload del mapeo, y el
+    simulador no invierte mapeos. Si no se le aporta el canónico, **la validación de esquema no se da por
+    superada**: rechaza diciendo que no ha podido comprobarla. Declarado ≠ demostrado, también aquí.
+11. **`avanzar` exige prueba humana** donde la tabla marca `exige_desistimiento`, igual que la firma: el
+    simulador comprueba que alguien desistió, no desiste por su cuenta.
+12. **Inalterabilidad** (`docs/02` §5.4): tras la firma no se recarga ni se revalida.
+13. **Tareas pendientes** con `id` determinista y `vence_en` siempre vacío: la plataforma menciona "seguimiento
+    de plazos" sin cifras (`TODO(API-10)`).
+14. **`PeticionFirmada` del transporte se queda deliberadamente mínima** (quién firma, qué se firma, dónde): ni
+    endpoint, ni cabeceras, ni algoritmo, ni códigos de error. Todo eso es `API-01`.
+
 ## 6. Lo que queda para Billy (PROPUESTA)
 
 1. **Dónde vive el transporte** (`API-09`): `UBICACIONES` está declarado y sin decidir. No bloquea S3.4.
@@ -219,7 +279,11 @@ lo comprueba sobre el árbol de ficheros, no sobre un comentario.
 3. **Perfil de la credencial con la que operaríamos nosotros** (`Modificacion` vs. usuario del tenant): el
    simulador modela los tres perfiles sin presuponer cuál usamos.
 4. **Si el handoff debe negarse a construir un paquete de una actuación no `PREVALIDADO`**: hoy construye y lo
-   transporta en `Paquete.veredicto`; la puerta la pone la máquina de estados cuando hay log (§2 punto 2).
+   transporta en `Paquete.veredicto`; la puerta la pone la máquina de estados cuando hay log (§2 punto 2). Que
+   se niegue siempre es un cambio de una línea, pero duplicaría el invariante 2 en dos sitios.
+5. **Granularidad del detalle y formato de los decimales** en el payload: hoy van las dos granularidades (por
+   actuación y por unidad) y el ahorro va exacto y truncado por separado. Lo cierra el diccionario (`API-08`),
+   y las preguntas están en `docs/HUECOS.md` §2 bis.
 
 ## 7. Verificación
 

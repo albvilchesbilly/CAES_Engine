@@ -1,0 +1,342 @@
+# =====================================================================
+# IND240 -> handoff. Mapeo declarativo modelo canonico -> carpeta del tenant.
+#
+# Contrato C5 de `docs/decisiones/ADR-009` §3; lo carga `salida/mapeo.py`.
+#
+# ESTE FORMATO ES NUESTRO. El handoff no imita ningun campo de la plataforma oficial: es la carpeta
+# ordenada que el tenant abre, revisa y presenta el mismo por el cauce vigente. El payload de la API
+# oficial vivira en `mapping/IND240.api.yaml`, que NO existe todavia porque no hay diccionario:
+#   TODO(API-08): nombres, tipos, unidades y granularidad del formulario de detalle. Ver docs/HUECOS.md.
+#   TODO(API-01): endpoints y esquemas. Ver docs/HUECOS.md.
+#
+# Reglas del formato (las comprueba `salida.mapeo.cargar`, y fallan AL CARGAR):
+#   - `origen` es una ruta punteada del modelo canonico YA SERIALIZADO (`engine.modelo.a_dict`).
+#     Solo seleccion: ni expresiones, ni funciones, ni condicionales, ni conversiones de unidad.
+#   - Un `origen` que no resuelve deja el campo a null; si el campo es `obligatorio`, entra en `carencias`.
+#     Eso no es un error: declarado != demostrado, y el tenant tiene derecho a ver que le falta.
+#   - Un campo con `hueco` no puede ser `obligatorio`. Un campo sin `origen` tiene que declarar su `hueco`.
+#   - `unidad` es documentacion para la persona que lee la carpeta, NO una instruccion de conversion.
+#
+# Si el cauce que usan hoy los delegados exige otro orden o otros nombres, se cambia ESTE fichero,
+# nunca `salida/handoff/` (ADR-009 §6 punto 2, decision de Billy).
+# =====================================================================
+
+mapeo:
+  id: IND240.handoff
+  ficha: IND240
+  destino: handoff
+  version: "1.0"
+
+# ---------------------------------------------------------------------
+# 1. CABECERA COMUN — VACIA A PROPOSITO
+#
+# La cabecera transversal (titularidad, localizacion, tipologia de empresa, participe en subasta...) la
+# define `spec/cabecera_v1.yaml`, que es S3.2 y espera la aprobacion de Billy (`CLAUDE.md` §6). El modelo
+# canonico la trae hoy como `{}` (`engine/modelo/conversion.py`), asi que aqui no hay nada que seleccionar
+# y NO se inventa ni un campo. Cuando S3.2 se apruebe, esta lista se llena y sube `mapeo.version`.
+# Los dos campos que ya se sabe que llevara y que la plataforma no ha definido tienen hueco propio:
+# TODO(API-05) tipologia de empresa del propietario inicial · TODO(API-06) participe en subasta.
+# ---------------------------------------------------------------------
+cabecera: []
+
+# ---------------------------------------------------------------------
+# 2. DETALLE DE LA ACTUACION
+# ---------------------------------------------------------------------
+detalle_actuacion:
+
+  # --- Identidad ------------------------------------------------------
+  - clave: codigo_identificativo_propio
+    etiqueta: "Código identificativo propio de la actuación"
+    origen: codigo_identificativo_propio
+    obligatorio: true
+  - clave: ficha
+    etiqueta: "Ficha de actuación estandarizada"
+    origen: ficha.codigo
+    obligatorio: true
+  - clave: version_ficha
+    etiqueta: "Versión de la ficha"
+    origen: ficha.version_ficha
+    obligatorio: true
+  - clave: version_spec
+    etiqueta: "Versión de nuestra lectura de la ficha (spec)"
+    origen: ficha.version_spec
+    obligatorio: true
+  - clave: hash_spec
+    etiqueta: "Huella SHA-256 de la spec con la que se evaluó"
+    origen: ficha.hash_spec
+    obligatorio: true
+  - clave: modelo_version
+    etiqueta: "Versión del modelo canónico"
+    origen: modelo_version
+    obligatorio: true
+  - clave: fecha_creacion
+    etiqueta: "Fecha en la que se preparó esta actuación"
+    origen: creado_en
+
+  # --- Titularidad y fechas (variables de la ficha) ---------------------
+  - clave: titular_nif
+    etiqueta: "NIF del titular / propietario inicial del ahorro"
+    origen: variables_actuacion.titular_nif.valor_consumido
+    obligatorio: true
+  - clave: titular_razon_social
+    etiqueta: "Razón social del titular"
+    origen: variables_actuacion.titular_razon_social.valor_consumido
+    obligatorio: true
+  - clave: fecha_inicio_actuacion
+    etiqueta: "Fecha de inicio de la actuación"
+    origen: variables_actuacion.fecha_inicio_actuacion.valor_consumido
+    obligatorio: true
+  - clave: fecha_fin_actuacion
+    etiqueta: "Fecha de finalización (puesta en marcha)"
+    origen: variables_actuacion.fecha_fin_actuacion.valor_consumido
+    obligatorio: true
+  - clave: n_motores
+    etiqueta: "Número de motores de la actuación"
+    origen: variables_actuacion.n_motores.valor_consumido
+    obligatorio: true
+
+  # --- Convenio CAE -----------------------------------------------------
+  - clave: convenio_ahorro_kwh
+    etiqueta: "Ahorro anual declarado en el convenio CAE"
+    origen: variables_actuacion.convenio.ahorro_kwh.valor_consumido
+    unidad: "kWh/año"
+  - clave: convenio_fecha_firma
+    etiqueta: "Fecha de firma del convenio CAE"
+    origen: variables_actuacion.convenio.fecha_firma.valor_consumido
+  - clave: ficha_cumplimentada_firmada
+    etiqueta: "La ficha cumplimentada consta firmada"
+    origen: variables_actuacion.ficha_cumplimentada.firmada.valor_consumido
+
+  # --- Atributos de agrupacion (expediente oficial) ---------------------
+  - clave: anio_finalizacion
+    etiqueta: "Año de finalización (agrupación en expediente)"
+    origen: atributos_agrupacion.anio_finalizacion
+  - clave: sector
+    etiqueta: "Sector (agrupación en expediente)"
+    origen: atributos_agrupacion.sector
+  - clave: ccaa
+    etiqueta: "Comunidad autónoma (agrupación en expediente)"
+    origen: atributos_agrupacion.ccaa
+    hueco: API-07
+    # TODO(API-07): ver docs/HUECOS.md
+    nota: >-
+      No se sabe cómo determina la plataforma la CCAA de una actuación (¿localización del convenio?,
+      ¿declaración?). Hoy el modelo canónico la deja a null y el tenant la aporta al presentar.
+  - clave: verificador_id
+    etiqueta: "Organismo de verificación asignado"
+    origen: atributos_agrupacion.verificador_id
+
+  # --- Veredicto y ahorro (se transportan, no se juzgan aquí) -----------
+  - clave: veredicto
+    etiqueta: "Veredicto de prevalidación"
+    origen: evaluacion.veredicto
+    obligatorio: true
+  - clave: fecha_evaluacion
+    etiqueta: "Fecha de evaluación"
+    origen: evaluacion.evaluado_en
+    obligatorio: true
+  - clave: hash_reglas
+    etiqueta: "Huella SHA-256 del bloque de reglas aplicado"
+    origen: evaluacion.hash_reglas
+    obligatorio: true
+  - clave: ahorro_total
+    etiqueta: "Ahorro anual total (valor exacto)"
+    origen: calculo.total
+    unidad: "kWh/año"
+    obligatorio: true
+  - clave: ahorro_total_cae
+    etiqueta: "Ahorro anual total truncado a kWh enteros (CAE)"
+    origen: calculo.total_cae
+    unidad: "kWh/año"
+    obligatorio: true
+    nota: "Truncado por INT-06; lo calcula el motor, este mapeo no redondea nada."
+  - clave: ahorro_provisional
+    etiqueta: "El ahorro es una estimación no acreditada"
+    origen: calculo.provisional
+  - clave: motivo_no_calculo
+    etiqueta: "Motivo por el que no hay ahorro calculado"
+    origen: calculo.motivo_no_calculo
+
+  # --- Trazabilidad -----------------------------------------------------
+  - clave: interpretaciones_aplicadas
+    etiqueta: "Interpretaciones propias aplicadas (INT-xx)"
+    origen: interpretaciones_aplicadas
+  - clave: carencias_evaluacion
+    etiqueta: "Carencias detectadas por el motor de reglas"
+    origen: evaluacion.carencias
+  - clave: observaciones
+    etiqueta: "Observaciones del procesamiento"
+    origen: observaciones
+  - clave: subsanaciones
+    etiqueta: "Subsanaciones abiertas"
+    origen: subsanaciones
+  - clave: estado_ciclo
+    etiqueta: "Estado de nuestro ciclo de trabajo"
+    origen: ciclo.estado_ciclo
+    obligatorio: true
+  - clave: estado_plataforma
+    etiqueta: "Último estado conocido en la plataforma oficial"
+    origen: ciclo.estado_plataforma
+    nota: "Por la vía handoff lo conoce el tenant, no nosotros: sale a null hasta que él lo comunique."
+
+# ---------------------------------------------------------------------
+# 3. DETALLE POR UNIDAD (motor + su variador)
+#
+# Estos `origen` se resuelven contra CADA unidad, no contra la actuación entera. Además de sus campos
+# propios, la unidad ve su resultado de cálculo bajo `calculo` (`salida.mapeo.aplicar`).
+# ---------------------------------------------------------------------
+detalle_unidad:
+
+  # --- Identificacion ---------------------------------------------------
+  - clave: num_serie_motor
+    etiqueta: "Nº de serie del motor"
+    origen: variables.num_serie_motor.valor_consumido
+    obligatorio: true
+  - clave: num_serie_variador
+    etiqueta: "Nº de serie del variador instalado"
+    origen: num_serie_variador
+    obligatorio: true
+  - clave: tipo_equipo_accionado
+    etiqueta: "Tipo de equipo accionado"
+    origen: variables.tipo_equipo_accionado.valor_consumido
+    obligatorio: true
+  - clave: regimen_previo
+    etiqueta: "Régimen de funcionamiento previo"
+    origen: variables.regimen_previo.valor_consumido
+    obligatorio: true
+
+  # --- Entradas de la formula -------------------------------------------
+  - clave: PM
+    etiqueta: "Potencia nominal del motor"
+    origen: variables.PM.valor_consumido
+    unidad: kW
+    obligatorio: true
+  - clave: N1
+    etiqueta: "Velocidad antes de la actuación"
+    origen: variables.N1.valor_consumido
+    unidad: rpm
+    obligatorio: true
+  - clave: N2
+    etiqueta: "Velocidad media anual con variador"
+    origen: variables.N2.valor_consumido
+    unidad: rpm
+    obligatorio: true
+  - clave: h_antes
+    etiqueta: "Horas anuales de funcionamiento antes"
+    origen: variables.h_antes.valor_consumido
+    unidad: h
+    obligatorio: true
+  - clave: h_despues
+    etiqueta: "Horas anuales de funcionamiento después"
+    origen: variables.h_despues.valor_consumido
+    unidad: h
+    obligatorio: true
+  - clave: P_prom
+    etiqueta: "Potencia promedio en el nuevo punto de funcionamiento"
+    origen: variables.P_prom.valor_consumido
+    unidad: kW
+    nota: "No entra en la fórmula; es control de coherencia."
+  - clave: perdidas_declaradas_variador
+    etiqueta: "Pérdidas declaradas por el fabricante del variador"
+    origen: variables.perdidas_declaradas_variador.valor_consumido
+    unidad: kW
+    nota: "Informativo. La ficha exige las pérdidas de referencia del cuadro 6, no estas."
+
+  # --- Como se demostro cada entrada ------------------------------------
+  - clave: PM_evidencia
+    etiqueta: "Tipo de evidencia de PM"
+    origen: variables.PM.tipo_evidencia
+  - clave: N2_evidencia
+    etiqueta: "Tipo de evidencia de N2"
+    origen: variables.N2.tipo_evidencia
+  - clave: N2_interpretacion
+    etiqueta: "Interpretación aplicada a N2"
+    origen: variables.N2.interpretacion
+  - clave: h_despues_interpretacion
+    etiqueta: "Interpretación aplicada a h_después"
+    origen: variables.h_despues.interpretacion
+  - clave: registro_dias
+    etiqueta: "Días de registro de funcionamiento aportados"
+    origen: variables.registro.dias.valor_consumido
+    unidad: "días"
+  - clave: registro_inicio
+    etiqueta: "Inicio del periodo registrado"
+    origen: variables.registro.inicio.valor_consumido
+  - clave: registro_fin
+    etiqueta: "Fin del periodo registrado"
+    origen: variables.registro.fin.valor_consumido
+  - clave: registro_hash_declarado
+    etiqueta: "Huella de inalterabilidad declarada en el registro"
+    origen: variables.registro.hash_declarado.valor_consumido
+
+  # --- Resultado de calculo de ESTA unidad -------------------------------
+  - clave: h
+    etiqueta: "Horas de funcionamiento consideradas"
+    origen: calculo.derivadas.h
+    unidad: h
+  - clave: perdidas_ref_kw
+    etiqueta: "Pérdidas de referencia del cuadro 6"
+    origen: calculo.derivadas.perdidas_ref_kw
+    unidad: kW
+  - clave: perdidas_ref_fuente
+    etiqueta: "De dónde salen las pérdidas de referencia"
+    origen: calculo.fuentes.perdidas_ref_kw
+  - clave: p
+    etiqueta: "Factor p de pérdidas"
+    origen: calculo.derivadas.p
+    unidad: "fracción"
+  - clave: ahorro_unidad
+    etiqueta: "Ahorro anual de esta unidad"
+    origen: calculo.salida
+    unidad: "kWh/año"
+  - clave: control_FIS_01
+    etiqueta: "Control físico FIS-01"
+    origen: calculo.controles.FIS-01
+  - clave: control_FIS_02
+    etiqueta: "Control físico FIS-02"
+    origen: calculo.controles.FIS-02
+  - clave: interpretaciones_unidad
+    etiqueta: "Interpretaciones aplicadas en esta unidad"
+    origen: calculo.interpretaciones
+  - clave: motivo_no_calculo_unidad
+    etiqueta: "Motivo por el que esta unidad no tiene ahorro"
+    origen: calculo.motivo_no_calculo
+
+# ---------------------------------------------------------------------
+# 4. DOCUMENTOS: en qué subcarpeta va cada tipo documental
+#
+# Los tipos son los de `spec/IND240_v1.1.yaml` (bloque `documentacion`) más los que la clasificación puede
+# deducir. Un tipo que no esté aquí no es un error: va al cajón `sin_tipo` y se ve en el 00_LEEME.md.
+# ---------------------------------------------------------------------
+documentos:
+  carpeta: documentos
+  sin_tipo: 99_sin_clasificar
+  por_tipo:
+    ficha_cumplimentada: 01_ficha_cumplimentada
+    declaracion_responsable: 02_declaracion_responsable
+    factura: 03_facturas
+    informe_fotografico: 04_informe_fotografico
+    placa_caracteristicas_foto: 04_informe_fotografico
+    certificado_instalador: 05_certificado_instalador
+    certificado_tecnico_competente: 06_certificado_tecnico_competente
+    registro_funcionamiento: 07_registro_funcionamiento
+    registro_horas_previo: 08_registro_horas_previo
+    ficha_tecnica_motor: 09_ficha_tecnica_motor
+    ficha_tecnica_variador: 10_ficha_tecnica_variador
+    ficha_tecnica_equipo_accionado: 11_ficha_tecnica_equipo_accionado
+    convenio_cae: 12_convenio_cae
+    pedido: 13_pedido
+
+# ---------------------------------------------------------------------
+# 5. NOMBRES DEL ARBOL DEL HANDOFF (ADR-009 §4)
+#
+# El manifiesto no está aquí: su nombre de fichero lo declara `mapping/manifiesto.handoff.yaml`, que es
+# quien manda sobre cómo se presenta el manifiesto interno.
+# ---------------------------------------------------------------------
+ficheros:
+  leeme: 00_LEEME.md
+  payload: 02_payload.json
+  informe_markdown: 03_informe_prevalidacion.md
+  informe_json: 04_informe_prevalidacion.json
+  log_eventos: 05_log_eventos.jsonl
+  verificacion: 99_verificacion.txt
