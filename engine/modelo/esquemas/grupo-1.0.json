@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cae-engine:modelo/grupo-1.0.json",
+  "title": "GrupoActuaciones",
+  "description": "Actuaciones verificadas juntas con dictamen unico (docs/03 §5.2). Solo estructura: las reglas de composicion R-GRP son S4 y diseño pendiente de Billy (ADR-001 §3).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "tenant_id", "verificador_id", "actuaciones", "estado_plataforma"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "tenant_id": { "type": "string", "minLength": 1 },
+    "verificador_id": { "type": ["string", "null"], "minLength": 1 },
+    "actuaciones": {
+      "description": "codigo_identificativo_propio de cada actuacion del grupo.",
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "estado_plataforma": {
+      "description": "El grupo comparte los 8 estados de fase 1 (docs/02 §5.1). Se refleja, no se decide.",
+      "type": ["string", "null"]
+    }
+  }
+}

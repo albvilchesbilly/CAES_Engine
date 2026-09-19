@@ -20,7 +20,10 @@ dependencies = [
 dev = ["pytest>=8.0", "ruff>=0.5"]
 
 [tool.setuptools]
-packages = ["engine", "generator", "generator.documentos"]
+packages = ["engine", "engine.modelo", "engine.eventos", "generator", "generator.documentos"]
+
+[tool.setuptools.package-data]
+"engine.modelo" = ["esquemas/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

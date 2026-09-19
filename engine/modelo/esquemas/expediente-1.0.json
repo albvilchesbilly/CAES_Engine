@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cae-engine:modelo/expediente-1.0.json",
+  "title": "Expediente",
+  "description": "Agregacion oficial de actuaciones VERIFICADA_FAVORABLE con misma CCAA + año + sector + verificador (docs/03 §5.2). Solo estructura: R-EXP es S4 y diseño pendiente de Billy.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "tenant_id",
+    "ccaa",
+    "anio",
+    "sector",
+    "verificador_id",
+    "actuaciones",
+    "grupo_id",
+    "estado_expediente",
+    "requerimientos"
+  ],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "tenant_id": { "type": "string", "minLength": 1 },
+    "ccaa": {
+      "description": "NO DOCUMENTADO como se determina. TODO(API-07): ver docs/HUECOS.md.",
+      "type": ["string", "null"]
+    },
+    "anio": { "type": ["integer", "null"], "minimum": 2000 },
+    "sector": { "type": ["string", "null"] },
+    "verificador_id": { "type": ["string", "null"], "minLength": 1 },
+    "actuaciones": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "grupo_id": { "type": ["string", "null"], "minLength": 1 },
+    "estado_expediente": {
+      "description": "Nombre provisional NO OFICIAL. TODO(API-03): ver docs/HUECOS.md. La tabla de mapeo vive en engine/estados.py, no aqui.",
+      "type": ["string", "null"]
+    },
+    "requerimientos": {
+      "description": "Requerimientos GA/CN. Su forma la fija S3.5; aqui solo se exige que sean objetos.",
+      "type": "array",
+      "items": { "type": "object" }
+    }
+  }
+}

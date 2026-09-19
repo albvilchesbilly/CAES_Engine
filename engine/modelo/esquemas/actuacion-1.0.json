@@ -1,0 +1,247 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cae-engine:modelo/actuacion-1.0.json",
+  "title": "ActuacionCanonica",
+  "description": "Modelo canonico de una actuacion CAE (docs/03 §5.2, ADR-004 C1). Version 1.0.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "codigo_identificativo_propio",
+    "modelo_version",
+    "creado_en",
+    "ficha",
+    "cabecera",
+    "partes",
+    "atributos_agrupacion",
+    "documentos",
+    "unidades",
+    "variables_actuacion",
+    "evaluacion",
+    "calculo",
+    "observaciones",
+    "interpretaciones_aplicadas",
+    "subsanaciones",
+    "ciclo"
+  ],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "codigo_identificativo_propio": {
+      "description": "Clave de reconciliacion con la plataforma (docs/03 §5.2); no cambia tras PayloadConstruido.",
+      "type": "string",
+      "minLength": 1
+    },
+    "modelo_version": { "type": "string", "enum": ["1.0"] },
+    "creado_en": { "type": "string", "format": "date" },
+    "ficha": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["codigo", "version_ficha", "version_spec", "hash_spec"],
+      "properties": {
+        "codigo": { "type": "string", "minLength": 1 },
+        "version_ficha": { "type": "string", "minLength": 1 },
+        "version_spec": { "type": "string", "minLength": 1 },
+        "hash_spec": { "type": "string", "minLength": 1 }
+      }
+    },
+    "cabecera": {
+      "description": "Cabecera comun de la plataforma. Vacia en S3.1: la spec transversal es S3.2 (ADR-004 §6.1).",
+      "type": "object"
+    },
+    "partes": { "type": "array", "items": { "$ref": "#/$defs/parte" } },
+    "atributos_agrupacion": {
+      "description": "Lo que permite componer un expediente oficial (docs/03 §5.2).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ccaa", "anio_finalizacion", "sector", "verificador_id"],
+      "properties": {
+        "ccaa": {
+          "description": "NO DOCUMENTADO como se determina. TODO(API-07): ver docs/HUECOS.md.",
+          "type": ["string", "null"]
+        },
+        "anio_finalizacion": { "type": ["integer", "null"], "minimum": 2000 },
+        "sector": { "type": ["string", "null"] },
+        "verificador_id": { "type": ["string", "null"] }
+      }
+    },
+    "documentos": { "type": "array", "items": { "$ref": "#/$defs/documento_ref" } },
+    "unidades": { "type": "array", "items": { "$ref": "#/$defs/unidad" } },
+    "variables_actuacion": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/dato_consolidado" }
+    },
+    "evaluacion": {
+      "type": "object",
+      "required": ["reglas", "veredicto", "hash_reglas", "evaluado_en"],
+      "properties": {
+        "reglas": { "type": "array", "items": { "$ref": "#/$defs/resultado_regla" } },
+        "veredicto": {
+          "type": "string",
+          "enum": ["NO_ELEGIBLE", "BLOQUEADO", "SUBSANABLE", "PREVALIDADO"]
+        },
+        "hash_reglas": { "type": "string", "minLength": 1 },
+        "evaluado_en": { "type": "string", "format": "date" }
+      }
+    },
+    "calculo": {
+      "type": ["object", "null"],
+      "required": ["por_unidad", "total", "traza", "provisional"],
+      "properties": {
+        "total": { "type": ["string", "null"], "format": "decimal-string" },
+        "total_cae": { "type": ["integer", "null"] },
+        "por_unidad": { "type": "array" },
+        "traza": { "type": "array", "items": { "type": "string" } },
+        "provisional": { "type": "boolean" }
+      }
+    },
+    "observaciones": { "type": "array", "items": { "type": "string" } },
+    "interpretaciones_aplicadas": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "subsanaciones": { "type": "array", "items": { "type": "object" } },
+    "ciclo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["estado_ciclo", "estado_plataforma", "grupo_id", "expediente_id"],
+      "properties": {
+        "estado_ciclo": {
+          "description": "Nuestro trabajo, nunca la plataforma (ADR-004 C3). engine/estados.py debe coincidir.",
+          "type": "string",
+          "enum": [
+            "ABIERTA",
+            "EN_PROCESO",
+            "EVALUADA",
+            "PENDIENTE_SUBSANACION",
+            "EN_REVISION_HUMANA",
+            "LISTA_PARA_ENVIO",
+            "ENTREGADA",
+            "EN_PLATAFORMA",
+            "CERRADA",
+            "DESCARTADA"
+          ]
+        },
+        "estado_plataforma": {
+          "description": "Literal que refleja la plataforma (docs/02 §5.1). No se enumera aqui: la tabla de mapeo vive en engine/estados.py (S3.1, pieza posterior).",
+          "type": ["string", "null"]
+        },
+        "grupo_id": { "type": ["string", "null"] },
+        "expediente_id": { "type": ["string", "null"] }
+      }
+    }
+  },
+  "$defs": {
+    "parte": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rol", "nif", "razon_social"],
+      "properties": {
+        "rol": {
+          "type": "string",
+          "enum": ["propietario_inicial", "solicitante", "instalador", "verificador"]
+        },
+        "nif": { "type": ["string", "null"], "minLength": 1 },
+        "razon_social": { "type": ["string", "null"], "minLength": 1 }
+      }
+    },
+    "documento_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["doc_id", "sha256", "bytes", "paginas", "metodo_lectura", "tipo", "confianza_tipo", "origen"],
+      "properties": {
+        "doc_id": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "minLength": 1 },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "paginas": { "type": "integer", "minimum": 0 },
+        "metodo_lectura": { "type": "string", "minLength": 1 },
+        "tipo": { "type": ["string", "null"], "minLength": 1 },
+        "confianza_tipo": { "type": ["string", "null"], "format": "decimal-string" },
+        "origen": { "type": ["string", "null"], "minLength": 1 }
+      }
+    },
+    "unidad": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["clave", "num_serie_variador", "variables"],
+      "properties": {
+        "clave": { "type": "string", "minLength": 1 },
+        "num_serie_variador": { "type": ["string", "null"], "minLength": 1 },
+        "variables": { "type": "object", "additionalProperties": { "$ref": "#/$defs/dato_consolidado" } }
+      }
+    },
+    "dato_consolidado": {
+      "description": "Tres capas por dato (docs/03 §5.3): evidencias con cita, interpretacion y valor consumido.",
+      "type": "object",
+      "required": [
+        "variable",
+        "evidencias",
+        "valor_normalizado",
+        "tipo_evidencia",
+        "fuente_primaria",
+        "interpretacion",
+        "valor_consumido",
+        "conflicto",
+        "tratable_por_plataforma"
+      ],
+      "properties": {
+        "variable": { "type": "string", "minLength": 1 },
+        "evidencias": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/evidencia" } },
+        "valor_normalizado": { "type": ["string", "null"] },
+        "tipo_evidencia": {
+          "type": ["string", "null"],
+          "enum": ["demostrado", "declarado", "derivado", null]
+        },
+        "fuente_primaria": { "type": ["string", "null"] },
+        "interpretacion": { "type": ["string", "null"] },
+        "valor_consumido": {
+          "description": "Capa 3. Null si hay conflicto entre fuentes fiables (regla de oro 6).",
+          "type": ["string", "boolean", "array", "null"]
+        },
+        "conflicto": { "type": "boolean" },
+        "tratable_por_plataforma": { "type": "boolean" },
+        "nivel": { "type": "string", "enum": ["unidad", "actuacion"] },
+        "unidad": { "type": ["string", "null"] },
+        "num_serie_motor": { "type": ["string", "null"] }
+      }
+    },
+    "evidencia": {
+      "description": "Capa 1: sin cita literal no entra (regla de oro 2).",
+      "type": "object",
+      "required": [
+        "variable",
+        "doc_id",
+        "pagina",
+        "texto_literal",
+        "metodo",
+        "confianza",
+        "extractor_version",
+        "tipo_evidencia"
+      ],
+      "properties": {
+        "variable": { "type": "string", "minLength": 1 },
+        "valor": { "type": "string" },
+        "doc_id": { "type": "string", "minLength": 1 },
+        "tipo_doc": { "type": ["string", "null"] },
+        "pagina": { "type": "integer", "minimum": 0 },
+        "texto_literal": { "type": "string", "minLength": 1 },
+        "metodo": { "type": "string", "minLength": 1 },
+        "confianza": { "type": "string", "format": "decimal-string" },
+        "extractor_version": { "type": "string", "minLength": 1 },
+        "tipo_evidencia": { "type": "string", "enum": ["demostrado", "declarado", "derivado"] }
+      }
+    },
+    "resultado_regla": {
+      "type": "object",
+      "required": ["id", "resultado", "severidad", "fase", "nivel"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "resultado": { "type": "string", "enum": ["CUMPLE", "FALLA", "NO_EVALUABLE"] },
+        "severidad": { "type": "string", "minLength": 1 },
+        "fase": { "type": "string", "minLength": 1 },
+        "nivel": { "type": "string", "minLength": 1 },
+        "descripcion": { "type": "string" },
+        "referencia": { "type": ["string", "null"] },
+        "interpretacion": { "type": ["string", "null"] },
+        "motivo": { "type": ["string", "null"] },
+        "por_unidad": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    }
+  }
+}
