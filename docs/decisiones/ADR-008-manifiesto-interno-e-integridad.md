@@ -1,6 +1,6 @@
 # ADR-008 — Manifiesto interno e integridad total (S3.3)
 
-**Estado**: EN CURSO
+**Estado**: ACEPTADA (técnica) · PROPUESTA (§5, lo que decide Billy)
 **Fecha**: 2026-09-19
 **Decide**: Claude (técnica) · Billy (lo marcado `PROPUESTA` en §5)
 **Ámbito**: `salida/constructor/`, `tests/`, `docs/01` §3.8, `docs/03` §9
@@ -93,6 +93,33 @@ cambiará y los manifiestos antiguos seguirán siendo verificables contra su pro
 - El test de dependencias de la Fase 0 (`engine/` no importa de `salida/`) cubre ya el módulo nuevo.
 - El manifiesto **oficial** sigue sin existir: su formato es `TODO(API-02)` y el mapeo vivirá en
   `mapping/manifiesto.handoff.yaml` (S3.4), nunca en `engine/`.
+
+## 4 bis. Decisiones tomadas al construir (19/09/2026)
+
+64 tests. Lo que la implementación obligó a decidir, más allá de los contratos de arriba:
+
+1. **El PDF combinado figura en el manifiesto y sus partes también.** El combinado es el fichero que entregó el
+   cliente y el único que se contrasta contra el disco; cada parte se declara con `origen` (el sha256 del
+   combinado) y una ruta `"<ruta del combinado>#<doc_id>"` que **no existe en disco** y por eso no se busca allí.
+   El caso G da 13 ficheros reales más 3 partes. Si el combinado sale alterado o ausente, sus partes se reportan
+   con él: una parte no es demostrable sin su original.
+2. **Las rutas se resuelven por huella, nunca por nombre.** `DocumentoRef` no lleva ruta, así que `construir`
+   indexa el paquete por SHA-256 con el mismo universo de ficheros que la ingesta. Efecto deseable: **si un
+   adjunto ya estaba alterado antes de construir, el manifiesto no se genera** en vez de sellar una foto falsa.
+3. **`raiz` es obligatoria en la práctica**: sin ella no hay ruta que declarar y el manifiesto daría por ausente
+   todo el paquete al verificarlo. `construir` la rechaza con un mensaje que lo explica.
+4. **Los hashes se calculan sobre `engine.modelo.a_dict(actuacion)`**, la serialización oficial del modelo, para
+   que `Decimal` y las fechas tengan una sola forma textual y no dos según por dónde entren.
+5. **`hash_log_eventos`** es el hash del último evento (que ya encadena todo el log); `None` sin log o con log
+   vacío. Un log de **otra** actuación es error, no se mezclan.
+6. **El universo de ficheros es el de la ingesta**: un fichero oculto o temporal añadido a la carpeta no cuenta
+   como sobrante.
+7. **El manifiesto describe, no juzga**: los casos con conflicto o sin registro producen manifiesto igual; no
+   hay campo `veredicto`.
+
+Un test de la Fase 0 (`test_la_periferia_no_existe_todavia`) afirmaba que `salida/` no existía. No se relajó: se
+actualizó a lo que `docs/01` §3.8 describe hoy, conservando lo que de verdad protege (el núcleo resuelve los
+siete casos con la periferia ausente, vacía o rota, y `engine/` no la importa).
 
 ## 5. Lo que queda para Billy (PROPUESTA)
 

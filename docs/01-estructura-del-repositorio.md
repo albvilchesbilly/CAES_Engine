@@ -43,7 +43,7 @@ cae-engine/
 │
 ├── engine/                          EXISTE  Núcleo determinista. No importa de agentes/ ni de salida/
 ├── agentes/                         S3   Periferia con LLM. Nunca el núcleo
-├── salida/                          S3   Puerto de salida y adaptadores (handoff, simulador, API)
+├── salida/                          PARCIAL Puerto de salida y adaptadores; hoy solo el constructor del manifiesto
 ├── generator/                       EXISTE  Generador del paquete sintético (modelo de datos → documentos)
 ├── expedientes/                     EXISTE  Carpetas de entrada de los casos de prueba (salida del generator)
 │   ├── EXP001-A_completo/ … EXP001-G_desordenado/
@@ -234,12 +234,13 @@ agentes/
 - Una salida con resultado calculado se rechaza en el runtime (test).
 - A0 (coordinador) no está aquí: es `engine/estados.py`. A6 (vigía normativo) trabaja fuera de línea y solo produce diffs en `spec/propuestas/`.
 
-### 3.8 `salida/` — puerto y adaptadores (`S3`)
+### 3.8 `salida/` — puerto y adaptadores (`PARCIAL`: solo `constructor/`, desde S3.3)
 
 ```
 salida/
   puerto.py       construir(actuacion, mapping) · entregar(paquete) · consultar_estado(ref) · consultar_tareas(tenant)
-  constructor/    Payload cabecera + detalle + manifiesto, sin firmar. Nuestro
+  constructor/    EXISTE (S3.3) manifiesto interno con los cinco hashes y `verificar()`; el payload de
+                  cabecera y detalle llega con S3.2 y S3.4. Nuestro, nunca el oficial (TODO(API-02))
   handoff/        Carpeta ordenada + manifiesto + informe, para que el tenant presente por el cauce vigente
   simulador/      Reproduce SOLO lo documentado de la plataforma: 8 estados de fase 1, estados provisionales
                   de fases 2–4 (marcados NO OFICIAL), manifiesto con hash, validación de esquema, firma humana

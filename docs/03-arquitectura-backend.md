@@ -77,7 +77,7 @@ Rutas según `docs/01` §3. La columna Estado, tras cerrar la Fase 0 (19/09/2026
 | N2 | Rules Engine | Evalúa reglas por fases con tres resultados y fija el veredicto; **tres niveles** (actuación/unidad, grupo, expediente) | `engine/reglas.py` | `EXISTE` (F0.9) nivel actuación/unidad · `NUEVO` S4: grupo y expediente (con N9) |
 | N3 | Calculation Engine + tablas | Fórmula leída del YAML, `Decimal`, traza, controles físicos; tablas de `data/` con vigencia y búsqueda por clave (`INT-02`); **control cruzado** con el valor de la plataforma | `engine/calculo.py`, `engine/tablas.py` | `EXISTE` (18/09/2026, F0.2 y F0.3): cálculo genérico desde la spec y cuadro 6 con vigencia e INT-02 · `NUEVO` S3: control cruzado (necesita sandbox) |
 | N4 | Evidence Store | Grafo de evidencias, tres capas por dato, consolidación, conflictos, `tratable_por_plataforma` | `engine/evidencias.py` | `EXISTE` (F0.8) en memoria con serialización JSON (§14 e) · `NUEVO` S3: persistencia junto al log |
-| N5 | Integridad | SHA-256 de **todo** fichero en ingesta + manifiesto interno | `engine/ingesta.py` (hash) · `salida/constructor/` (manifiesto) | `EXISTE` (F0.6) hash total de todo fichero (§14 d) · `NUEVO` S3: manifiesto interno |
+| N5 | Integridad | SHA-256 de **todo** fichero en ingesta + manifiesto interno | `engine/ingesta.py` (hash) · `salida/constructor/` (manifiesto) | `EXISTE`: hash total de todo fichero (F0.6, §14 d) y manifiesto interno verificable (S3.3, `ADR-008`) |
 | N6 | Máquina de estados | Cuatro niveles de estado, contagio, inalterabilidad post-firma; es el A0 (coordinador) hecho código | `engine/estados.py` + `engine/estados_plataforma.yaml` | `EXISTE` (S3.1): estado de ciclo como proyección del log; estados de plataforma en tabla YAML |
 | N7 | Modelo canónico | `ActuacionCanonica`, `GrupoActuaciones`, `Expediente`, `Verificador`, `Tenant`; validado con JSON Schema propio (sin dependencias nuevas) | `engine/modelo/` | `EXISTE` (S3.1): los 7 casos validan · `cabecera` vacía hasta S3.2 |
 | N8 | Log de eventos | Solo-añadir, hash encadenado, JSON canónico, replay | `engine/eventos/` | `EXISTE` (S3.1): el replay de los 7 casos reproduce veredicto y ahorro bit a bit |
@@ -317,7 +317,7 @@ El consolidador es determinista y no llama a modelos. Lo que A4 aporta en P4 es 
 
 - SHA-256 de **todo** fichero en el momento de ingesta, antes de cualquier transformación (`engine/ingesta.py`, desde la Fase 0, §14 d). El hash del original se conserva aunque se separe un PDF combinado: se registran el original y cada parte (`PdfSeparado`).
 - Vinculación de documentos por hash y por nº de serie, nunca por nombre de fichero. Renombrar, reordenar o duplicar ficheros no cambia nada (propiedades metamórficas de `docs/05`).
-- Manifiesto interno (`NUEVO` S3, `salida/constructor/`): el nuestro, no el oficial. Añade `hash_cabecera` y `hash_detalle` del payload para poder demostrar exactamente qué se envió.
+- Manifiesto interno (`EXISTE` desde S3.3, `salida/constructor/`): el nuestro, no el oficial. Añade `hash_cabecera` y `hash_detalle` del payload, más `hash_log_eventos` y `hash_manifiesto`, para poder demostrar exactamente qué se envió. `verificar()` lo contrasta contra los ficheros y dice **qué** cambió: alterados, ausentes y sobrantes por separado (`ADR-008`).
 
 ```json
 {

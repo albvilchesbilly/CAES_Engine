@@ -68,14 +68,21 @@ def ground_truth(caso: str) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# 1 · Sin periferia: hoy `agentes/` y `salida/` no existen
+# 1 · La periferia que hay: `agentes/` sigue sin existir; `salida/` nace en S3.3
 # ---------------------------------------------------------------------------
 
 
-def test_la_periferia_no_existe_todavia():
-    """Si algun dia existe, los tests de abajo siguen valiendo; este deja constancia del punto de partida."""
+def test_la_periferia_es_la_que_dice_docs_01():
+    """`salida/` nace en S3.3 (`ADR-008`) con el constructor del manifiesto; `agentes/` es S3.6.
+
+    Este test decia hasta S3.3 que `salida/` no existia. No se relaja: se actualiza a lo que docs/01 §3.8
+    describe hoy, y lo que de verdad protege el modo degradado lo comprueban los tests de abajo (el nucleo
+    resuelve los siete casos con la periferia ausente, vacia o rota, y `engine/` no la importa).
+    """
     assert not (RAIZ / "agentes").exists()
-    assert not (RAIZ / "salida").exists()
+    assert (RAIZ / "salida" / "constructor" / "manifiesto.py").is_file()
+    #: La firma es un acto humano con certificado de representante: no existe como codigo (docs/03 §10.3).
+    assert not (RAIZ / "salida" / "firma").exists()
 
 
 @pytest.mark.parametrize("caso", CASOS)

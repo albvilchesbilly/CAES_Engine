@@ -13,7 +13,7 @@ Fuente de partida: presentación "Plataforma electrónica del sistema de CAE" (O
 | ID | Hueco | Qué bloquea | Cómo se trabaja mientras tanto | Dueño | Revisar cuando |
 |---|---|---|---|---|---|
 | API-01 | Endpoints, autenticación concreta, ejemplos de petición y respuesta | `salida/api_oficial/`, `salida/transporte/` | Simulador (`salida/simulador/`) implementa solo lo conocido; handoff como vía operativa | Billy (consulta X.1) | Llegue el diccionario |
-| API-02 | Formato del manifiesto oficial de ficheros (algoritmo de hash, estructura, campos) | `mapping/manifiesto.api.yaml` | Manifiesto interno propio (`docs/03` §9) con SHA-256; el mapeo al oficial se escribe cuando exista | Billy | Idem |
+| API-02 | Formato del manifiesto oficial de ficheros (algoritmo de hash, estructura, campos) | `mapping/manifiesto.api.yaml` | Manifiesto interno propio ya construido (`salida/constructor/`, S3.3, `ADR-008`) con SHA-256; el mapeo al oficial se escribe cuando exista | Billy | Idem |
 | API-03 | Estados de expediente en fases 2–4 (presentación, validación técnica GA, revisión formal CN, resolución, registro, desistimiento) y de la solicitud de certificación | Máquina de estados `engine/estados.py` | Nombres provisionales marcados `NO OFICIAL` en tabla de mapeo YAML: `BORRADOR_SOLICITUD`, `PRESENTADO`, `EN_VALIDACION_TECNICA`, `REQUERIDO_GA`, `VALIDADO_GA`, `EN_REVISION_FORMAL`, `REQUERIDO_CN`, `RESUELTO_FAVORABLE`, `RESUELTO_DESFAVORABLE`, `INSCRITO`, `DESISTIDO` | Billy | Idem |
 | API-04 | Si la validación documental de la plataforma comprueba **contenido** o solo **presencia** por tipo | Valor diferencial de R-DOC frente a R-CON; `R-DOC-01.equivalente_plataforma` | Se asume presencia por tipo (lectura razonable de la presentación); R-DOC-01 marcada `diferencial: false` en la propuesta v1.2 | Billy | Diccionario / fase II (ene–mar 2027) |
 | API-05 | Taxonomía de "tipología de empresa" del propietario inicial (¿PYME / gran empresa? ¿otra?) | `R-CAB-06`; variable `tipologia_empresa` | Dato `declarado`; regla solo `AVISO` | Billy | Diccionario |
@@ -32,6 +32,24 @@ Fuente de partida: presentación "Plataforma electrónica del sistema de CAE" (O
 | ID | Cerrado el | Fuente oficial | Qué cambió en el repo |
 |---|---|---|---|
 | — | — | — | — |
+
+---
+
+## 2 bis. Preguntas concretas pendientes de respuesta oficial
+
+Las que la construcción ha hecho necesarias y la presentación del 30/06/2026 no cubre. Van al gestor de la
+plataforma con la consulta de `docs/06` §5 X.1.
+
+**Sobre API-02 (manifiesto oficial), planteadas al construir S3.3:**
+
+1. ¿Qué algoritmo de hash exige el manifiesto oficial de adjuntos (SHA-256 u otro) y sobre qué se calcula: el
+   fichero entero tal y como se sube, o alguna normalización previa?
+2. ¿Qué estructura y qué campos tiene, y **cómo se identifica cada adjunto**: por nombre de fichero, por un id
+   que devuelve la carga asíncrona, o por su hash? De esto depende si nuestra `ruta` mapea directamente o hace
+   falta un identificador de la plataforma.
+3. **Un PDF que contiene varios documentos**: ¿se sube tal cual con un solo tipo documental, o hay que subir un
+   fichero por tipo? De ahí depende si nuestras "partes" viajan al manifiesto oficial o se quedan como traza
+   interna, y enlaza con `API-04` (si la validación mira contenido o solo presencia por tipo).
 
 ---
 
