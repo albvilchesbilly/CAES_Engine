@@ -172,18 +172,28 @@ class Simulador:   # implementa PuertoSalida
 
 Ocho reglas, cada una con su fuente:
 
-1. **Ni un literal de plataforma en el código del simulador.** Los estados salen de
+1. **Ni un literal de *estado* de plataforma en el código del simulador.** Los estados salen de
    `engine.estados.tabla_plataforma()` (`estados_plataforma.yaml`) y se derivan por las marcas `inicial`,
    `validacion_automatica` y `exige_firma` (§5 ter punto 2), nunca por su nombre ni por su posición en el
    fichero. Si mañana el diccionario renombra `PDTE_RECTIFICACION_VER`, cambia el YAML y el simulador no se
-   toca (`docs/03` §7.1).
+   toca (`docs/03` §7.1). Los tres **perfiles** de usuario sí están escritos en el módulo: están confirmados
+   en `docs/02` §2.2 y no salen de ningún YAML, así que renombrarlos obligaría a tocar el código. Queda
+   declarado en la cabecera del módulo para que la regla no prometa más de lo que el código sostiene.
 2. **La firma es lo único que abre `COMPLETA` → `ENVIADA_A_VERIFICACION`**, y exige un `FirmaRegistrada` (o un
    `Actor`) de clase `humano` **y** credencial de perfil `Firma`. Actor `motor`, `agente` o `plataforma` es
    `ErrorSimulador` (`docs/02` §5.6, `CLAUDE.md` §2). El simulador **no firma**: comprueba que alguien firmó.
 3. **La automatización termina en `COMPLETA`** (`docs/02` §6.2). El simulador nunca avanza solo más allá.
 4. **Validación**: esquema del modelo canónico (`engine.modelo.validar` — es el **nuestro**, el oficial es
-   `TODO(API-01)`), integridad del manifiesto (`salida.constructor.verificar` contra la carpeta entregada) y
-   recálculo de `hash_manifiesto`. Un paquete con un hash alterado se rechaza nombrando el fichero.
+   `TODO(API-01)`), integridad del manifiesto (`salida.constructor.verificar` contra **la raíz del paquete
+   que se le entrega**) y recálculo de `hash_manifiesto`. Un paquete con un hash alterado se rechaza
+   nombrando el fichero.
+   *Precisión de la revisión de S3.4*: una redacción anterior decía "contra la carpeta entregada", que se
+   leía como la carpeta del handoff. **No es eso, y no debe serlo**: el handoff entrega al **tenant** y el
+   simulador hace de **plataforma**; son dos destinos distintos y el simulador no conoce —ni debe conocer—
+   el reagrupado por tipo documental del handoff (§5 ter punto 8). Quien audita la carpeta del handoff es el
+   propio adaptador: `entregar` verifica lo que acaba de escribir y `verificar_entrega` la relee cuando se
+   quiera. La frontera está clavada en un test con nombre explícito para que, el día que S3.7 la mueva, se
+   vea que se está moviendo.
 5. **Permisos por perfil** (`docs/02` §2.2, confirmados): `Consulta` no crea ni firma; `Modificacion` crea y
    carga borradores pero no firma; `Firma` todo. Si el usuario de `Modificacion` puede ser ajeno al agente es
    `TODO(API-09)` y el simulador **no lo modela**: solo mira el perfil, nunca de quién es la infraestructura.
@@ -271,6 +281,48 @@ ambas la probó después la revisión adversarial.
 14. **`PeticionFirmada` del transporte se queda deliberadamente mínima** (quién firma, qué se firma, dónde): ni
     endpoint, ni cabeceras, ni algoritmo, ni códigos de error. Todo eso es `API-01`.
 
+## 5 quater. Lo que encontró la revisión adversarial (19/09/2026)
+
+Las dos mitades se construyeron en paralelo y cada una validó su lado contra un doble de la otra. La costura
+la probó después una revisión adversarial con un test de extremo a extremo (`tests/test_salida_e2e.py`,
+caso A real: motor → handoff → simulador → log). Encontró cuatro defectos que ninguno de los dos constructores
+vio, y que **ningún test de los suyos cubría**. Se dejan escritos porque el patrón se repetirá:
+
+1. **El handoff no tenía reloj inyectable.** `hash_paquete` **es** el `hash_manifiesto`, que sella su
+   `generado_en`: sin punto de inyección, volver a construir el paquete de la misma actuación daba otra
+   huella, otra referencia en el simulador y una segunda entrega que fallaba. La "idempotencia por contenido"
+   solo valía para el mismo objeto en memoria, que era justo lo único que probaban sus tests.
+2. **La tolerancia del log era bidireccional y borraba eventos del tenant.** El log es solo-añadir: si en
+   disco hay **más** log del que traemos, la carpeta sabe algo que nosotros no y reescribirla es perder
+   eventos, en el mismo módulo que promete que nunca se borra nada del usuario. La tolerancia va en una sola
+   dirección.
+3. **El `00_LEEME.md` afirmaba al tenant una causa falsa.** Cuando entrega un adaptador distinto del que
+   construyó, no hay informe; el texto decía que el paquete venía del modelo canónico, que en ese caso es
+   mentira. Un documento que lee el cliente no afirma lo que quien lo escribe no sabe.
+4. **Un mapeo incompleto cargaba y reventaba a mitad de `entregar`**, contra lo que el propio módulo promete.
+   El cargador no puede verlo (no sabe a qué destino se entregará); el adaptador sí, y lo comprueba al entrar.
+
+Y dos tests que no probaban lo que decían, corregidos sin relajarlos:
+
+5. `tests/test_mapeo.py::test_cada_unidad_ve_su_propio_calculo` comparaba `len(set(dict))`, es decir las
+   **claves**: era cierto pasara lo que pasara. Demostrado por mutación (emparejar unidad↔cálculo por
+   posición y ver la suite pasar entera). Ahora contrasta cada ahorro contra `calculo.por_unidad` por
+   identidad, y la mutación lo mata.
+6. `tests/test_modo_degradado.py` solo miraba el **primer nivel** de `engine/`: `engine/modelo/` y
+   `engine/eventos/` (S3.1) nunca se revisaron ni por importaciones prohibidas ni por `eval`. Estaban
+   limpios; el agujero era latente. Ahora recorre el árbol completo (72 → 105 comprobaciones).
+
+Tres cosas más se arreglaron en el mismo paso: el fallback de la clave de unidad usaba `or`, que habría
+colado una clave vacía al emparejamiento por posición; la cabecera del simulador prometía "ni un literal de
+plataforma" cuando los tres perfiles sí están escritos en el módulo (ahora lo declara); y el bloque
+`ficheros` de `mapping/manifiesto.handoff.yaml` se cargaba y no lo leía nadie — configuración muerta es
+configuración que miente, y se ha quitado.
+
+Deuda declarada y aceptada, no tapada: `AdaptadorHandoff` guarda informes y huellas en memoria y crece en un
+proceso largo (la consola de S4 tendrá que acotarlo) · el `05_log_eventos.jsonl` entregado va siempre un
+evento por detrás, porque no puede contener su propia entrega · el `id` de `TareaPendiente` es nuestro y
+tiene forma de identificador.
+
 ## 6. Lo que queda para Billy (PROPUESTA)
 
 1. **Dónde vive el transporte** (`API-09`): `UBICACIONES` está declarado y sin decidir. No bloquea S3.4.
@@ -290,6 +342,8 @@ ambas la probó después la revisión adversarial.
 Criterio de `docs/06` S3.4: el simulador acepta el paquete del caso A y rechaza uno con hash alterado · la
 firma es un paso humano simulado que cambia `COMPLETA` → `ENVIADA_A_VERIFICACION` solo con `FirmaRegistrada` de
 actor humano · ningún campo inventado de la API, cada hueco citando `docs/HUECOS.md`.
-Añadido: `pytest -q` en verde sin romper los 1467 anteriores · `evaluar_casos.py` 7/7 con el caso A en
+Añadido: `pytest -q` en verde sin romper los anteriores · `evaluar_casos.py` 7/7 con el caso A en
 305.829,6 kWh/año · `ruff` limpio · el test de dependencias sigue probando que `engine/` no importa de
-`salida/` · ningún literal de plataforma en el código de `salida/simulador/`.
+`salida/`, ahora sobre el árbol completo · ningún literal de estado de plataforma en `salida/simulador/` ·
+y el recorrido de extremo a extremo del caso A por handoff y simulador, con el log proyectado sin traducción
+hasta `EN_PLATAFORMA` con `firmada=True` y `via_entrega="handoff"`.

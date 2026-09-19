@@ -70,11 +70,3 @@ campos:
     nota: >-
       Se calcula sobre el JSON canónico del manifiesto sin este campo; comprobarlo requiere nuestra
       canonicalización, mientras que las huellas de cada fichero se comprueban con sha256sum a secas.
-
-# Etiquetas de las columnas de la tabla de ficheros del manifiesto (`Manifiesto.ficheros[]`).
-ficheros:
-  ruta: "Ruta en el paquete que entregó el cliente"
-  tipo: "Tipo documental"
-  sha256: "SHA-256 de los bytes tal y como entraron en ingesta"
-  bytes: "Tamaño en bytes"
-  origen: "PDF combinado del que se separó (si es una parte)"

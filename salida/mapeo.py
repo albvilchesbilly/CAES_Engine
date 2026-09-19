@@ -68,7 +68,9 @@ CLAVES_DOCUMENTOS = ("carpeta", "por_tipo", "sin_tipo")
 PATRON_HUECO = r"API-\d{2}"
 
 #: Bloques admitidos en la raiz de un mapeo de render del manifiesto (`mapping/manifiesto.<destino>.yaml`).
-BLOQUES_MANIFIESTO = ("manifiesto", "campos", "ficheros")
+#: No hay bloque de etiquetas para la tabla de ficheros del manifiesto: lo hubo, no lo leia nadie, y
+#: configuracion muerta es configuracion que miente (revision de S3.4). El manifiesto se escribe tal cual.
+BLOQUES_MANIFIESTO = ("manifiesto", "campos")
 
 #: Nombre del mapeo de render del manifiesto, por destino.
 NOMBRE_MANIFIESTO = "manifiesto"
@@ -178,7 +180,6 @@ class RenderManifiesto:
     version: str
     fichero: str
     campos: tuple[Campo, ...]
-    ficheros: Mapping[str, str]  # etiqueta de cada columna de la tabla de ficheros del manifiesto
 
     def a_dict(self) -> dict[str, object]:
         return {
@@ -187,7 +188,6 @@ class RenderManifiesto:
             "version": self.version,
             "fichero": self.fichero,
             "campos": [c.a_dict() for c in self.campos],
-            "ficheros": dict(self.ficheros),
         }
 
 
@@ -420,7 +420,6 @@ def cargar_manifiesto(destino: str, *, carpeta: str | Path | None = None) -> Ren
         version=str(_texto(identidad.get("version"), f"{ruta.name}: manifiesto.version")),
         fichero=str(_texto(identidad.get("fichero"), f"{ruta.name}: manifiesto.fichero")),
         campos=_campos(crudo.get("campos"), f"{ruta.name}: campos"),
-        ficheros=_ficheros(crudo.get("ficheros"), f"{ruta.name}: ficheros"),
     )
 
 
@@ -503,7 +502,10 @@ def aplicar(mapeo: Mapeo, actuacion_canonica: object) -> tuple[dict[str, object]
                 f"unidades[{indice}] ya trae una clave {CLAVE_CALCULO_EN_UNIDAD!r}: el contexto de unidad "
                 "del mapeo la reserva para el resultado de calculo de esa unidad"
             )
-        clave = str(contexto.get("clave") or indice)
+        # Solo cae a la posicion si la unidad **no trae** clave. Con `or`, una clave vacia o un `0` se
+        # habrian colado silenciosamente al emparejamiento por posicion, que es justo lo que no queremos.
+        propia = contexto.get("clave")
+        clave = str(propia) if propia is not None else str(indice)
         contexto[CLAVE_CALCULO_EN_UNIDAD] = calculos.get(clave)
         campos, faltan = _aplicar_campos(mapeo.detalle_unidad, contexto, f"detalle.unidades[{clave}].")
         carencias.extend(faltan)

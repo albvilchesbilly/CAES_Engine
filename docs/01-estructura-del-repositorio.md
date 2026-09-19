@@ -35,7 +35,7 @@ cae-engine/
 │   └── propuestas/                       Cambios de spec pendientes de revisión humana (NO se cargan)
 │       ├── cabecera_v1.yaml              Spec transversal común a todas las fichas (S3, tras aprobación)
 │       └── IND240_v1.2.diff.md           Diff v1.1 → v1.2 (R-TMP-03, INT-08, INT-09, R-DOC-01)
-├── mapping/                         S3   Modelo canónico → destino, por ficha (handoff, api, manifiesto)
+├── mapping/                         PARCIAL Modelo canónico → destino, por ficha (handoff EXISTE; api espera diccionario)
 ├── data/                            EXISTE  Tablas de referencia con fuente, verificación y vigencia
 │   ├── README.md                    DOC  Cómo se transcribe una tabla y qué está verificado
 │   ├── reg_2019_1781_cuadro6.csv    F0   Cuadro 6 del Reg. (UE) 2019/1781 (transcribir del DOUE)
@@ -43,7 +43,7 @@ cae-engine/
 │
 ├── engine/                          EXISTE  Núcleo determinista. No importa de agentes/ ni de salida/
 ├── agentes/                         S3   Periferia con LLM. Nunca el núcleo
-├── salida/                          PARCIAL Puerto de salida y adaptadores; hoy solo el constructor del manifiesto
+├── salida/                          PARCIAL Puerto, mapeo, constructor, handoff, simulador y transporte; falta api_oficial/
 ├── generator/                       EXISTE  Generador del paquete sintético (modelo de datos → documentos)
 ├── expedientes/                     EXISTE  Carpetas de entrada de los casos de prueba (salida del generator)
 │   ├── EXP001-A_completo/ … EXP001-G_desordenado/

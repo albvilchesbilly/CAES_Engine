@@ -10,7 +10,8 @@ real (S3.7) cuando haya diccionario, sin reescribir nada aguas arriba.
 
 Las ocho reglas de `ADR-009` §5, y donde viven en este modulo:
 
-1. **Ni un literal de plataforma en este fichero.** Los estados salen de `engine.estados.tabla_plataforma()`
+1. **Ni un literal de ESTADO de plataforma en este fichero.** Los estados salen de
+   `engine.estados.tabla_plataforma()`
    (`engine/estados_plataforma.yaml`). Este modulo los **deriva por sus atributos**, nunca por su nombre:
    `estado_creacion()`, `estado_validado()` y `estado_firmado()` son las filas que la tabla marca
    `inicial`, `validacion_automatica` y `exige_firma`. Son marcas explicitas a proposito: derivarlas del
@@ -18,6 +19,10 @@ Las ocho reglas de `ADR-009` §5, y donde viven en este modulo:
    garantiza al cargar que hay exactamente una de cada. Si el diccionario renombra manana cualquiera de
    ellos, cambia el YAML y este fichero no se toca (`docs/03` §7.1). Hay un test que recorre este fuente y
    lo comprueba.
+   Lo que si esta escrito aqui son los tres **perfiles** de usuario (`PERFIL_FIRMA`, `PERFIL_MODIFICACION`,
+   `PERFIL_CONSULTA`): estan confirmados en `docs/02` §2.2 y no salen de ningun YAML, asi que si el
+   diccionario los renombrara habria que tocar este modulo. Se declara aqui en vez de dejar que la frase de
+   arriba prometa mas de lo que el codigo sostiene (revision de S3.4, `ADR-009` §5 ter).
 2. **La firma es lo unico que abre el paso al estado que `exige_firma`**, y exige dos cosas a la vez: un
    `FirmaRegistrada` (o un `Actor`) de clase `humano` **y** credencial de perfil `Firma`. Un actor `motor`,
    `agente` o `plataforma` es `ErrorSimulador` (`docs/02` §5.6, `CLAUDE.md` §2). **El simulador no firma**:

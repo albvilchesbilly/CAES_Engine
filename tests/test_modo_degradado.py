@@ -45,7 +45,10 @@ FECHA = date(2026, 9, 18)
 #: Paquetes que `engine/` no puede importar: la periferia (`S3`), el generador de casos y los propios tests.
 PROHIBIDOS = ("agentes", "salida", "generator", "tests")
 
-MODULOS = sorted(p.name for p in PAQUETE.glob("*.py"))
+#: **Todo** el arbol de `engine/`, no solo el primer nivel: `engine/modelo/` y `engine/eventos/` (S3.1) son
+#: nucleo igual que `engine/calculo.py` y estaban fuera de estas comprobaciones hasta que la revision de
+#: S3.4 lo senalo. La ruta es relativa al paquete, para que el identificador del test diga donde esta.
+MODULOS = sorted(p.relative_to(PAQUETE).as_posix() for p in PAQUETE.rglob("*.py"))
 
 CASOS = (
     "EXP001-A_completo",

@@ -308,12 +308,24 @@ def test_aplicar_no_convierte_ni_redondea_los_decimales(mapeo: Mapeo) -> None:
 
 
 def test_cada_unidad_ve_su_propio_calculo(mapeo: Mapeo) -> None:
-    payload, _ = aplicar(mapeo, canonico(CASO_E))
+    """El emparejamiento unidad -> calculo es por identidad, no por posicion.
+
+    La version anterior comparaba `len(set(ahorros))` sobre un `dict`, es decir sobre sus **claves**: era
+    cierta pasara lo que pasara y no habria visto un emparejamiento por posicion. Ahora se contrasta cada
+    ahorro contra la entrada de `calculo.por_unidad` que lleva el mismo numero de serie de motor.
+    """
+    canonica = canonico(CASO_E)
+    payload, _ = aplicar(mapeo, canonica)
     unidades = payload["detalle"]["unidades"]
     assert len(unidades) == 2
-    ahorros = {u["clave"]: u["campos"]["ahorro_unidad"] for u in unidades}
-    assert all(valor is not None for valor in ahorros.values())
-    assert len(set(ahorros)) == 2
+
+    esperado = {
+        str(entrada["num_serie_motor"]): entrada["salida"] for entrada in canonica["calculo"]["por_unidad"]
+    }
+    assert len(set(esperado.values())) == 2, "los dos motores deben ahorrar distinto o el test no prueba nada"
+
+    obtenido = {u["clave"]: u["campos"]["ahorro_unidad"] for u in unidades}
+    assert obtenido == esperado
 
 
 def test_un_obligatorio_sin_valor_es_una_carencia_y_el_campo_va_a_null(mapeo: Mapeo) -> None:

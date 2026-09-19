@@ -23,12 +23,18 @@ Seis decisiones de este modulo, todas comprobadas por `tests/test_handoff.py`:
 1. **Los bytes se copian, no se regeneran.** Terminada la escritura, se vuelve a calcular la huella de cada
    adjunto **en la carpeta escrita** y se contrasta con la que declaro el manifiesto. Si una sola no
    coincide, el acuse es `aceptado: False` con el fichero por su nombre, y la entrega no se declara hecha.
+   Eso comprueba lo que se acaba de escribir; para volver a mirar la misma carpeta mas tarde esta
+   `verificar_entrega`, porque el simulador valida la raiz del paquete y no esta carpeta.
 2. **Las partes de un PDF combinado no se copian**: no existen en disco (`ADR-008` §4 bis punto 1). Se
    listan en el `00_LEEME.md` bajo su combinado, que si viaja.
 3. **Idempotente por contenido.** Entregar dos veces el mismo paquete en la misma carpeta da el mismo
    resultado. Una carpeta destino no vacia con contenido distinto es `ErrorSalida`: **nunca se borra nada
    del usuario**. La unica excepcion declarada es el log de eventos, que es solo-anadir: si lo que hay en
    disco es un prefijo de lo que hay ahora, es el mismo log mas tarde y se reescribe entero.
+   Ojo a lo que "el mismo paquete" quiere decir: el manifiesto sella su `generado_en`, asi que **volver a
+   construir** el paquete de la misma actuacion con el reloj corriendo da otro `hash_paquete` y otra
+   carpeta. Para que dos construcciones sean identicas byte a byte hay que inyectar `instante` (ver
+   `__init__`), igual que en `salida.constructor.construir`.
 4. **El estado de ciclo lo mueve el log, no este adaptador** (`ADR-009` §2 punto 2). Con `log`, `construir`
    emite `PayloadConstruido` y `ManifiestoGenerado` y `entregar` emite `EntregadoADelegado` **solo si la
    entrega fue aceptada**; quien decide si eso vale es `engine.estados.proyectar`, que levanta `ErrorEstado`
@@ -45,7 +51,9 @@ Seis decisiones de este modulo, todas comprobadas por `tests/test_handoff.py`:
 El informe de prevalidacion se renderiza desde la `Actuacion` del motor (`engine.informe`), que el modelo
 canonico no lleva: `construir` lo guarda junto al paquete que devuelve, indexado por `hash_paquete`. Si el
 paquete se construyo desde una `ActuacionCanonica` suelta no hay informe que escribir y el `00_LEEME.md`
-lo dice; no se inventa uno a partir del detalle.
+lo dice; no se inventa uno a partir del detalle. Y si quien entrega **no** es el adaptador que construyo el
+paquete, tampoco hay informe, pero el motivo es otro y el `00_LEEME.md` dice ese: un documento que lee el
+tenant no afirma una causa que quien lo escribe no conoce.
 
 Nada de `eval`, `exec`, `compile` ni coma flotante. Importa de `engine/` y de `salida/`; `engine/` no
 importa de `salida/`.
@@ -54,13 +62,13 @@ importa de `salida/`.
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
 from engine.estados import proyectar
-from engine.eventos import ahora_utc, normalizar_instante
+from engine.eventos import ErrorEvento, ahora_utc, normalizar_instante
 from engine.eventos.log import Actor, LogEventos
 from engine.informe import a_json, a_markdown
 from engine.ingesta import ficheros_de, sha256_bytes
@@ -86,6 +94,12 @@ EVENTO_PAYLOAD = "PayloadConstruido"
 EVENTO_MANIFIESTO = "ManifiestoGenerado"
 EVENTO_ENTREGA = "EntregadoADelegado"
 
+#: Nombres del arbol que este adaptador pide al mapeo (`mapping/<FICHA>.handoff.yaml`, bloque `ficheros`).
+#: El del manifiesto no esta: lo declara el render (`mapping/manifiesto.handoff.yaml`). Que falte uno se
+#: descubre al **entrar**, no a mitad de una entrega: es lo que promete la cabecera de `salida/mapeo.py`, y
+#: el cargador no puede comprobarlo porque no sabe a que destino se entregara.
+CLAVES_ARBOL = ("leeme", "payload", "informe_markdown", "informe_json", "log_eventos", "verificacion")
+
 #: Codificacion y forma de los JSON que se escriben: legibles por una persona, estables entre entregas.
 CODIFICACION = "utf-8"
 SANGRIA_JSON = 2
@@ -108,6 +122,8 @@ class AdaptadorHandoff:
         *,
         destino_carpeta: str | Path | None = None,
         render_manifiesto: RenderManifiesto | None = None,
+        instante: datetime | None = None,
+        reloj: Callable[[], datetime] | None = None,
     ) -> None:
         """`destino_carpeta` es adonde escribe este adaptador; `render_manifiesto`, un render ya cargado.
 
@@ -115,12 +131,28 @@ class AdaptadorHandoff:
         cumple la firma de `PuertoSalida` y un llamante generico del puerto (P9, la consola) puede entregar
         sin saber que la via es un handoff ni que un handoff escribe en una carpeta. Sigue admitiendose en
         la llamada para entregar el mismo paquete en dos sitios sin construir dos adaptadores.
+
+        `instante` congela el reloj y `reloj` inyecta uno propio, como en `salida/simulador/`. No es un lujo
+        de test: `salida.constructor.construir` documenta que pasando `generado_en` dos construcciones del
+        mismo paquete dan el mismo JSON byte a byte, y `hash_paquete` **es** el del manifiesto; sin punto de
+        inyeccion aqui esa propiedad se perdia y el mismo paquete cambiaba de huella en cada construccion.
         """
+        if instante is not None and reloj is not None:
+            raise ErrorSalida("se inyecta `instante` (fijo) o `reloj` (invocable), no los dos a la vez")
+        if instante is not None:
+            fijo = _instante(instante)
+            self._reloj: Callable[[], datetime] = lambda: fijo
+        else:
+            self._reloj = reloj or ahora_utc
         self._destino = None if destino_carpeta is None else Path(destino_carpeta)
         self._render = render_manifiesto if render_manifiesto is not None else cargar_manifiesto(DESTINO)
         # El informe de prevalidacion no cabe en `Paquete` y no se puede derivar del modelo canonico: se
         # guarda aqui, indexado por la huella del paquete, que es exactamente su contenido (ver cabecera).
         self._informes: dict[str, tuple[str, dict[str, object]]] = {}
+        # Y que paquetes ha construido, con informe o sin el: sin esto, entregar un paquete que construyo
+        # OTRO adaptador escribia en el `00_LEEME.md` que se habia construido desde el modelo canonico, que
+        # es un motivo distinto y podia ser falso. Un documento que lee el tenant no afirma lo que no sabe.
+        self._construidos: set[str] = set()
 
     # -- construccion ----------------------------------------------------------------------------
 
@@ -146,7 +178,7 @@ class AdaptadorHandoff:
                 f"{canonica.ficha.get('codigo')!r}: un mapeo no se aplica a otra ficha"
             )
         carpeta = _raiz(raiz, del_motor)
-        instante = ahora_utc()
+        instante = self._ahora()
 
         payload, carencias = aplicar(mapeo, canonica)
         _registrar(
@@ -192,6 +224,7 @@ class AdaptadorHandoff:
             veredicto=_veredicto(canonica),
             carencias=carencias,
         )
+        self._construidos.add(paquete.hash_paquete)
         if del_motor is not None:
             self._informes[paquete.hash_paquete] = (a_markdown(del_motor), a_json(del_motor))
         return paquete
@@ -224,6 +257,7 @@ class AdaptadorHandoff:
             self._render,
             self._informes.get(paquete.hash_paquete),
             log,
+            construido_aqui=paquete.hash_paquete in self._construidos,
         )
         carpeta = self._carpeta(destino_carpeta)
         _comprobar_ocupacion(carpeta, arbol)
@@ -234,7 +268,7 @@ class AdaptadorHandoff:
         acuse = Acuse(
             referencia=_referencia(paquete),
             via=NOMBRE,
-            instante=ahora_utc(),
+            instante=self._ahora(),
             aceptado=aceptado,
             hash_paquete=paquete.hash_paquete,
             estado_plataforma=None,  # el handoff no es una plataforma: no fija ningun estado oficial
@@ -262,6 +296,57 @@ class AdaptadorHandoff:
                 instante=acuse.instante,
             )
         return acuse
+
+    def _ahora(self) -> datetime:
+        """El reloj de este adaptador: el inyectado o el UTC del resto del repositorio."""
+        return _instante(self._reloj())
+
+    # -- comprobar mas tarde lo que se entrego ----------------------------------------------------
+
+    def verificar_entrega(
+        self,
+        paquete: Paquete,
+        destino_carpeta: str | Path | None = None,
+        *,
+        mapeo: object | None = None,
+    ) -> tuple[str, ...]:
+        """Relee una carpeta ya entregada y contrasta cada adjunto con la huella que declaro el manifiesto.
+
+        `entregar` comprueba lo que acaba de escribir (`ADR-009` §4), pero **despues nadie vuelve a mirar**:
+        el simulador valida la raiz del paquete, no esta carpeta, asi que un byte cambiado aqui mas tarde no
+        lo veria nadie. Esto es lo que permite comprobarla en cualquier momento. No recalcula ninguna huella
+        propia: contrasta los bytes que hay en disco con lo que declaro el manifiesto de S3.3.
+
+        Devuelve los motivos, cada uno **con el nombre del fichero**; vacio significa que la carpeta sigue
+        siendo la que se entrego. No es un veredicto ni mueve ningun estado: describe.
+        """
+        if not isinstance(paquete, Paquete):
+            raise ErrorSalida(f"verificar_entrega espera un Paquete, no {type(paquete).__name__}")
+        carpeta = self._carpeta(destino_carpeta)
+        if not carpeta.is_dir():
+            raise ErrorSalida(f"no hay ninguna carpeta entregada en {carpeta}")
+        rutas = _rutas_de_adjuntos(paquete, _mapeo_de(mapeo, paquete))
+        motivos: list[str] = []
+        sellado = hash_de_manifiesto(paquete.manifiesto)
+        if sellado != paquete.manifiesto.hash_manifiesto:
+            motivos.append(
+                f"el manifiesto no sella su propio contenido: calcula {sellado} y declara "
+                f"{paquete.manifiesto.hash_manifiesto}"
+            )
+        for adjunto in sorted(paquete.adjuntos, key=lambda a: a.ruta):
+            if adjunto.es_parte:  # una parte no es un fichero de la carpeta: viaja dentro de su combinado
+                continue
+            relativa = rutas[adjunto.ruta]
+            fichero = carpeta / relativa
+            if not fichero.is_file():
+                motivos.append(f"falta en la carpeta entregada: {relativa}")
+                continue
+            if sha256_bytes(fichero.read_bytes()) != adjunto.sha256:
+                motivos.append(
+                    f"adjunto alterado: {relativa} no tiene la huella {adjunto.sha256} que declara el "
+                    "manifiesto"
+                )
+        return tuple(motivos)
 
     def _carpeta(self, destino_carpeta: str | Path | None) -> Path:
         """Adonde se escribe: lo de la llamada manda sobre lo del constructor.
@@ -301,12 +386,26 @@ class AdaptadorHandoff:
 # ---------------------------------------------------------------------------
 
 
+def _instante(valor: datetime) -> datetime:
+    """Un instante siempre en UTC y siempre con zona: un `datetime` naive nunca entra."""
+    try:
+        return normalizar_instante(valor)
+    except ErrorEvento as exc:
+        raise ErrorSalida(f"instante invalido: {exc}") from exc
+
+
 def _mapeo(mapeo: object) -> Mapeo:
     if not isinstance(mapeo, Mapeo):
         raise ErrorSalida(f"se esperaba un Mapeo de salida.mapeo, no {type(mapeo).__name__}")
     if mapeo.destino != DESTINO:
         raise ErrorSalida(
             f"el mapeo {mapeo.id} es del destino {mapeo.destino!r} y este adaptador es {DESTINO!r}"
+        )
+    faltan = [clave for clave in CLAVES_ARBOL if clave not in mapeo.ficheros]
+    if faltan:
+        raise ErrorSalida(
+            f"el mapeo {mapeo.id} no declara los nombres del arbol del handoff {faltan}; declara "
+            f"{sorted(mapeo.ficheros)}. Un mapeo incompleto se ve aqui, antes de tocar el disco"
         )
     return mapeo
 
@@ -457,6 +556,8 @@ def _arbol(
     render: RenderManifiesto,
     informe: tuple[str, dict[str, object]] | None,
     log: object,
+    *,
+    construido_aqui: bool = True,
 ) -> _Arbol:
     """Todo el handoff en memoria: los bytes de cada fichero y donde acabo cada adjunto."""
     rutas = _rutas_de_adjuntos(paquete, mapeo)
@@ -495,7 +596,13 @@ def _arbol(
     nombre_leeme = mapeo.fichero("leeme")
     # El propio LEEME entra en la lista de lo que hay en la carpeta: se escribe el ultimo, pero esta.
     ficheros[nombre_leeme] = _leeme(
-        paquete, mapeo, render, rutas, {*ficheros, nombre_leeme}, informe is not None
+        paquete,
+        mapeo,
+        render,
+        rutas,
+        {*ficheros, nombre_leeme},
+        informe is not None,
+        construido_aqui=construido_aqui,
     ).encode(CODIFICACION)
     return _Arbol(ficheros=ficheros, adjuntos=rutas, log=nombre_log)
 
@@ -531,6 +638,8 @@ def _leeme(
     rutas: Mapping[str, str],
     escritos: set[str],
     con_informe: bool,
+    *,
+    construido_aqui: bool = True,
 ) -> str:
     """El `00_LEEME.md`: que es la carpeta, que contiene, que falta y que tiene que hacer el tenant."""
     lineas: list[str] = [
@@ -573,13 +682,23 @@ def _leeme(
             [[nombre, descripciones[nombre]] for nombre in sorted(descripciones) if nombre in escritos],
         )
     )
-    if not con_informe:
+    if not con_informe and construido_aqui:
         lineas.extend(
             [
                 "",
                 "> **Sin informe de prevalidación.** Este paquete se construyó desde el modelo canónico y no",
                 "> desde la actuación procesada, así que no hay informe que adjuntar. No se ha reconstruido",
                 "> uno a partir del detalle: sería un informe que nadie ha producido.",
+            ]
+        )
+    elif not con_informe:
+        # No se dice por qué no hay informe: quien entrega no construyó este paquete y no lo sabe.
+        lineas.extend(
+            [
+                "",
+                "> **Sin informe de prevalidación.** El paquete no lo construyó quien lo entrega, así que",
+                "> el informe no ha viajado hasta aquí. No se ha reconstruido uno a partir del detalle:",
+                "> sería un informe que nadie ha producido. Pídalo a quien preparó el paquete.",
             ]
         )
 
@@ -732,7 +851,9 @@ def _comprobar_ocupacion(carpeta: Path, arbol: _Arbol) -> None:
     """Idempotencia por contenido. Nunca se borra nada del usuario (`ADR-009` §4).
 
     La unica diferencia tolerada es el fichero del log: el log es solo-anadir, asi que si lo que hay en
-    disco es un prefijo de lo que hay ahora (o al reves) es el mismo log en otro momento, no otra entrega.
+    disco es un **prefijo** de lo que hay ahora, es el mismo log mas tarde y se reescribe entero. La
+    tolerancia va en una sola direccion a proposito: si en disco hay MAS log del que traemos, la carpeta
+    sabe algo que nosotros no, y reescribirla seria borrar eventos del usuario. Eso es `ErrorSalida`.
     """
     existentes = _existentes(carpeta)
     if not existentes:
@@ -749,8 +870,8 @@ def _comprobar_ocupacion(carpeta: Path, arbol: _Arbol) -> None:
         previo = existentes.get(ruta)
         if previo is None or previo == contenido:
             continue
-        if ruta == arbol.log and (contenido.startswith(previo) or previo.startswith(contenido)):
-            continue
+        if ruta == arbol.log and contenido.startswith(previo):
+            continue  # el mismo log, mas tarde: solo-anadir. Al reves no: perderiamos eventos
         distintos.append(ruta)
     if distintos:
         raise ErrorSalida(
@@ -808,6 +929,7 @@ def _verificar_entrega(paquete: Paquete, carpeta: Path, arbol: _Arbol) -> list[s
 __all__ = [
     "ACTOR",
     "AVISO_FIRMA",
+    "CLAVES_ARBOL",
     "DESTINO",
     "EVENTO_ENTREGA",
     "EVENTO_MANIFIESTO",

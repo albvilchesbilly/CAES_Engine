@@ -21,6 +21,7 @@ from __future__ import annotations
 from salida.handoff.adaptador import (
     ACTOR,
     AVISO_FIRMA,
+    CLAVES_ARBOL,
     DESTINO,
     EVENTO_ENTREGA,
     EVENTO_MANIFIESTO,
@@ -32,6 +33,7 @@ from salida.handoff.adaptador import (
 __all__ = [
     "ACTOR",
     "AVISO_FIRMA",
+    "CLAVES_ARBOL",
     "DESTINO",
     "EVENTO_ENTREGA",
     "EVENTO_MANIFIESTO",
