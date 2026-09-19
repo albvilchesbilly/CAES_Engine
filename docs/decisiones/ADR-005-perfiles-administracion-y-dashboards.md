@@ -1,4 +1,4 @@
-# ADR-002 — Administración interna en dos planos con dashboards operativo y técnico
+# ADR-005 — Administración interna en dos planos con dashboards operativo y técnico
 
 **Estado**: ACEPTADA
 **Fecha**: 2026-09-19
