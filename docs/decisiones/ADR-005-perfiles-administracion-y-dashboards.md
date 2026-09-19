@@ -56,7 +56,7 @@ Activar spec, severidades o `INT-xx` exige tests en verde, replay de actuaciones
 
 ### Dashboards
 
-Operativo y técnico, en solo lectura para ambos perfiles. Catálogo de métricas, vistas y plan de construcción en ADR-006.
+Operativo y técnico, en solo lectura para ambos perfiles. Catálogo de métricas, vistas y plan de construcción en ADR-007.
 
 ## Consecuencias
 

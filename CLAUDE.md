@@ -165,6 +165,17 @@ Proveedor LLM y condiciones de datos · umbral de activación de agentes en prod
 Modificación (API-09) · aprobación del diff v1.2 y de `cabecera_v1.yaml` · familias `R-CAB`, `R-GRP/R-EXP`,
 `R-XCK`, `R-REQ` como diseño · Expediente Builder en Sprint 4 · segunda ficha (vecina vs. frío) · módulo de
 singulares/CVP · posición comercial respecto a Moeve · orden de contactos comerciales.
+
+De la Fase 0 y de la revisión normativa (`ADR-002` §6, `ADR-003`): **fila de 110 kW del cuadro 6** (5,55 frente a
+6,11 kW; sostiene el criterio de aceptación de 305.829,6 y nadie ha podido contrastarla contra el DOUE) ·
+verificación de las 38 filas `pendiente` · INT-10 a INT-15 · severidad de `R-CON-07` y desdoble de `R-AMB-01` ·
+`instalacion_personal_propio` · léxicos de lectura a la spec v1.2.
+
+De perfiles y dashboards (`ADR-005`, `ADR-006` §"Pendiente", `ADR-007`): A1 a A8 (instalador, cliente,
+reasignación, vistas, doble función, firma manual con API activa, y si las capacidades se modelan ya) · umbrales
+de las métricas · interfaz de los dashboards (DB5) · **revisión jurídica de la monitorización de trabajadores
+antes del primer cliente**. Lista única y al día en `docs/decisiones/ADR-001` §3.
+
 Cuando una tarea choque con una de estas, haz lo que no dependa de la decisión, deja la alternativa preparada
 y márcalo en el resumen de sesión.
 

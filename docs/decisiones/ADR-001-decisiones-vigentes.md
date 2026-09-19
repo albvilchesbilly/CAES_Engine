@@ -27,6 +27,12 @@ Este ADR es el punto de partida del registro de decisiones. Recoge en un solo si
 | 18/09/2026 | Búsqueda de delegado partner en curso: barrido de los 70 de la lista MITECO; revisión de CalculaCAE.ai y CAE Digital; criterio añadido de capacidad de delegación disponible | `docs/08`, `docs/07` |
 | 18/09/2026 | Vigilancia normativa del Sistema CAE programada en días laborables (RD, órdenes, plataforma, catálogo) | Memoria del proyecto |
 | 18/09/2026 | Arranque del repositorio en Claude Code **desde cero**, con consolidación documental y doble instrucción (Claude Code + GitHub Copilot) | Esta consolidación |
+| 19/09/2026 | **Administración en dos planos sin permisos solapados**: `ADM-MOD` (propietario del modelo: specs, reglas, severidades, `INT-xx`, agentes y prompts) y `ADM-OPS` (operación: tenants, capacidad de delegación, accesos de soporte, auditoría global). Una persona con ambos actúa con uno a la vez, con cambio de rol registrado y segundo factor | `ADR-005` |
+| 19/09/2026 | **Dos dashboards en solo lectura**, operativo y técnico, para los dos perfiles de administración | `ADR-005` |
+| 19/09/2026 | **D3**: el sujeto delegado tiene un administrador (`T-RES`) que ve toda la actividad de su tenant y de su equipo, con dashboards de su propio tenant | `ADR-006` |
+| 19/09/2026 | **D4**: administrador y responsable del tenant se consolidan en **un único rol** (`T-RES`) | `ADR-006` |
+| 19/09/2026 | **Permisos por capacidades, no por pantallas**: catálogo de ocho perfiles y matriz de capacidades `CAP-nn`, cada una atada a su evento del log | `ADR-006` |
+| 19/09/2026 | **Una métrica se define una sola vez en configuración** (`metricas/catalogo.yaml` validado por JSON Schema), con el mismo criterio que las fichas; las vistas de tenant son filtros aplicados antes del cálculo; se empieza por informes estáticos | `ADR-007` |
 
 ---
 
@@ -66,6 +72,17 @@ Se tomaron para que los documentos fueran coherentes entre sí y ejecutables por
 | Regla de vigencia de versiones de ficha por fechas de actuación | Validar con normativa / verificador | Spec Registry N1 | `docs/04` §2 |
 | Qué se ofrece a cambio del expediente real (informe gratuito, acceso preferente, nada) y orden de contactos | — | `docs/08` | `docs/08` §5, §7 |
 | Contrato laboral: exclusividad, PI, conflicto de interés | Revisar antes de cualquier contacto | Comercial | `docs/08` §5 |
+| A1 · Instalador: usuario externo del tenant, tenant propio de CAE Check o ambos | — | Perfiles externos | `ADR-006` |
+| A2 · Cliente: cuenta, enlace de subida puntual sin cuenta o sin acceso | Recomendación: enlace sin cuenta | Perfiles externos | `ADR-006` |
+| A3 · `T-RES` reasigna trabajo o solo lo ve | Recomendación: reasigna | CAP-32 | `ADR-006` |
+| A4 · Vista funcional del dashboard también para `T-OPE` y `T-REV` | — | `O-FUN` | `ADR-006` |
+| A5 · Vista de equipo por persona o por equipo | Recomendación: por equipo hasta revisión jurídica | `O-EQU` | `ADR-006`, `ADR-007` B3 |
+| A6 · Preparar y aprobar la misma persona | Recomendación: configurable, por defecto permitido y señalado | CAP-10, CAP-33 | `ADR-006` |
+| A7 · Firma manual con API activa | Recomendación: rechazarla si la plataforma no la confirma | CAP-22, `SYS-API` | `ADR-006` |
+| A8 · Modelar capacidades desde el Sprint 3 | Recomendación: sí; es lo único que condiciona el código de S3.1 | `engine/modelo/`, `engine/eventos/` | `ADR-006` |
+| Umbrales de las métricas del catálogo (`umbral: POR DEFINIR`) | — | Dashboards | `ADR-007` |
+| Interfaz o herramienta de los dashboards (DB5); si es BI externa, se alimenta de la API de lectura | — | DB5 | `ADR-007` |
+| **Revisión jurídica de la monitorización de trabajadores** (CAP-31 y CAP-36) antes del primer cliente | Obligatoria | Perfiles de tenant | `ADR-006` |
 
 ---
 

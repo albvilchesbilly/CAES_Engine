@@ -7,7 +7,7 @@
 
 ## Contexto
 
-ADR-002 creó los dos perfiles internos de administración, pero no había perfiles para quien usa la plataforma: el sujeto delegado, su equipo y las partes externas. Tampoco estaba definido qué acciones puede hacer cada uno sobre las actuaciones.
+ADR-005 creó los dos perfiles internos de administración, pero no había perfiles para quien usa la plataforma: el sujeto delegado, su equipo y las partes externas. Tampoco estaba definido qué acciones puede hacer cada uno sobre las actuaciones.
 
 Referencias:
 
@@ -49,8 +49,8 @@ No documentado: si un usuario de Modificación puede ser un tercero o una cuenta
 | `T-REV` | Revisor técnico | Actuaciones de su tenant | Sin equivalente | Propuesta |
 | `EXT-INS` | Instalador / ingeniería | Solo sus actuaciones | Sin acceso | Abierto |
 | `EXT-CLI` | Cliente / propietario inicial | Solo sus actuaciones | Sin acceso para estandarizadas | Abierto |
-| `ADM-MOD` | Propietario del modelo | Global, solo agregados | — | Decidido (ADR-002) |
-| `ADM-OPS` | Administrador de operación | Global, solo metadatos | — | Decidido (ADR-002) |
+| `ADM-MOD` | Propietario del modelo | Global, solo agregados | — | Decidido (ADR-005) |
+| `ADM-OPS` | Administrador de operación | Global, solo metadatos | — | Decidido (ADR-005) |
 | `SYS-API` | Identidad de sistema para la API oficial | Tenant al que sirve | Modificación técnico | Condicionado a API-09 |
 
 ### Capacidades
@@ -94,8 +94,8 @@ No documentado: si un usuario de Modificación puede ser un tercero o una cuenta
 | CAP-32 | Reasignar actuaciones y tareas entre usuarios | `ActuacionReasignada` (nuevo) |
 | CAP-33 | Configurar la política del tenant | `PoliticaTenantCambiada` (nuevo) |
 | CAP-34 | Autorizar o denegar un acceso de soporte | `AccesoSoporteAutorizado` / `Denegado` (nuevos) |
-| CAP-35 | Dashboard operativo, vista funcional del tenant (ADR-006) | Lectura |
-| CAP-36 | Dashboard operativo, vista de equipo del tenant (ADR-006) | Lectura |
+| CAP-35 | Dashboard operativo, vista funcional del tenant (ADR-007) | Lectura |
+| CAP-36 | Dashboard operativo, vista de equipo del tenant (ADR-007) | Lectura |
 
 **Externos**
 
@@ -127,8 +127,8 @@ No documentado: si un usuario de Modificación puede ser un tercero o una cuenta
 | CAP-63 | Usar un acceso de soporte autorizado y vigente | `AccesoSoporteUsado` (nuevo) |
 | CAP-64 | Ver el estado de integración de cada tenant | Lectura |
 | CAP-65 | Consultar la auditoría global | Lectura |
-| CAP-66 | Dashboard operativo, vista global (ADR-006) | Lectura |
-| CAP-67 | Dashboard técnico (ADR-006) | Lectura |
+| CAP-66 | Dashboard operativo, vista global (ADR-007) | Lectura |
+| CAP-67 | Dashboard técnico (ADR-007) | Lectura |
 
 **Sistema**
 
@@ -210,7 +210,7 @@ No documentado: si un usuario de Modificación puede ser un tercero o una cuenta
 - **Máquina de estados** (`engine/estados.py`): CAP-10 y CAP-22 como únicos disparadores humanos de sus transiciones.
 - **Salida** (`salida/transporte/`): `SYS-API` limitado a CAP-70; condicionado a API-09.
 - **Documentación**: `docs/03` §S7 y §N7; `docs/06` S3.1 ampliado; `CLAUDE.md` §6 con los puntos pendientes; ADR-001 §1 con D3 y D4.
-- **Sustituye** el catálogo de perfiles de ADR-002; el resto de ADR-002 sigue vigente.
+- **Sustituye** el catálogo de perfiles de ADR-005; el resto de ADR-005 sigue vigente.
 - **Coste**: cinco entidades y unos veinte eventos nuevos antes del primer cliente.
 - **Pendiente (Billy)**:
   - A1 · Instalador: usuario externo del tenant, tenant propio de CAE Check o ambos.
