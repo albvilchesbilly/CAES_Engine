@@ -1,0 +1,78 @@
+/*
+ * Estilos minimos de los tres rotulos. Los importa la aplicacion que los usa; los tests no.
+ *
+ * Criterio: la diferencia entre un dato y un hueco NUNCA se confia al color (R-UI-07). El color
+ * acompana; lo que distingue es el texto y la forma, que se siguen viendo en blanco y negro, con
+ * daltonismo y en un PDF impreso.
+ */
+
+.cae-valor-metrica,
+.cae-rotulo-prevalidado,
+.cae-marca-origen {
+  --cae-color-texto: #1a1a1a;
+  --cae-color-atenuado: #5a5a5a;
+  --cae-color-aviso: #8a4b00;
+  font-family: system-ui, sans-serif;
+  color: var(--cae-color-texto);
+}
+
+.cae-valor-metrica {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.cae-valor-metrica__etiqueta {
+  font-size: 0.8rem;
+  color: var(--cae-color-atenuado);
+}
+
+.cae-valor-metrica__valor {
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Un hueco no se parece a una cifra: ni tamano, ni peso, ni caja. */
+.cae-valor-metrica__sin-dato {
+  display: inline-flex;
+  flex-direction: column;
+  align-self: flex-start;
+  padding: 0.1rem 0.4rem;
+  border: 1px dashed var(--cae-color-atenuado);
+  border-radius: 3px;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  color: var(--cae-color-atenuado);
+}
+
+.cae-valor-metrica__desde {
+  font-size: 0.7rem;
+}
+
+.cae-rotulo-prevalidado {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.cae-rotulo-prevalidado__marca,
+.cae-marca-origen {
+  align-self: flex-start;
+  padding: 0.05rem 0.35rem;
+  border: 1px solid currentcolor;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* El aviso viaja pegado a la cifra y no se puede ocultar con una clase de la aplicacion. */
+.cae-rotulo-prevalidado__aviso {
+  font-size: 0.75rem;
+  color: var(--cae-color-aviso);
+}
+
+.cae-marca-origen[data-origen="SIN_DECLARAR"] {
+  color: var(--cae-color-aviso);
+}

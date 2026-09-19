@@ -65,6 +65,7 @@ decidió" de "se decidió y esto es lo que implicó".
 |---|---|---|
 | 19/09/2026 | **C1 (`ADR-050`) · Stack de presentación**: un solo stack web (React con TypeScript) para las cuatro superficies | Desbloquea `FR0`. Cierra también **B1 de `ADR-007`**, que preguntaba lo mismo |
 | 19/09/2026 | **C7 (`ADR-050`) · Superficies y orden**: cuatro superficies adaptadas por capacidades y orden `FR0` → `FR6` | Desbloquea el plan FR completo; `S4.4` queda absorbida por `FR1` |
+| 19/09/2026 | **A8 (`ADR-006`) · Modelar capacidades y perfiles ya en el Sprint 3**: entidades de usuario y perfil en el modelo, `actor.rol` obligatorio en actor humano y los eventos de administración en el catálogo | Desbloquea `S3.1b`. Permite persistir el rol que `FR0` ya calcula, y que el log rechace un evento que la capacidad del perfil no concede |
 | 19/09/2026 | **El contrato antes que las pantallas no es negociable** (reafirmado por Billy como práctica establecida) | `api/` primero; `front/` solo consume el contrato. `R-UI-11` pasa de regla de interfaz a criterio de aceptación de todo el plan FR |
 
 ---
@@ -97,7 +98,6 @@ que abra una serie debería usar una letra libre (`D`, `E`…) en vez de reutili
 | A5 · Vista de equipo por persona o por equipo | Recomendación: por equipo hasta revisión jurídica | `O-EQU` | `ADR-006`, `ADR-007` B3 |
 | A6 · Preparar y aprobar la misma persona | Recomendación: configurable, por defecto permitido y señalado | CAP-10, CAP-33 | `ADR-006` |
 | A7 · Firma manual con API activa | Recomendación: rechazarla si la plataforma no la confirma | CAP-22, `SYS-API` | `ADR-006` |
-| A8 · Modelar capacidades desde el Sprint 3 | Recomendación: sí; es lo único que condiciona el código de S3.1 | `engine/modelo/`, `engine/eventos/` | `ADR-006` |
 | Umbrales de las métricas del catálogo (`umbral: POR DEFINIR`) | — | Dashboards | `ADR-007` |
 | Interfaz o herramienta de los dashboards (DB5); si es BI externa, se alimenta de la API de lectura | — | DB5 | `ADR-007` |
 | **Revisión jurídica de la monitorización de trabajadores** (CAP-31 y CAP-36) antes del primer cliente | Obligatoria | Perfiles de tenant | `ADR-006` |

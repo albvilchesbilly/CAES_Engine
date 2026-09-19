@@ -12,6 +12,13 @@ venv/
 build/
 dist/
 
+# Node y front (nunca se commitea node_modules/)
+node_modules/
+front/**/node_modules/
+npm-debug.log*
+.vitest/
+*.tsbuildinfo
+
 # Entorno y editores
 .env
 .vscode/

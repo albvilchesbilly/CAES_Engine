@@ -179,8 +179,9 @@ lectura hasta tener clientes · C6 idiomas y accesibilidad.
 **El contrato antes que las pantallas no es negociable** (Billy, 19/09/2026): `api/` primero, y el front solo
 consume el contrato. Un front que calcula, evalúa una regla o decide una transición es un defecto (`R-UI-11`).
 
-De perfiles y dashboards (`ADR-005`, `ADR-006` §"Pendiente", `ADR-007`): A1 a A8 (instalador, cliente,
-reasignación, vistas, doble función, firma manual con API activa, y si las capacidades se modelan ya) · umbrales
+De perfiles y dashboards (`ADR-005`, `ADR-006` §"Pendiente", `ADR-007`): A1 a A7 (instalador, cliente,
+reasignación, vistas, doble función, firma manual con API activa; **A8 aprobada el 19/09/2026**: las capacidades
+se modelan ya, con `actor.rol` obligatorio en actor humano) · umbrales
 de las métricas · interfaz de los dashboards (DB5) · **revisión jurídica de la monitorización de trabajadores
 antes del primer cliente**. Lista única y al día en `docs/decisiones/ADR-001` §3.
 
