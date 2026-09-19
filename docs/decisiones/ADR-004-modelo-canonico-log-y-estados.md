@@ -1,6 +1,6 @@
 # ADR-004 — Modelo canónico, log de eventos y máquina de estados (S3.1)
 
-**Estado**: EN CURSO
+**Estado**: ACEPTADA (contratos y decisiones técnicas) · PROPUESTA (§6, lo que decide Billy)
 **Fecha**: 2026-09-19
 **Decide**: Claude (técnica) · Billy (lo que se marca `PROPUESTA` en §6)
 **Ámbito**: `engine/modelo/`, `engine/eventos/`, `engine/estados.py`, `engine/motor.py` (solo el enganche), `tests/`
@@ -160,6 +160,54 @@ es cambiar YAML (`docs/03` §7.1).
    que el diccionario oficial no obligue a tocar código.
 3. **`capacidad_delegacion_disponible`** (`API-11`) y **`ccaa`** (`API-07`): atributos opcionales sin semántica
    propia hasta que la plataforma los documente.
+
+## 7. Decisiones tomadas al construir (19/09/2026)
+
+Cerrado en tres piezas: modelo canónico (161 tests), log de eventos (112) y máquina de estados (92).
+
+**Modelo canónico**
+
+- `desde_motor` **no llama al reloj**: `creado_en` y `evaluado_en` son la `fecha_evaluacion` de la actuación. El
+  modelo es función pura de lo procesado, que es lo que el replay bit a bit necesita, y evita el defecto H-08 de
+  `ADR-003` (`date.today()` no determinista).
+- El validador propio acepta un subconjunto declarado de JSON Schema y **cualquier palabra no declarada es error
+  de carga**, el mismo criterio que el parser de expresiones con una función desconocida.
+- El esquema exige la regla de oro 2: `evidencias` con `minItems: 1` y `texto_literal` con `minLength: 1`. Un dato
+  sin cita no valida.
+- `ActuacionCanonica` **no lleva `tenant_id`**: el tenant contiene la actuación, no al revés. Si el aislamiento
+  por tenant o el payload de S3.4 lo necesitan dentro, es campo nuevo y `modelo_version` 1.1.
+- `ciclo.estado_plataforma` y `estado_expediente` **no se enumeran** en el esquema: esos literales viven en la
+  tabla YAML de la máquina de estados, y duplicarlos sería el literal disperso que `docs/02` §5.2 prohíbe.
+
+**Log de eventos**
+
+- `LogEventos.proyectar()` que anunciaba §C2 **no existe**: la proyección vive en `engine/estados.py`
+  (`proyectar(log)`). Ponerla en el log crearía una dependencia circular, porque `estados` ya importa `eventos`.
+  **Corrige §C2 en ese punto.**
+
+**Máquina de estados**
+
+- El catálogo de eventos de `docs/03` §6.2 no tiene tipo para tres cosas que el ciclo necesita: revisión humana,
+  escalado y descarte. Se resuelven con `ObservacionRegistrada` y un `origen` en el payload. **Propuesta**: tipos
+  propios `RevisionHumanaRegistrada` y `ActuacionDescartada` (y, de la pieza B, `InterpretacionConfirmada` y
+  `ConsolidacionCompletada`).
+- Dos aristas que `docs/03` §7.2 no dibuja pero su prosa implica: `EN_REVISION_HUMANA` alcanzable desde cualquier
+  estado no terminal (presupuesto agotado, literal desconocido) y **`ENTREGADA` → `EN_PROCESO`**, porque en
+  `BORRADOR` y `COMPLETA` la actuación sigue siendo modificable por nosotros (`docs/02` §5.6): la inalterabilidad
+  empieza en `EN_PLATAFORMA`, no en la entrega.
+- La inalterabilidad se evalúa por `firmada and requerimiento_abierto is None`, no por el estado, para que siga
+  valiendo cuando una subsanación oficial devuelve la actuación a `EN_PROCESO`.
+- `aplicar` es pura y **no escribe en el log**: el rechazo post-firma se acumula en `Proyeccion.rechazos` y quien
+  llama emite `CorreccionRechazadaPostFirma`. Queda por decidir de quién es esa responsabilidad (¿`motor.py`, el
+  puerto de salida?).
+- Una actuación terminal no se contagia: un requerimiento de GA o CN no revienta un expediente con actuaciones ya
+  cerradas.
+- A los estados de expediente sin efecto declarado en `docs/02` §5.6 (entre ellos `RESUELTO_DESFAVORABLE`) **no se
+  les inventa uno**: quedan con `ciclo: null` hasta que llegue `API-03`.
+
+**Pendiente de enganche**: `engine/motor.py` no construye todavía el modelo canónico ni emite eventos. Es una tarea
+pequeña y aislada que va con S3.3 o S3.4, cuando haya un consumidor real; hoy `grabar(actuacion)` y `desde_motor`
+se invocan desde fuera y los tests lo cubren.
 
 ## Verificación
 
