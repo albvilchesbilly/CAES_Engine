@@ -80,6 +80,28 @@ Decidido el 17/09/2026 y reordenado el 18/09/2026 tras la confrontación con la 
 
 ---
 
+## 3 bis. Perfiles, permisos y dashboards (ADR-005, ADR-006 y ADR-007, 19/09/2026)
+
+Billy añadió tres decisiones que no estaban en este plan y que crean su propia línea de entregables: dos perfiles
+de administración sin permisos solapados (`ADM-MOD`, propietario del modelo, y `ADM-OPS`, administrador de
+operación), un catálogo de perfiles con matriz de capacidades, y dos dashboards (operativo y técnico) con cuatro
+vistas. **El plan de construcción detallado vive en `ADR-007` §"Plan de construcción"**; aquí solo el resumen y
+las dependencias, para que no haya dos planes.
+
+| # | Entregable | Depende de | Estado |
+|---|---|---|---|
+| DB0 | Catálogo de métricas en YAML, JSON Schema, validador y vista técnica estática | Nada | PENDIENTE |
+| DB1 | Proyecciones sobre el log y las tres vistas operativas estáticas, con filtro por capacidad y tenant | S3.1 (HECHO) y `ADR-005` | PENDIENTE |
+| DB2 | Métricas de salida y seguimiento contra el simulador | S3.4, S3.5 | PENDIENTE |
+| DB3 | Métricas del runtime de agentes | S3.6 (proveedor LLM, decisión de Billy) | BLOQUEADO (decisión) |
+| DB4 | Métricas con la plataforma real | S3.7 (diccionario de API y acceso) | BLOQUEADO (externo) |
+| DB5 | API de lectura y vistas en la interfaz elegida | Decisión de Billy sobre la interfaz | BLOQUEADO (decisión) |
+
+Una métrica se define **una sola vez en configuración**, con el mismo criterio que las fichas: el catálogo es
+YAML validado, no código. Una métrica sin fuente se muestra como `SIN DATO`, nunca como cero.
+
+---
+
 ## 4. Roadmap (decisiones de Billy)
 
 Módulo de actuaciones singulares y Consulta Voluntaria Previa (fase II de la plataforma, ene–mar 2027) · estados de CAE (`vigente`, `expirado`, `liquidado`) solo si entra CAE Supply · coeficientes de corrección (art. 18 bis) como tabla con vigencia cuando existan · A6 vigía normativo con diff automático sobre `spec/propuestas/` · memoria entre expedientes (IND190–220) si entra la familia de frío.
