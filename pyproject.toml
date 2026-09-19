@@ -23,6 +23,7 @@ dev = ["pytest>=8.0", "ruff>=0.5"]
 packages = ["engine", "engine.modelo", "engine.eventos", "generator", "generator.documentos"]
 
 [tool.setuptools.package-data]
+"engine" = ["*.yaml"]
 "engine.modelo" = ["esquemas/*.json"]
 
 [tool.pytest.ini_options]

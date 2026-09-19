@@ -1,0 +1,202 @@
+# Tabla de mapeo: estado de plataforma -> efecto sobre nuestro estado de ciclo.
+#
+# Es la tabla de `docs/02` §5.6, literal. La plataforma fija estos estados; nosotros solo los reflejamos
+# (`docs/03` §7.1). Ninguna fila de aqui decide un estado de plataforma: `engine/estados.py` la lee para
+# saber que le pasa a NUESTRO ciclo cuando llega un `EstadoPlataformaRecibido`.
+#
+# Por que YAML y no codigo: los estados de expediente (fases 2-4) son nombres NUESTROS, no oficiales
+# (`TODO(API-03)`, `docs/HUECOS.md`). Cuando llegue el diccionario oficial, cambiar nombres debe ser
+# cambiar este fichero, no tocar `engine/estados.py`.
+#
+# Campos de cada fila:
+#   literal               nombre tal cual lo devuelve (o lo devolvera) la plataforma
+#   nivel                 "actuacion" (fase 1, confirmados) | "expediente" (fases 2-4, provisionales)
+#   fase                  fase del procedimiento (`docs/02` §3)
+#   oficial               true solo para los 8 confirmados de `docs/02` §5.1
+#   ciclo                 estado de ciclo al que proyecta, o null = se refleja y no mueve el ciclo
+#   origen_subsanacion    "verificador" | "GA" | "CN" | null (`docs/03` §10.5)
+#   alcance               "actuacion" | "grupo" | "expediente": a quien alcanza el efecto
+#   resultado             etiqueta de cierre cuando `ciclo: CERRADA`
+#   exige_firma           la transicion necesita un `FirmaRegistrada` previo de actor humano
+#   exige_desistimiento   la transicion necesita un `DesistimientoRegistrado` previo de actor humano
+#   modificable           seguimos pudiendo modificar la actuacion (antes de la inalterabilidad)
+#   candidata_expediente  la actuacion puede entrar en un `Expediente` (`docs/02` §5.1)
+#   nota                  de donde sale la fila
+
+version_tabla: "1.0"
+fuentes:
+  - "docs/02 §5.1 — 8 estados de actuacion, confirmados (presentacion OMIE/MIBGAS 30/06/2026, pag. 26)"
+  - "docs/02 §5.2 — estados de expediente, provisionales, NO OFICIAL (TODO(API-03))"
+  - "docs/02 §5.6 — tabla de proyeccion estado de plataforma -> ciclo"
+  - "docs/03 §7.1 y §7.2 — cuatro niveles de estado y grafo del estado de ciclo"
+
+estados:
+
+  # --- Nivel actuacion (fase 1): los 8 confirmados de docs/02 §5.1 -------------------------------
+
+  - literal: BORRADOR
+    nivel: actuacion
+    fase: "1A"
+    oficial: true
+    ciclo: ENTREGADA
+    alcance: actuacion
+    modificable: true
+    nota: "docs/02 §5.6: ENTREGADA(API); sigue siendo modificable por nosotros"
+
+  - literal: COMPLETA
+    nivel: actuacion
+    fase: "1A"
+    oficial: true
+    ciclo: ENTREGADA
+    alcance: actuacion
+    modificable: true
+    nota: "Validacion automatica de la plataforma superada. Fin de la automatizacion (docs/02 §5.1)"
+
+  - literal: ENVIADA_A_VERIFICACION
+    nivel: actuacion
+    fase: "1A"
+    oficial: true
+    ciclo: EN_PLATAFORMA
+    alcance: actuacion
+    exige_firma: true
+    nota: "docs/02 §5.6: requiere FirmaRegistrada (actor humano) previa. Desde aqui, inalterabilidad (§5.4)"
+
+  - literal: PDTE_RECTIFICACION_VER
+    nivel: actuacion
+    fase: "1B"
+    oficial: true
+    ciclo: PENDIENTE_SUBSANACION
+    origen_subsanacion: verificador
+    alcance: grupo
+    nota: "docs/02 §5.6: subsanacion de la actuacion, o del grupo por dictamen unico"
+
+  - literal: VERIFICACION_EN_PROCESO
+    nivel: actuacion
+    fase: "1B"
+    oficial: true
+    ciclo: null
+    alcance: actuacion
+    nota: "Solicitud aceptada por el verificador. docs/02 §5.6 no le asigna efecto: se refleja y ya"
+
+  - literal: VERIFICADA_FAVORABLE
+    nivel: actuacion
+    fase: "1B"
+    oficial: true
+    ciclo: null
+    alcance: actuacion
+    candidata_expediente: true
+    nota: "docs/02 §5.6: candidata a Expediente; P10 puede proponer agrupacion. No cierra el ciclo"
+
+  - literal: VERIFICADA_DESFAVORABLE
+    nivel: actuacion
+    fase: "1B"
+    oficial: true
+    ciclo: CERRADA
+    resultado: verificada_desfavorable
+    alcance: actuacion
+    nota: "docs/02 §5.6: CERRADA con etiqueta de resultado; el reintento es una actuacion nueva"
+
+  - literal: NO_PUEDE_EMITIR_DICTAMEN
+    nivel: actuacion
+    fase: "1B"
+    oficial: true
+    ciclo: CERRADA
+    resultado: sin_dictamen
+    alcance: actuacion
+    nota: "docs/02 §5.6: CERRADA con etiqueta de resultado"
+
+  # --- Nivel expediente (fases 2-4): NOMBRES NUESTROS, NO OFICIALES ------------------------------
+  # Cada fila de aqui es provisional: la presentacion no enumera estos estados.
+
+  - literal: BORRADOR_SOLICITUD
+    nivel: expediente
+    fase: "2"
+    oficial: false   # TODO(API-03): nombre nuestro, NO OFICIAL; ver docs/HUECOS.md
+    ciclo: null
+    alcance: expediente
+    nota: "docs/02 §5.2 (grafo provisional). Sin efecto declarado sobre el ciclo en §5.6"
+
+  - literal: PRESENTADO
+    nivel: expediente
+    fase: "2"
+    oficial: false   # TODO(API-03): nombre nuestro, NO OFICIAL; ver docs/HUECOS.md
+    ciclo: null
+    alcance: expediente
+    nota: "docs/02 §5.2 (grafo provisional). Sin efecto declarado sobre el ciclo en §5.6"
+
+  - literal: EN_VALIDACION_TECNICA
+    nivel: expediente
+    fase: "3A"
+    oficial: false   # TODO(API-03): nombre nuestro, NO OFICIAL; ver docs/HUECOS.md
+    ciclo: null
+    alcance: expediente
+    nota: "Validacion tecnica del GA (docs/02 §5.2). Sin efecto declarado sobre el ciclo en §5.6"
+
+  - literal: REQUERIDO_GA
+    nivel: expediente
+    fase: "3A"
+    oficial: false   # TODO(API-03): nombre nuestro, NO OFICIAL; ver docs/HUECOS.md
+    ciclo: PENDIENTE_SUBSANACION
+    origen_subsanacion: GA
+    alcance: expediente
+    nota: "docs/02 §5.6: PENDIENTE_SUBSANACION en TODAS las actuaciones del expediente (contagio)"
+
+  - literal: VALIDADO_GA
+    nivel: expediente
+    fase: "3A"
+    oficial: false   # TODO(API-03): nombre nuestro, NO OFICIAL; ver docs/HUECOS.md
+    ciclo: null
+    alcance: expediente
+    nota: "docs/02 §5.2 (grafo provisional). Sin efecto declarado sobre el ciclo en §5.6"
+
+  - literal: EN_REVISION_FORMAL
+    nivel: expediente
+    fase: "3B"
+    oficial: false   # TODO(API-03): nombre nuestro, NO OFICIAL; ver docs/HUECOS.md
+    ciclo: null
+    alcance: expediente
+    nota: "Revision formal de la CN (docs/02 §5.2). Sin efecto declarado sobre el ciclo en §5.6"
+
+  - literal: REQUERIDO_CN
+    nivel: expediente
+    fase: "3B"
+    oficial: false   # TODO(API-03): nombre nuestro, NO OFICIAL; ver docs/HUECOS.md
+    ciclo: PENDIENTE_SUBSANACION
+    origen_subsanacion: CN
+    alcance: expediente
+    nota: "docs/02 §5.6: PENDIENTE_SUBSANACION en TODAS las actuaciones del expediente (contagio)"
+
+  - literal: RESUELTO_FAVORABLE
+    nivel: expediente
+    fase: "4"
+    oficial: false   # TODO(API-03): nombre nuestro, NO OFICIAL; ver docs/HUECOS.md
+    ciclo: null
+    alcance: expediente
+    nota: "docs/02 §5.2 (grafo provisional). El cierre lo marca INSCRITO, no la resolucion"
+
+  - literal: RESUELTO_DESFAVORABLE
+    nivel: expediente
+    fase: "4"
+    oficial: false   # TODO(API-03): nombre nuestro, NO OFICIAL; ver docs/HUECOS.md
+    ciclo: null
+    alcance: expediente
+    nota: "docs/02 §5.2 (grafo provisional). §5.6 no le asigna efecto: no se inventa un cierre"
+
+  - literal: INSCRITO
+    nivel: expediente
+    fase: "4"
+    oficial: false   # TODO(API-03): nombre nuestro, NO OFICIAL; ver docs/HUECOS.md
+    ciclo: CERRADA
+    resultado: inscrita
+    alcance: expediente
+    nota: "docs/02 §5.6: CERRADA(resultado=inscrita); con CAE Supply empezaria el seguimiento del CAE (§5.3)"
+
+  - literal: DESISTIDO
+    nivel: expediente
+    fase: "3A"
+    oficial: false   # TODO(API-03): nombre nuestro, NO OFICIAL; ver docs/HUECOS.md
+    ciclo: CERRADA
+    resultado: desistida
+    alcance: expediente
+    exige_desistimiento: true
+    nota: "docs/02 §5.5 y §5.6: exige DesistimientoRegistrado de actor humano. Tambien cabe en fase 3B"
