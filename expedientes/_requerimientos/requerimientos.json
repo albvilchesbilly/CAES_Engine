@@ -1,0 +1,361 @@
+{
+  "marca": "DOCUMENTO SINTÉTICO – SOLO PRUEBAS",
+  "entregable": "S3.5",
+  "contrato": "ADR-010 §5 (C12)",
+  "generado_por": "python -m generator.requerimientos (generator/requerimientos.py)",
+  "ficha": "IND240",
+  "version_ficha": "1.1",
+  "version_spec": "0.1.0",
+  "cronologia": [
+    {
+      "fecha": "2026-03-02",
+      "hecho": "Fin de las tres actuaciones (fecha de puesta en marcha del modelo del banco)"
+    },
+    {
+      "fecha": "2026-05-04",
+      "hecho": "Las tres actuaciones se envían a verificación (ENVIADA_A_VERIFICACION)"
+    },
+    {
+      "fecha": "2026-05-12",
+      "hecho": "El verificador requiere rectificación de la actuación ACT-SYN-2026-001 (REQ-SYN-2026-001)"
+    },
+    {
+      "fecha": "2026-06-10",
+      "hecho": "Las tres actuaciones quedan VERIFICADA_FAVORABLE"
+    },
+    {
+      "fecha": "2026-06-30",
+      "hecho": "Se presenta el expediente EXPD-SYN-2026-001 con las tres actuaciones"
+    },
+    {
+      "fecha": "2026-07-15",
+      "hecho": "El órgano gestor autonómico requiere subsanación en fase 3A (REQ-SYN-2026-002)"
+    },
+    {
+      "fecha": "2026-09-14",
+      "hecho": "Primera ronda de la coordinación nacional en fase 3B (no se materializa documento)"
+    },
+    {
+      "fecha": "2026-10-05",
+      "hecho": "Segunda ronda de la coordinación nacional (REQ-SYN-2026-003, ronda 2)"
+    }
+  ],
+  "expediente": {
+    "id": "EXPD-SYN-2026-001",
+    "ccaa": "Aragón",
+    "anio": 2026,
+    "sector": "industrial",
+    "verificador": {
+      "nombre": "Verificación Sintética Independiente, S.A. (entidad ficticia de pruebas)",
+      "codigo": "VER-SYN-007",
+      "nif": "A99004046"
+    },
+    "estado_plataforma": "EN_VALIDACION_TECNICA",
+    "presentado_en": "2026-06-30",
+    "claves_de_agrupacion": [
+      "ccaa",
+      "anio",
+      "sector",
+      "verificador"
+    ],
+    "actuaciones": [
+      {
+        "actuacion_id": "ACT-SYN-2026-001",
+        "codigo_identificativo_propio": "CAE-SYN-2026-0001",
+        "caso": "A",
+        "carpeta": "EXP001-A_completo",
+        "estado_plataforma": "VERIFICADA_FAVORABLE",
+        "veredicto_esperado": "PREVALIDADO",
+        "n_motores": 1,
+        "aetotal_exacto": "305829.6",
+        "aetotal_cae": 305829
+      },
+      {
+        "actuacion_id": "ACT-SYN-2026-002",
+        "codigo_identificativo_propio": "CAE-SYN-2026-0002",
+        "caso": "E",
+        "carpeta": "EXP001-E_dos_motores",
+        "estado_plataforma": "VERIFICADA_FAVORABLE",
+        "veredicto_esperado": "PREVALIDADO",
+        "n_motores": 2,
+        "aetotal_exacto": "470791.7875",
+        "aetotal_cae": 470791
+      },
+      {
+        "actuacion_id": "ACT-SYN-2026-003",
+        "codigo_identificativo_propio": "CAE-SYN-2026-0003",
+        "caso": "F",
+        "carpeta": "EXP001-F_tres_motores",
+        "estado_plataforma": "VERIFICADA_FAVORABLE",
+        "veredicto_esperado": "PREVALIDADO",
+        "n_motores": 3,
+        "aetotal_exacto": "832770.2819125",
+        "aetotal_cae": 832770
+      }
+    ],
+    "nota_solape": "Las tres actuaciones se materializan con los casos A, E y F del banco, que comparten el motor MTR-SYN-0001 porque E y F son variaciones de A. Es un artefacto declarado de la reutilización: este expediente sirve para el contagio y no sirve como caso limpio de una futura regla de cruce entre actuaciones (duplicidad de número de serie en el mismo expediente, familia R-XCK de docs/04)."
+  },
+  "cobertura_de_motivos": {
+    "regla": [
+      "REQ-SYN-2026-001#1",
+      "REQ-SYN-2026-002#2"
+    ],
+    "documento": [
+      "REQ-SYN-2026-001#2",
+      "REQ-SYN-2026-002#1"
+    ],
+    "nada": [
+      "REQ-SYN-2026-003#1"
+    ]
+  },
+  "requerimientos": [
+    {
+      "id": "REQ-SYN-2026-001",
+      "origen": "verificador",
+      "organismo": {
+        "nombre": "Verificación Sintética Independiente, S.A. (entidad ficticia de pruebas)",
+        "papel": "verificador",
+        "codigo": "VER-SYN-007",
+        "nif": "A99004046"
+      },
+      "fichero": "REQ-SYN-2026-001_verificador.pdf",
+      "informe_sha256": "9fa759756143e7da67dbe1ec62d9bcf96fdd0842d36d179d2f0b4cd4cda709e9",
+      "literal_plataforma": "PDTE_RECTIFICACION_VER",
+      "fase": "1B",
+      "referencia_oficial": "VER-SYN-007/2026/0031",
+      "recibido_en": "2026-05-12T10:30:00+02:00",
+      "plazo_dias": 10,
+      "ronda": 1,
+      "actuacion_id": "ACT-SYN-2026-001",
+      "expediente_id": null,
+      "grupo_id": null,
+      "alcance": "grupo",
+      "motivos": [
+        {
+          "numero": 1,
+          "texto": "Revisada la documentación de la actuación, el ahorro anual de energía final que figura en el apartado 4 del convenio CAE no se corresponde con el resultado de aplicar la fórmula de la ficha IND240 a los datos aportados. Procede rectificar el convenio CAE o justificar documentalmente la diferencia. Este punto figura identificado como R-CON-06 en el informe de prevalidación que acompaña a la actuación.",
+          "tipo_esperado": "regla",
+          "dificultad": "explicita",
+          "regla_esperada": "R-CON-06",
+          "documento_esperado": null,
+          "variable_esperada": null,
+          "pistas": [
+            "ahorro anual de energía final",
+            "convenio CAE",
+            "R-CON-06"
+          ],
+          "nota": "El motivo cita el identificador de la regla porque el verificador tiene a la vista el informe de prevalidación. Es el motivo fácil: garantiza un item con el que probar la reapertura."
+        },
+        {
+          "numero": 2,
+          "texto": "No consta aportada la ficha técnica del equipo accionado correspondiente al motor con número de serie MTR-SYN-0001, necesaria para acreditar que el equipo accionado es rotodinámico y que la actuación queda incluida en el ámbito de la ficha. Se requiere su aportación.",
+          "tipo_esperado": "documento",
+          "dificultad": "lexica",
+          "regla_esperada": null,
+          "documento_esperado": "ficha_tecnica_equipo_accionado",
+          "variable_esperada": null,
+          "pistas": [
+            "No consta aportada",
+            "ficha técnica del equipo accionado",
+            "MTR-SYN-0001"
+          ],
+          "nota": "Tipo documental EVD-05 de la spec. El léxico tiene que reconocer el nombre del tipo y que se pide por ausencia; una regla admisible además del documento sería R-DOC-01 (documentos obligatorios)."
+        }
+      ],
+      "interpretacion_esperada": {
+        "items": [
+          {
+            "texto_literal": "Revisada la documentación de la actuación, el ahorro anual de energía final que figura en el apartado 4 del convenio CAE no se corresponde con el resultado de aplicar la fórmula de la ficha IND240 a los datos aportados. Procede rectificar el convenio CAE o justificar documentalmente la diferencia. Este punto figura identificado como R-CON-06 en el informe de prevalidación que acompaña a la actuación.",
+            "regla_id": "R-CON-06",
+            "documento": null,
+            "variable": null,
+            "pistas": [
+              "ahorro anual de energía final",
+              "convenio CAE",
+              "R-CON-06"
+            ]
+          },
+          {
+            "texto_literal": "No consta aportada la ficha técnica del equipo accionado correspondiente al motor con número de serie MTR-SYN-0001, necesaria para acreditar que el equipo accionado es rotodinámico y que la actuación queda incluida en el ámbito de la ficha. Se requiere su aportación.",
+            "regla_id": null,
+            "documento": "ficha_tecnica_equipo_accionado",
+            "variable": null,
+            "pistas": [
+              "No consta aportada",
+              "ficha técnica del equipo accionado",
+              "MTR-SYN-0001"
+            ]
+          }
+        ],
+        "motivos_sin_mapear": [],
+        "escala_a_humano": false,
+        "confirmacion_humana_obligatoria": true
+      },
+      "contagio_esperado": [
+        {
+          "actuacion_id": "ACT-SYN-2026-001",
+          "afectada_directamente": true,
+          "ciclo_esperado": "PENDIENTE_SUBSANACION"
+        }
+      ]
+    },
+    {
+      "id": "REQ-SYN-2026-002",
+      "origen": "GA",
+      "organismo": {
+        "nombre": "Órgano Gestor Autonómico Sintético de Certificados de Ahorro Energético (organismo ficticio)",
+        "papel": "organo_gestor_autonomico",
+        "codigo": "GA-SYN-050",
+        "nif": "S9900505J"
+      },
+      "fichero": "REQ-SYN-2026-002_GA.pdf",
+      "informe_sha256": "a4fab0e8de6318bf45458189b69556024fcc2d6d83b56bff974bde73afdae058",
+      "literal_plataforma": "REQUERIDO_GA",
+      "fase": "3A",
+      "referencia_oficial": "GA-SYN-050/2026/EXP-0114",
+      "recibido_en": "2026-07-15T09:15:00+02:00",
+      "plazo_dias": 15,
+      "ronda": 1,
+      "actuacion_id": "ACT-SYN-2026-002",
+      "expediente_id": "EXPD-SYN-2026-001",
+      "grupo_id": null,
+      "alcance": "expediente",
+      "motivos": [
+        {
+          "numero": 1,
+          "texto": "Del examen de la documentación obrante en el expediente no puede descartarse que la instalación de los variadores de velocidad haya sido ejecutada con personal propio del beneficiario. En tal supuesto resulta exigible el certificado de técnico competente, que no se ha aportado; en caso contrario deberá acreditarse que la ejecución correspondió a una empresa instaladora habilitada distinta del beneficiario.",
+          "tipo_esperado": "documento",
+          "dificultad": "lexica",
+          "regla_esperada": null,
+          "documento_esperado": "certificado_tecnico_competente",
+          "variable_esperada": null,
+          "pistas": [
+            "certificado de técnico competente",
+            "no se ha aportado"
+          ],
+          "nota": "Tipo documental DOC-05B, obligatorio condicional. Engancha con la decisión abierta `instalacion_personal_propio` (CLAUDE.md §6)."
+        },
+        {
+          "numero": 2,
+          "texto": "La inalterabilidad del registro de parámetros de funcionamiento se acredita únicamente mediante una huella SHA-256 declarada en el certificado de la propia empresa instaladora, sin sello de tiempo ni intervención de un tercero de confianza. Deberá acreditarse la integridad del registro aportado para cada una de las tres actuaciones que integran el expediente.",
+          "tipo_esperado": "regla",
+          "dificultad": "lexica",
+          "regla_esperada": "R-EVD-03",
+          "documento_esperado": null,
+          "variable_esperada": null,
+          "pistas": [
+            "inalterabilidad del registro",
+            "huella SHA-256",
+            "tres actuaciones"
+          ],
+          "nota": "Aquí no hay identificador de regla: el léxico tiene que reconocerla por el vocabulario ('inalterabilidad', 'registro', 'huella'). La regla lleva INT-05, así que el motivo es además discutible en cuanto al fondo, como en la vida real."
+        }
+      ],
+      "interpretacion_esperada": {
+        "items": [
+          {
+            "texto_literal": "Del examen de la documentación obrante en el expediente no puede descartarse que la instalación de los variadores de velocidad haya sido ejecutada con personal propio del beneficiario. En tal supuesto resulta exigible el certificado de técnico competente, que no se ha aportado; en caso contrario deberá acreditarse que la ejecución correspondió a una empresa instaladora habilitada distinta del beneficiario.",
+            "regla_id": null,
+            "documento": "certificado_tecnico_competente",
+            "variable": null,
+            "pistas": [
+              "certificado de técnico competente",
+              "no se ha aportado"
+            ]
+          },
+          {
+            "texto_literal": "La inalterabilidad del registro de parámetros de funcionamiento se acredita únicamente mediante una huella SHA-256 declarada en el certificado de la propia empresa instaladora, sin sello de tiempo ni intervención de un tercero de confianza. Deberá acreditarse la integridad del registro aportado para cada una de las tres actuaciones que integran el expediente.",
+            "regla_id": "R-EVD-03",
+            "documento": null,
+            "variable": null,
+            "pistas": [
+              "inalterabilidad del registro",
+              "huella SHA-256",
+              "tres actuaciones"
+            ]
+          }
+        ],
+        "motivos_sin_mapear": [],
+        "escala_a_humano": false,
+        "confirmacion_humana_obligatoria": true
+      },
+      "contagio_esperado": [
+        {
+          "actuacion_id": "ACT-SYN-2026-001",
+          "afectada_directamente": false,
+          "ciclo_esperado": "PENDIENTE_SUBSANACION"
+        },
+        {
+          "actuacion_id": "ACT-SYN-2026-002",
+          "afectada_directamente": true,
+          "ciclo_esperado": "PENDIENTE_SUBSANACION"
+        },
+        {
+          "actuacion_id": "ACT-SYN-2026-003",
+          "afectada_directamente": false,
+          "ciclo_esperado": "PENDIENTE_SUBSANACION"
+        }
+      ]
+    },
+    {
+      "id": "REQ-SYN-2026-003",
+      "origen": "CN",
+      "organismo": {
+        "nombre": "Coordinación Nacional Sintética del sistema CAE – Unidad de Revisión Formal (organismo ficticio)",
+        "papel": "coordinacion_nacional",
+        "codigo": "CN-SYN-001",
+        "nif": "S9900606F"
+      },
+      "fichero": "REQ-SYN-2026-003_CN.pdf",
+      "informe_sha256": "6b111815b6890b333114e8c7a6dec6ce3c51ff85cd3dbf2ed4a7bcbc137952e2",
+      "literal_plataforma": "REQUERIDO_CN",
+      "fase": "3B",
+      "referencia_oficial": "CN-SYN-001/2026/RF-0407",
+      "recibido_en": "2026-10-05T11:45:00+02:00",
+      "plazo_dias": 10,
+      "ronda": 2,
+      "actuacion_id": "ACT-SYN-2026-003",
+      "expediente_id": "EXPD-SYN-2026-001",
+      "grupo_id": null,
+      "alcance": "expediente",
+      "motivos": [
+        {
+          "numero": 1,
+          "texto": "Examinadas las alegaciones y la información remitida en contestación al requerimiento anterior, y sin perjuicio de lo que resulte de ulteriores comprobaciones, se aprecia que lo aportado no permite formar juicio bastante sobre la adecuación de lo actuado a lo declarado por el interesado. En consecuencia, se le requiere para que complete la información en los términos que estime procedentes, con advertencia de que, de no atenderse en el plazo señalado, se continuará el procedimiento con los datos que obren en poder de esta unidad.",
+          "tipo_esperado": "nada",
+          "dificultad": "no_mapeable",
+          "regla_esperada": null,
+          "documento_esperado": null,
+          "variable_esperada": null,
+          "pistas": [],
+          "nota": "Prosa administrativa: no cita ninguna regla ni ningún tipo documental. La interpretación correcta es cero items y escalado a un humano (ADR-010 §3, decisión 2). Un léxico que dispare aquí por 'complete la información' produce un falso positivo, que es justo lo que este motivo mide."
+        }
+      ],
+      "interpretacion_esperada": {
+        "items": [],
+        "motivos_sin_mapear": [
+          1
+        ],
+        "escala_a_humano": true,
+        "confirmacion_humana_obligatoria": true
+      },
+      "contagio_esperado": [
+        {
+          "actuacion_id": "ACT-SYN-2026-001",
+          "afectada_directamente": false,
+          "ciclo_esperado": "PENDIENTE_SUBSANACION"
+        },
+        {
+          "actuacion_id": "ACT-SYN-2026-002",
+          "afectada_directamente": false,
+          "ciclo_esperado": "PENDIENTE_SUBSANACION"
+        },
+        {
+          "actuacion_id": "ACT-SYN-2026-003",
+          "afectada_directamente": true,
+          "ciclo_esperado": "PENDIENTE_SUBSANACION"
+        }
+      ]
+    }
+  ]
+}

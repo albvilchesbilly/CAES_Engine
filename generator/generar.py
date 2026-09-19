@@ -19,6 +19,9 @@ Caso G (mismos datos que A, 13 ficheros): `doc1.pdf` (ficha + declaración + con
 motor), `doc6.pdf` (ficha técnica del equipo), `scan.pdf` (ficha del variador escaneada y girada, sin texto),
 `datos.xlsx` (registro renombrado), `foto1.jpg`..`foto4.jpg` (ANTES, DESPUÉS, placa, irrelevante) y
 `notas.pdf` (acta de reunión irrelevante).
+
+Sin `--solo` escribe además el material de S3.5 (`generator/requerimientos.py`): los tres requerimientos
+sintéticos y el expediente de tres actuaciones en `expedientes/_requerimientos/`.
 """
 
 from __future__ import annotations
@@ -33,7 +36,7 @@ from pathlib import Path
 
 from engine.calculo import ResultadoCalculo
 from engine.spec_registry import Spec
-from generator import ground_truth
+from generator import ground_truth, requerimientos
 from generator.calculo_caso import calcular_caso, cargar_spec_activa
 from generator.casos import todos_los_casos
 from generator.documentos import (
@@ -304,6 +307,8 @@ def main(argv: list[str] | None = None) -> int:
             f"{g.caso.carpeta}: {len(g.ficheros)} ficheros, veredicto {g.caso.veredicto_esperado}, "
             f"AETOTAL {gt['exacto']} (cae {gt['cae']}{', provisional' if gt['provisional'] else ''})"
         )
+    if not args.solo:  # el material de S3.5 se compone de varios casos: solo tiene sentido con los siete
+        requerimientos.main(["--salida", str(args.salida)])
     return 0 if generados else 1
 
 

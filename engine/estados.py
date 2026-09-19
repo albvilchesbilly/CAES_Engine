@@ -605,13 +605,16 @@ def aplicar(proyeccion: Proyeccion, evento: Evento) -> Proyeccion:
         siguiente = _desistir(proyeccion, evento)
     elif tipo in TIPOS_REQUERIMIENTO:
         origen = _origen_declarado(datos, tipo)
+        # `docs/02` §5.6: el contagio de GA/CN llega a las companeras con `afectada_directamente: false`.
+        # El payload lo declara (lo escribe `engine/seguimiento.py`); sin declararlo, la senalada es esta.
+        senalada = datos.get("afectada_directamente")
         siguiente = _transitar(
             proyeccion,
             "PENDIENTE_SUBSANACION",
             f"subsanacion de origen {origen}",
             origen_subsanacion=origen,
             requerimiento_abierto=origen,
-            afectada_directamente=True,
+            afectada_directamente=True if senalada is None else bool(senalada),
         )
     elif tipo == "SubsanacionCerrada":
         siguiente = replace(
