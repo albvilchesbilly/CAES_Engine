@@ -78,7 +78,7 @@ Rutas según `docs/01` §3. La columna Estado, tras cerrar la Fase 0 (19/09/2026
 | N3 | Calculation Engine + tablas | Fórmula leída del YAML, `Decimal`, traza, controles físicos; tablas de `data/` con vigencia y búsqueda por clave (`INT-02`); **control cruzado** con el valor de la plataforma | `engine/calculo.py`, `engine/tablas.py` | `EXISTE` (18/09/2026, F0.2 y F0.3): cálculo genérico desde la spec y cuadro 6 con vigencia e INT-02 · `NUEVO` S3: control cruzado (necesita sandbox) |
 | N4 | Evidence Store | Grafo de evidencias, tres capas por dato, consolidación, conflictos, `tratable_por_plataforma` | `engine/evidencias.py` | `EXISTE` (F0.8) en memoria con serialización JSON (§14 e) · `NUEVO` S3: persistencia junto al log |
 | N5 | Integridad | SHA-256 de **todo** fichero en ingesta + manifiesto interno | `engine/ingesta.py` (hash) · `salida/constructor/` (manifiesto) | `EXISTE` (F0.6) hash total de todo fichero (§14 d) · `NUEVO` S3: manifiesto interno |
-| N6 | Máquina de estados | Cuatro niveles de estado, contagio, inalterabilidad post-firma; es el A0 (coordinador) hecho código | `engine/estados.py` | `NUEVO` S3 |
+| N6 | Máquina de estados | Cuatro niveles de estado, contagio, inalterabilidad post-firma; es el A0 (coordinador) hecho código | `engine/estados.py` + `engine/estados_plataforma.yaml` | `EXISTE` (S3.1): estado de ciclo como proyección del log; estados de plataforma en tabla YAML |
 | N7 | Modelo canónico | `ActuacionCanonica`, `GrupoActuaciones`, `Expediente`, `Verificador`, `Tenant`; validado con JSON Schema propio (sin dependencias nuevas) | `engine/modelo/` | `EXISTE` (S3.1): los 7 casos validan · `cabecera` vacía hasta S3.2 |
 | N8 | Log de eventos | Solo-añadir, hash encadenado, JSON canónico, replay | `engine/eventos/` | `EXISTE` (S3.1): el replay de los 7 casos reproduce veredicto y ahorro bit a bit |
 | N9 | Compositor de expedientes | Propone grupos y expedientes válidos a partir de `R-GRP` / `R-EXP` | `engine/compositor.py` | `NUEVO` S4 (Expediente Builder, decisión de Billy) |
@@ -122,7 +122,7 @@ Decisiones registradas el 18/09/2026: A8 empieza emitiendo solo avisos (no alter
 
 ---
 
-## 5. Modelo canónico (N7) — `NUEVO` S3
+## 5. Modelo canónico (N7) — `EXISTE` (S3.1, 19/09/2026)
 
 Esquema propio, versionado (`modelo_version`), validado con JSON Schema. Es lo único que consumen los adaptadores de salida. Vive en `engine/modelo/`.
 
@@ -186,7 +186,7 @@ Regla de oro 3 de `docs/00`. Un `DatoConsolidado` guarda siempre:
 
 ---
 
-## 6. Log de eventos (N8) — `NUEVO` S3
+## 6. Log de eventos (N8) — `EXISTE` (S3.1, 19/09/2026)
 
 Vive en `engine/eventos/`. Es la fuente de verdad del ciclo: el estado de una actuación es una proyección del log.
 
@@ -235,7 +235,7 @@ En la Fase 0, `engine/motor.py` no emite eventos: es lineal y síncrono. En el S
 
 ---
 
-## 7. Máquina de estados (N6) — `NUEVO` S3
+## 7. Máquina de estados (N6) — `EXISTE` (S3.1, 19/09/2026)
 
 Vive en `engine/estados.py`. Es el A0 (coordinador): código, no un LLM.
 

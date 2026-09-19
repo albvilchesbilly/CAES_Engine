@@ -139,7 +139,9 @@ engine/
   modelo/               EXISTE N7  ActuacionCanonica, GrupoActuaciones, Expediente, Verificador, Tenant,
                                   con JSON Schema propio en esquemas/ y `desde_motor` (S3.1)
   eventos/              EXISTE N8  Log solo-añadir, hash encadenado, JSON canónico, grabación y replay (S3.1)
-  estados.py            S3  N6  Cuatro niveles de estado, contagio, inalterabilidad post-firma
+  estados.py            EXISTE N6  Cuatro niveles de estado, contagio, inalterabilidad post-firma (S3.1)
+  estados_plataforma.yaml EXISTE — Tabla de mapeo: 8 estados de actuación confirmados y 11 de expediente
+                                  provisionales (`oficial: false`, TODO(API-03))
   compositor.py         S4  N9  R-GRP / R-EXP, propuesta de grupos y expedientes
 ```
 
