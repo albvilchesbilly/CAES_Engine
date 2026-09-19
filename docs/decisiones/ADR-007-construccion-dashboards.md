@@ -205,7 +205,7 @@ Vistas: G = `O-GLO` · F = `O-FUN` · E = `O-EQU` · T = `T-TEC`. "Desde" = entr
 - **Pendiente (Billy)**:
   - B1 · Presentación: informes estáticos, consola propia (S4) o herramienta BI externa alimentada por la API de lectura.
   - B2 · Cuándo se construye DB5: Sprint 4 con la consola de revisión o con el primer cliente.
-  - B3 · Vista de equipo por persona o por equipo (mismo punto que ADR-005 A5).
+  - B3 · Vista de equipo por persona o por equipo (mismo punto que ADR-006 A5).
   - B4 · Línea base de horas manuales para M-OP-01: medida con el primer delegado partner o declarada por el tenant y rotulada como declarada.
   - B5 · Medición de minutos de revisión: tiempo de sesión en consola o duración declarada al aprobar.
   - B6 · Aprobar el tipo de telemetría `error`.
