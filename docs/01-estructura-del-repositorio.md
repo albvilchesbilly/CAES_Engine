@@ -48,6 +48,7 @@ cae-engine/
 ├── expedientes/                     EXISTE  Carpetas de entrada de los casos de prueba (salida del generator)
 │   ├── EXP001-A_completo/ … EXP001-G_desordenado/
 │   └── _resultados_esperados/            GROUND TRUTH. Nunca se entrega al Engine. Solo cambia con ADR
+├── metricas/                        NUEVO   Catálogo de métricas en YAML, proyecciones y render (ADR-007)
 ├── informes/                        EXISTE  Salida generada (markdown + JSON). No se commitea
 ├── tests/                           EXISTE  Pruebas: cálculo, spec, paquete, Engine end-to-end, metamórficas
 └── evaluar_casos.py                 EXISTE  Matriz esperado/obtenido sobre los casos de expedientes/
@@ -262,6 +263,22 @@ mapping/
 ```
 
 Declarativo. Si un cambio en la API oficial exige tocar `engine/`, el diseño está mal.
+
+### 3.9 bis `metricas/` — catálogo y dashboards (`NUEVO`, `ADR-007`)
+
+```
+metricas/
+  catalogo.yaml            Definición de todas las métricas: fórmula, fuente, cortes, vistas y capacidad
+  esquema_catalogo.json    JSON Schema del catálogo; una métrica sin fuente, vista o capacidad no carga
+  proyecciones/            normalizar · hechos_actuacion · hechos_evento · hechos_llamada · hechos_usuario
+  calcular.py              Evalúa el catálogo sobre las proyecciones
+  acceso.py                Filtro por capacidad y tenant; enmascarado
+  render/                  Salida estática por vista (O-GLO, O-FUN, O-EQU, T-TEC)
+```
+
+Una métrica se define **una sola vez en configuración**, con el mismo criterio que las fichas: el catálogo es
+YAML validado, no código. Una métrica sin fuente se muestra `SIN DATO` con su "desde", nunca como cero.
+Dependencias: `metricas/` lee de `engine/` y de `telemetria/`; **nada importa de `metricas/`**.
 
 ### 3.10 `informes/` (`EXISTE`, no se commitea)
 

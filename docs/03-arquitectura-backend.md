@@ -92,7 +92,8 @@ Módulos de `engine/` sin ID propio en este mapa (`docs/01` §3.3): `motor.py` (
 | S1 | Ingesta | PDF nativo, OCR, xlsx, EXIF, separación de PDF combinados, clasificación léxica con confianza, extractor por reglas detrás de la interfaz `Extractor`, lector del registro SCADA; hash de todo | `engine/ingesta.py`, `engine/clasificacion.py`, `engine/extraccion.py`, `engine/registro_xlsx.py` | `EXISTE` (F0.6, F0.7) |
 | S2 | Agent Runtime | El contrato común de agentes hecho código una sola vez (§11) | `agentes/runtime/` | `NUEVO` S3 |
 | S3 | Orquestador | Workflow por eventos con tareas humanas; la máquina de estados (N6) hace de A0 | `engine/motor.py` | `EXISTE` (F0.10) lineal y síncrono (ingesta → clasificación → extracción → consolidación → reglas → cálculo) · `NUEVO` S3: emite eventos sin cambiar su interfaz pública |
-| S4 | Consola de revisión | Escalados, conflictos, correcciones del profesional, tareas pendientes de la plataforma; centrada en lo previo a la firma | — (S4, `docs/06`) | `NUEVO` S4 |
+| S4 | Consola de revisión | Escalados, conflictos, correcciones del profesional, tareas pendientes de la plataforma; centrada en lo previo a la firma. Con `ADR-006`, es donde viven las capacidades `CAP-nn` de los perfiles de tenant | — (S4, `docs/06`) | `NUEVO` S4 |
+| S9 | Métricas y dashboards | Catálogo de métricas en YAML validado, proyecciones sobre el log y la telemetría, filtro por capacidad y tenant, y salida por vista (`O-GLO`, `O-FUN`, `O-EQU`, `T-TEC`) | `metricas/` | `NUEVO` (`ADR-007`, plan DB0–DB5) |
 | S5 | Salida | Puerto + adaptadores handoff / simulador / API; transporte separado de la firma humana (§10) | `salida/` | `NUEVO` S3 |
 | S6 | Evaluación | Banco de pruebas, fábrica de casos, metamórficas, batería `INT-xx` contra sandbox | `generator/`, `expedientes/`, `tests/`, `evaluar_casos.py` | `EXISTE` (F0.5, F0.11): 7 casos, ground truth, 999 tests y `evaluar_casos.py` · `NUEVO` S3: fábrica de casos y batería `INT-xx` |
 | S7 | Seguridad y tenencia | Aislamiento por tenant (delegado u obligado directo), enmascarado, anonimización (§12) | transversal | `NUEVO` S3 |
@@ -135,6 +136,7 @@ El código llama **`Actuacion`** a la unidad de trabajo **desde la Fase 0**. No 
 ```
 Tenant (sujeto delegado u obligado directo)
 ├─ id, tipo {delegado, obligado_directo}, capacidad_delegacion_disponible?  (NO DOCUMENTADO cómo se consulta → TODO(API-11))
+├─ usuarios: Usuario[]                            ← ADR-006; PoliticaTenant decide si quien prepara puede aprobar
 └─ Actuacion[]
     ├─ id, codigo_identificativo_propio           ← clave de reconciliación con la plataforma
     ├─ modelo_version, creado_en
@@ -164,7 +166,18 @@ Expediente (oficial)                             ← agregación de VERIFICADA_F
 
 Verificador
 ├─ id, razon_social, acreditacion_enac_ref, ccaa_operativas?  (NO DOCUMENTADO si la plataforma lo expone)
+
+Usuario / Perfil / Capacidad / AsignacionPerfil / PoliticaTenant   ← ADR-006, `NUEVO` (pendiente A8 de Billy)
+├─ Usuario: id, tenant_id?, nombre, identificador, perfiles[]      ← un usuario puede acumular perfiles de tenant
+├─ Perfil: codigo (T-RES, T-OPE, T-REV, EXT-INS, EXT-CLI, ADM-MOD, ADM-OPS, SYS-API), ambito_datos
+├─ Capacidad: id (CAP-nn), descripcion, evento                     ← cada capacidad se ata a su evento del log
+└─ AsignacionPerfil: usuario_id, perfil, desde, hasta?, quien_la_asigno   ← toda asignación es un evento
 ```
+
+**Permisos por capacidad, no por pantalla** (`ADR-006`): la matriz de perfiles y capacidades es la referencia
+vigente. Ningún permiso de tenant cruza tenants; los externos solo ven actuaciones en las que son parte, nunca la
+cabecera económica ni otras actuaciones. Los dos perfiles de administración (`ADM-MOD`, `ADM-OPS`) tienen permisos
+sin solapamiento (`ADR-005`) y no acceden por defecto al contenido documental de un tenant.
 
 **`codigo_identificativo_propio`** es la clave de reconciliación con la plataforma: es el campo de la cabecera común que la plataforma devuelve en estados, notificaciones y tareas, y el que permite emparejar lo que recibimos (P9) con la `Actuacion` que enviamos (P8). Lo genera el Engine (`= Actuacion.id`), es único dentro del tenant (`R-CAB-01`) y no cambia nunca después de `PayloadConstruido`.
 
@@ -199,7 +212,7 @@ Vive en `engine/eventos/`. Es la fuente de verdad del ciclo: el estado de una ac
   "secuencia": 17,
   "tipo": "EvidenciaPropuesta",
   "ocurrido_en": "2026-09-18T10:22:31Z",
-  "actor": { "clase": "agente | motor | humano | plataforma", "id": "lector@prompt-v3" },
+  "actor": { "clase": "agente | motor | humano | plataforma", "id": "lector@prompt-v3", "rol": "T-RES | ADM-MOD | …" },
   "payload": { },
   "hash_previo": "…",
   "hash": "sha256(hash_previo + json_canonico(evento sin hash))"
@@ -214,6 +227,7 @@ Reglas del log:
 - **JSON canónico**: claves ordenadas, UTF-8, sin espacios, `Decimal` como cadena. Sin esto el hash no es reproducible.
 - Los eventos de agente incluyen modelo, versión de prompt, coste y latencia (§11.2, punto 6).
 - Los eventos `FirmaRegistrada`, `DatoCorregidoPorHumano` y `DesistimientoRegistrado`, y la confirmación de una interpretación de A9, solo son válidos con `actor.clase = humano`.
+- **`actor.rol` es obligatorio en todo evento de actor humano** (`ADR-005`, `ADR-006`): sin él no se sabe con qué perfil se actuó. Una persona con dos perfiles actúa con uno a la vez y el cambio de rol queda registrado.
 
 ### 6.2 Catálogo de eventos por proceso
 
@@ -230,6 +244,12 @@ Reglas del log:
 | P8 Empaquetado | `PayloadConstruido`, `ManifiestoGenerado`, `EntregadoADelegado`, `EnviadoAPI`, `FirmaRegistrada` (actor humano) |
 | P9 Seguimiento | `EstadoPlataformaRecibido`, `TareaPendienteRecibida`, `RequerimientoRecibido{origen}`, `RequerimientoInterpretado`, `DesistimientoRegistrado` |
 | P10 Composición | `GrupoPropuesto`, `ExpedientePropuesto`, `AvisoContagio`, `ActuacionHuerfana` |
+| Gobierno del modelo (`ADM-MOD`) | `SpecActivada`, `AgenteActivado`, `AgenteDesactivado`, `PromptActivado`, `MejoraAceptada` |
+| Operación (`ADM-OPS`) | `TenantAlta`, `TenantBaja`, `TenantSuspendido`, `AccesoSoporteSolicitado`, `AccesoSoporteAutorizado`, `AccesoSoporteDenegado`, `AccesoSoporteUsado` |
+| Gobierno del tenant (`T-RES`) | `UsuarioAlta`, `UsuarioBaja`, `RolAsignado`, `ActuacionReasignada`, `PoliticaTenantCambiada` |
+| Trabajo humano sobre la actuación | `ObservacionRevisada`, `ActuacionDescartada`, `RevisionAprobada`, `ExpedienteAprobado`, `DiscrepanciaResuelta` |
+
+Las cuatro últimas filas son `NUEVO` (`ADR-005` y `ADR-006`): cada capacidad `CAP-nn` de la matriz se ata a su evento, así que un permiso sin evento sería un permiso sin traza. `ActuacionReasignada` nunca sobrescribe el actor de eventos anteriores.
 
 En la Fase 0, `engine/motor.py` no emite eventos: es lineal y síncrono. En el Sprint 3 pasa a emitirlos sin cambiar su interfaz pública (`docs/01` §3.3). Los tipos de evento se declaran en un único sitio (`engine/eventos/`); un tipo no declarado es un error.
 
@@ -265,7 +285,7 @@ ABIERTA → EN_PROCESO → EVALUADA ─┬─► PENDIENTE_SUBSANACION(origen=in
 
 ### 7.3 Reglas de transición
 
-- Solo una actuación `PREVALIDADO` **y revisada por un humano** pasa a `LISTA_PARA_ENVIO`.
+- Solo una actuación `PREVALIDADO` **y revisada por un humano** pasa a `LISTA_PARA_ENVIO`. La aprobación (CAP-10, evento `RevisionAprobada`) y el registro de la firma (CAP-22, `FirmaRegistrada`) son los **únicos disparadores humanos** de sus transiciones (`ADR-006`).
 - `ENTREGADA` → `EN_PLATAFORMA` requiere un evento `FirmaRegistrada` de actor `humano`. La firma no la hacemos nosotros; solo registramos que ocurrió, con quién y cuándo. Ningún evento de actor `agente` o `motor` puede hacer esa transición (propiedad metamórfica de ciclo, `docs/05`).
 - Tras `EN_PLATAFORMA`, **ningún cambio de datos es válido fuera de un requerimiento oficial** (inalterabilidad). Un intento de corrección interna post-firma se rechaza con evento `CorreccionRechazadaPostFirma`.
 - Un requerimiento de GA o CN sobre una actuación genera `PENDIENTE_SUBSANACION` en **todas** las actuaciones del expediente, con `afectada_directamente: bool`. Es el riesgo de contagio hecho estado.
@@ -437,6 +457,11 @@ El contrato común de agentes de `docs/00`, hecho código una sola vez:
 - Anonimización de actuaciones reales para el banco de pruebas: detección asistida, validación humana obligatoria.
 - Documentos sintéticos: siempre con la marca "DOCUMENTO SINTÉTICO – SOLO PRUEBAS".
 - Sin certificados de representante en nuestra infraestructura (§10.3). El certificado de usuario, donde diga Billy tras `API-09`.
+- **Perfiles y capacidades** (`ADR-005`, `ADR-006`): administración en dos planos sin solapamiento (`ADM-MOD` gobierna cómo piensa el sistema; `ADM-OPS`, quién lo usa), ambos con segundo factor. Activar una spec, una severidad o un `INT-xx` exige tests en verde, replay de actuaciones pasadas con informe de veredictos que cambian, y ADR.
+- **Acceso de soporte**: `ADM-OPS` lo solicita sobre una actuación concreta, con motivo y caducidad; `T-RES` lo autoriza; queda en la auditoría del tenant y en la global. Sin autorización no hay acceso al contenido documental.
+- **Continuidad**: mínimo dos usuarios `T-RES` por tenant, o procedimiento de recuperación por `ADM-OPS` con verificación de identidad fuera de la plataforma.
+- **Monitorización de trabajadores**: las vistas de equipo (CAP-31, CAP-36) permiten al tenant supervisar la actividad de sus empleados. Exige aviso a los usuarios, obligación contractual del tenant de informarles y **revisión jurídica antes del primer cliente** (`ADR-006`).
+- **Riesgo aceptado** (`ADR-005`): con un solo aprobador no hay segunda firma; el control compensatorio es técnico (tests, replay, ADR). Con una segunda persona, las activaciones de spec pasan a doble aprobación.
 
 ---
 
@@ -469,8 +494,10 @@ Visto desde el producto. Cada línea dice qué producto la vende, qué proceso l
 | F-21 | Multi-tenant: delegados y sujetos obligados directos, aislamiento, capacidad disponible | CAE Platform | S7 | — | `NUEVO` S3 |
 | F-22 | Replay de cualquier actuación pasada contra nueva spec/regla/agente (regresión automática) | Interno | N8 | — | `NUEVO` S3 |
 | F-23 | Vigilancia normativa con propuesta de diff sobre el YAML | Interno / A6 | S8 | — | `NUEVO` (hoy vigilancia manual, fuera de código) |
+| F-24 | Dashboard operativo (vista global, funcional del tenant y de equipo) y dashboard técnico, en solo lectura y filtrados por capacidad | CAE Platform / Interno | S9 | Sí | `NUEVO` (`ADR-007`; DB0 no depende de nada) |
+| F-25 | Administración en dos planos con permisos sin solapamiento y toda acción trazada en el log | Interno | S7, N8 | — | `NUEVO` (`ADR-005`, `ADR-006`) |
 
-**Lectura de negocio.** De las 23 funcionalidades, 17 son diferenciales, una lo es parcialmente (F-05), tres son internas (F-21..23) y dos no lo son. Esas dos (F-06 y F-08 como producto) son justo las que la competencia vende como "checklist" y "calculadora"; no deben aparecer como reclamo, sino como controles previos. Lo que se vende es F-03 + F-04 + F-07 + F-10 (CAE Check) y F-11 a F-16 (CAE Platform).
+**Lectura de negocio.** De las 25 funcionalidades (23 originales más F-24 y F-25, de `ADR-005` a `ADR-007`), 18 son diferenciales, una lo es parcialmente (F-05), tres son internas (F-21..23) y dos no lo son. Esas dos (F-06 y F-08 como producto) son justo las que la competencia vende como "checklist" y "calculadora"; no deben aparecer como reclamo, sino como controles previos. Lo que se vende es F-03 + F-04 + F-07 + F-10 (CAE Check) y F-11 a F-16 (CAE Platform).
 
 ---
 
