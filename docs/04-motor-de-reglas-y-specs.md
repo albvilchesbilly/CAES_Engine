@@ -422,7 +422,9 @@ Cómo se determina la CCAA de una actuación es `NO DOCUMENTADO` → `TODO(API-0
 
 `tolerancia_xck` empieza en 0 (aritmética exacta, `Decimal`). Cada discrepancia se clasifica a mano: bug nuestro, `INT-xx` mal resuelto o criterio oficial distinto.
 
-### 10.4 Reglas de requerimiento (`R-REQ`) — Sprint 3
+### 10.4 Reglas de requerimiento (`R-REQ`) — Sprint 3 · `PARCIAL` (S3.5): en código, no en spec activa
+
+Estado a 19/09/2026 (`ADR-010`): **R-REQ-01** y **R-REQ-02** están implementados en `engine/requerimientos.py` y, la segunda, también en el catálogo de eventos (`ACTORES_ADMITIDOS`), para que la puerta humana no se rodee escribiendo el evento a mano. **R-REQ-03** lo cumple `engine/estados.py` desde S3.1. **R-REQ-04** es invariante de test, no regla de spec. La familia como **spec** sigue sin escribirse y sin activarse: dónde vive es decisión de Billy (`ADR-010` §7 punto 1).
 
 | ID | Descripción | Lógica | Severidad |
 |---|---|---|---|

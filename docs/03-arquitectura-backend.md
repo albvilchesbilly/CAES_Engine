@@ -406,7 +406,11 @@ No conocido a 18/09/2026: endpoints, esquemas JSON, autenticación concreta, for
 
 **Regla:** el simulador implementa solo lo conocido. Cada hueco es un `TODO(API-xx)` enumerado en `docs/HUECOS.md` con dueño y fecha de revisión, no una suposición en el código. A 18/09/2026 hay doce enumerados (`API-01` a `API-12`).
 
-### 10.5 Seguimiento post-envío (P9) y subsanación con tres orígenes (P7)
+### 10.5 Seguimiento post-envío (P9) y subsanación con tres orígenes (P7) — `EXISTE` (S3.5, `ADR-010`)
+
+Implementado en `engine/seguimiento.py` (P9: reconciliación por `codigo_identificativo_propio`, literal desconocido que se refleja y escala, contagio persistido en el log de cada compañera) y `engine/requerimientos.py` (A9 como interfaz `Interprete` con implementación determinista; `R-REQ-01` y `R-REQ-02` en código). El puente que pregunta al destino es `salida/seguimiento.py`, del lado de la salida, para no invertir las dependencias.
+
+**A9 con LLM sigue siendo S3.6** y entra detrás de la misma interfaz, sin tocar nada más: el circuito post-envío funciona hoy con la periferia apagada.
 
 Los estados de plataforma llegan como `EstadoPlataformaRecibido` (del transporte o del simulador) y se reconcilian con la `Actuacion` por `codigo_identificativo_propio`.
 

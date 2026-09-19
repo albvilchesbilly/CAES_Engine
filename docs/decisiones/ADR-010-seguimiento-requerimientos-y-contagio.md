@@ -167,14 +167,81 @@ Los tres cubren: un motivo que mapea a una regla concreta · un motivo que mapea
 motivo que el léxico **no** sabe mapear (y que por tanto escala). Si los tres fueran fáciles, el banco de
 pruebas mentiría.
 
-## 6. Verificación
+## 5 ter. Decisiones tomadas al construir (19/09/2026)
 
-Criterio de `docs/06` S3.5: un `PDTE_RECTIFICACION_VER` simulado reabre subsanación con la regla correcta · un
-requerimiento de GA simulado bloquea el expediente completo · toda interpretación de A9 exige confirmación
-humana antes de reabrir (`R-REQ-02`).
-Añadido: `pytest -q` en verde sin romper los 1679 anteriores · `evaluar_casos.py` 7/7 con el caso A en
-305.829,6 kWh/año · `ruff` limpio · el circuito completo funciona **sin un solo LLM** (modo degradado) · un
-literal desconocido se refleja y escala en vez de perderse.
+**Del seguimiento (C9)**
+
+1. **Nada se añade a un log que no lo admita.** Antes de escribir, el evento se sella en un log de ensayo y
+   se prueba con `aplicar` contra la proyección actual; si el ciclo lo rechaza, es `ErrorSeguimiento` y el log
+   real queda intacto. En un log solo-añadir, un evento que lo deja sin proyectar lo envenena **para
+   siempre**: ese error no tiene arreglo posible, así que tiene que ser ruidoso. Lo confirmó un accidente: un
+   doble de prueba mal construido devolvió un estado imposible y el núcleo se negó a escribirlo.
+2. **El contagio se persiste, no solo se devuelve.** A cada compañera se le escribe su propio
+   `RequerimientoRecibido` (actor `plataforma`, `afectada_directamente: false`, `contagio: true`). Sin eso, el
+   resultado de la llamada y un `proyectar(log)` de mañana dirían cosas distintas, y el estado dejaría de ser
+   una proyección del log (`docs/03` §6). Es lo que obliga al cambio en `engine/estados.py`.
+3. **Reconciliación tolerante a la referencia compuesta**: igualdad primero y, si no, el código propio
+   **delimitado** dentro de la referencia (el simulador compone `SIM-<codigo>-<huella>`, `TODO(API-01)`). Dos
+   códigos que encajen es `ErrorSeguimiento` por ambigua, nunca "el primero".
+4. **`alcance: grupo` no se propaga**: la composición de grupos es `R-GRP` (S4.1) y decisión de Billy.
+5. **Idempotencia** = mismo tipo + mismo instante + mismo payload codificado. Un estado repetido no vuelve a
+   contagiar.
+
+**Del intérprete (C10)**
+
+6. **El léxico reconoce, no deduce, y no conoce la ficha.** Los candidatos salen de la spec cargada: cada
+   regla, documento y variable aporta sus términos y sus identificadores citables. Un término pesa
+   `1 / nº de candidatos que lo contienen` — un IDF calculado sobre la propia spec —, así que "documento" o
+   "actuación" pesan casi nada y "rotodinámico" o "instaladora" pesan mucho, **sin ninguna lista de palabras
+   clave cableada**. Lo prueba un test que le pasa una ficha de alumbrado inventada en el propio test.
+7. **Dos puertas distintas para la cita**: el intérprete **descarta** el item sin cita; `reabrir` **rechaza
+   con error** un item cuya cita no esté literal en los motivos. Al confirmar ya hay un humano detrás: ahí un
+   item incitable es un defecto, no algo que se tire en silencio.
+8. **Hasta tres propuestas por motivo**, dentro del 60 % del mejor. Quedarse con una sería elegir por el
+   humano, y para eso está `R-REQ-02`.
+9. **`reabrir` escribe dos eventos**: `RequerimientoRecibido` (el hecho) y `RequerimientoInterpretado` (la
+   lectura), con el instante del requerimiento y sin reloj propio.
+
+**Del banco de pruebas (C12)**
+
+10. **El expediente reutiliza A, E y F**, que son las tres únicas que pueden llegar a `VERIFICADA_FAVORABLE`
+    (B es `SUBSANABLE`, C `BLOQUEADO`, D `NO_ELEGIBLE`) y ya comparten CCAA, año, sector y verificador. Un
+    octavo caso habría roto el criterio de la Fase 0.
+11. **Los motivos van en tabla, no en prosa**, dentro del PDF: la marca de agua desordena el texto plano al
+    extraerlo (`docs/05` §4.4.1).
+12. **El ground truth de S3.5 vive junto a sus documentos**, en `expedientes/_requerimientos/`, y no en
+    `_resultados_esperados/`: es material de este entregable, no ground truth de la Fase 0, y así no entra en
+    la carpeta que revisa Billy.
+
+## 5 quater. Lo que encontró la revisión (19/09/2026)
+
+1. **Agujero en `R-REQ-02`, cerrado.** La puerta humana vivía en `reabrir`, pero un `RequerimientoRecibido`
+   escrito **directamente** al log la rodeaba: movía a `PENDIENTE_SUBSANACION` una actuación incluso firmada,
+   sin interpretación ni confirmación. No se puede exigir actor humano, porque el contagio lo escribe la
+   plataforma; lo que sí se exige ahora, en el catálogo, es que **ningún componente automático nuestro reabra
+   una actuación** (`ACTORES_ADMITIDOS`: solo `humano` y `plataforma`). Lo encontró el propio agente que
+   construyó la pieza, revisando su trabajo en vez de defenderlo.
+2. **Cómo se mide el acierto del intérprete.** Con el material real son **5 de 5**, pero dos no salen los
+   primeros. Decisión: el acierto es *"lo esperado está entre lo propuesto"*, no *"es lo primero"*. Exigir lo
+   segundo sería diseñar para un sistema que decide solo. La posición se mide igual: si lo esperado empieza a
+   caer al tercer puesto, el léxico se está degradando y hay que verlo venir.
+3. **Un test mal escrito casi hace condenar código bueno.** La primera versión del test de integración medía
+   3 de 5 porque comparaba la cita (recortada a 400 caracteres) con el motivo entero. El código estaba bien.
+   Queda como aviso: una medición que contradice a quien construyó la pieza se revisa antes de creerla.
+
+**Deuda declarada, no escondida:**
+
+- **El contagio no sabe cerrarse.** Nada emite `SubsanacionCerrada` en las compañeras cuando el expediente se
+  desbloquea: hoy un expediente contagiado se queda contagiado. La máquina lo soporta por actuación; lo que
+  falta es quién lo dispara. Es cierre de ciclo (S4), pero hay que saberlo antes del primer cliente.
+- **El umbral del léxico es sordo a propósito**: un motivo legítimo pero vago escala en vez de proponer. Si
+  resulta demasiado conservador, lo que se mueve son los umbrales, no el código. La cobertura sube sola
+  cuando la spec lleve más texto en `descripcion` y `subsanacion.mensaje` (léxicos de la v1.2).
+- **Rondas de CN**: dos requerimientos idénticos en contenido e instante se colapsarían en uno por
+  idempotencia. Hoy no hay forma de distinguirlos (`TODO(API-03)`).
+- **El expediente sintético comparte motor** entre sus tres actuaciones (E y F son variaciones de A). Sirve
+  para el contagio; **no** sirve para la futura familia `R-XCK` (duplicidad de nº de serie), que necesitará
+  series propias.
 
 ## 7. Lo que queda para Billy (PROPUESTA)
 
@@ -188,3 +255,12 @@ literal desconocido se refleja y escala en vez de perderse.
    línea, pero hoy **no está documentado** (`API-03`).
 4. **A9 con LLM** sigue esperando tu decisión de proveedor. La interfaz está lista y el circuito no la necesita
    para funcionar: lo que aporta el LLM es cobertura de motivos que el léxico no reconoce.
+
+## 8. Verificación
+
+Criterio de `docs/06` S3.5: un `PDTE_RECTIFICACION_VER` simulado reabre subsanación con la regla correcta · un
+requerimiento de GA simulado bloquea el expediente completo · toda interpretación de A9 exige confirmación
+humana antes de reabrir (`R-REQ-02`).
+Añadido: `pytest -q` en verde sin romper los 1679 anteriores · `evaluar_casos.py` 7/7 con el caso A en
+305.829,6 kWh/año · `ruff` limpio · el circuito completo funciona **sin un solo LLM** (modo degradado) · un
+literal desconocido se refleja y escala en vez de perderse.

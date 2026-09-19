@@ -143,6 +143,11 @@ engine/
   estados.py            EXISTE N6  Cuatro niveles de estado, contagio, inalterabilidad post-firma (S3.1)
   estados_plataforma.yaml EXISTE — Tabla de mapeo: 8 estados de actuación confirmados y 11 de expediente
                                   provisionales (`oficial: false`, TODO(API-03))
+  seguimiento.py        EXISTE P9  Lo que devuelve la plataforma, reflejado en el log: reconciliacion por
+                                  codigo propio, literal desconocido que escala, contagio persistido (S3.5)
+  requerimientos.py     EXISTE A9/P7  Requerimiento, interfaz `Interprete` e `InterpreteLexico` determinista;
+                                  R-REQ-01 y R-REQ-02 en codigo. El interprete con LLM es S3.6, detras de la
+                                  misma interfaz (`ADR-010` §1)
   compositor.py         S4  N9  R-GRP / R-EXP, propuesta de grupos y expedientes
 ```
 
@@ -168,6 +173,11 @@ generator/
   calculo_caso.py       Llama a `engine.calculo` para obtener el AETOTAL de cada caso (nunca a mano)
   ground_truth.py       Compone el JSON de `_resultados_esperados/` desde el mismo modelo de datos
   generar.py            `python -m generator.generar` → expedientes/EXP001-*/ + _resultados_esperados/
+                        + (desde S3.5, sin --solo) expedientes/_requerimientos/
+  modelo_requerimiento.py  S3.5  Modelo de un requerimiento oficial y del expediente de tres actuaciones
+  requerimientos.py     S3.5  Los tres requerimientos (verificador, GA, CN), el expediente y su ground truth
+  documentos/requerimiento.py  S3.5  El PDF del requerimiento; los motivos van en tabla, no en prosa, porque
+                        la marca de agua desordena el texto plano al extraerlo (`docs/05` §4.4.1)
 ```
 
 - Un solo modelo de datos produce todos los documentos de un caso: así el ground truth y los documentos no pueden discrepar.
@@ -186,6 +196,9 @@ expedientes/
   EXP001-F_tres_motores/    + compresor centrífugo 160 kW, h_despues<h_antes → PREVALIDADO 777.128 (ver nota)
   EXP001-G_desordenado/     nombres genéricos, PDF combinado, escaneo girado, fotos, xlsx renombrado → PREVALIDADO + avisos  305.829
   _resultados_esperados/    ground truth por caso (JSON). NUNCA se pasa al Engine
+  _requerimientos/          S3.5: tres requerimientos sinteticos (verificador, GA, CN) en PDF y su ground
+                            truth en requerimientos.json, con el expediente de tres actuaciones (A, E y F)
+                            que hace visible el contagio. NUNCA se pasa al Engine
 ```
 
 Se regeneran con `python -m generator.generar`; se commitean para que los tests no dependan de reportlab/pillow. **Nota sobre E y F**: los totales proceden del Engine 0.1 original; los parámetros exactos de los motores 2 y 3 no están documentados fuera de aquel código, así que el generator reconstruido fija los suyos y el ground truth de E y F se recalcula y se registra en ADR (`docs/05` §2). El caso A sí es reproducible exactamente: 110 kW, 1.485 → 1.188 rpm, 6.000 h, p = 5,55/110.
