@@ -32,7 +32,8 @@ Las dos decisiones del interprete determinista (`ADR-010` §3):
    interpretacion con cero items (`Interpretacion.escala_a_humano`), y eso escala a revision humana
    (`escalar`), que es lo correcto, en vez de inventar una regla plausible.
 
-**Como reconoce el lexico sin conocer la ficha** (no hay ni un `if ficha ==` ni un codigo de ficha aqui):
+**Como reconoce el lexico sin conocer la ficha** (aqui no hay ni una rama por codigo de ficha ni un codigo
+de ficha escrito):
 el indice de candidatos se construye **de la spec cargada**. Cada regla, cada documento y cada variable de
 la spec aportan sus terminos (descripcion, mensaje de subsanacion, nombre del documento, definicion de la
 variable) y sus identificadores citables (`id` de la regla, su `equivalente_plataforma`, `id` del
