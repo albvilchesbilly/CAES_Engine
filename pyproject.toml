@@ -20,7 +20,18 @@ dependencies = [
 dev = ["pytest>=8.0", "ruff>=0.5"]
 
 [tool.setuptools]
-packages = ["engine", "engine.modelo", "engine.eventos", "salida", "salida.constructor", "generator", "generator.documentos"]
+packages = [
+    "engine",
+    "engine.modelo",
+    "engine.eventos",
+    "salida",
+    "salida.constructor",
+    "salida.handoff",
+    "salida.simulador",
+    "salida.transporte",
+    "generator",
+    "generator.documentos",
+]
 
 [tool.setuptools.package-data]
 "engine" = ["*.yaml"]
