@@ -261,6 +261,14 @@ pruebas mentiría.
 Criterio de `docs/06` S3.5: un `PDTE_RECTIFICACION_VER` simulado reabre subsanación con la regla correcta · un
 requerimiento de GA simulado bloquea el expediente completo · toda interpretación de A9 exige confirmación
 humana antes de reabrir (`R-REQ-02`).
-Añadido: `pytest -q` en verde sin romper los 1679 anteriores · `evaluar_casos.py` 7/7 con el caso A en
-305.829,6 kWh/año · `ruff` limpio · el circuito completo funciona **sin un solo LLM** (modo degradado) · un
-literal desconocido se refleja y escala en vez de perderse.
+Resultado (19/09/2026): **1.781 tests en verde** (`-m "not ocr"`, 23 deselected) · `evaluar_casos.py` 7/7 con
+el caso A en **305.829,6 kWh/año** · `ruff` limpio sobre 98 ficheros · el circuito completo funciona **sin un
+solo LLM** · un literal desconocido se refleja y escala en vez de perderse.
+
+**Fragilidad del banco detectada al cerrar, no corregida**: `tests/test_ingesta.py::
+test_el_hash_no_cambia_al_transformar_el_documento` falla bajo carga alta porque tesseract devuelve texto
+vacío por falta de CPU, y entonces la lectura con OCR y la lectura sin OCR coinciden. Con la máquina libre
+pasa en 4 segundos; bajo carga 7 tardó 481 y falló. **No es una regresión** —la huella SHA-256 es idéntica con
+y sin OCR, que es lo que el test protege— pero el test depende de que el OCR produzca algo y no está marcado
+`@pytest.mark.ocr`, así que corre en la suite sin OCR y falla de forma engañosa. Se deja anotado en vez de
+tocarlo al cierre de sesión: cambiar un test del banco sin revisión es peor que declarar la fragilidad.
