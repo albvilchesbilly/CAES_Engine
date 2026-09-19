@@ -74,6 +74,21 @@ class Repositorio(Protocol):
         """
         ...
 
+    def bytes_de_documento(self, actuacion_id: str, sha256: str) -> bytes | None:
+        """Los bytes de un documento de esa actuacion, **resueltos por su huella** (`ADR-012` §1).
+
+        El contrato de esta operacion, que es lo que impide leer un fichero cualquiera del servidor:
+
+        - **Entra una huella, nunca una ruta.** Quien sabe donde estan los bytes es el repositorio; el
+          llamante solo sabe huellas. Una ruta que viniera de fuera seria un camino a `/etc/passwd`.
+        - **Entra tambien la actuacion**, y el repositorio solo mira dentro de ella: aunque el llamante
+          acertara una huella ajena, no la encontraria aqui. Es la segunda barrera despues del tenant.
+        - **Devuelve los bytes tal cual se ingestaron**, sin recortar, rotar ni comprimir. Quien comprueba
+          que siguen casando con la huella es `api.lecturas.documentos`, al servir.
+        - `None` si no los tiene. No se devuelve un sustituto ni un fichero "parecido".
+        """
+        ...
+
 
 class RepositorioAusente:
     """El repositorio por defecto: no hay ninguno configurado y se dice, en vez de fingir que esta vacio."""
@@ -108,6 +123,9 @@ class RepositorioAusente:
         raise ErrorApi(f"{actuacion_id}: {self._MOTIVO}")
 
     def registrar_documento(self, actuacion_id: str, ruta: str) -> Mapping[str, object]:
+        raise ErrorApi(f"{actuacion_id}: {self._MOTIVO}")
+
+    def bytes_de_documento(self, actuacion_id: str, sha256: str) -> bytes | None:
         raise ErrorApi(f"{actuacion_id}: {self._MOTIVO}")
 
 

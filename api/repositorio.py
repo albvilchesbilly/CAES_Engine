@@ -7,6 +7,10 @@ actuaciones. No guarda en disco, no tiene reloj y no calcula nada: lo que le dan
 La huella de un documento (`registrar_documento`) la calcula `engine.ingesta.sha256_bytes` sobre los bytes
 del fichero. Ni se acepta del cliente ni se inventa: vinculamos por hash (regla de implementacion de
 `CLAUDE.md` §2), y un hash que trae quien sube el fichero no vincula nada.
+
+Lo mismo al reves (`ADR-012` §1): los bytes se piden **por huella** (`bytes_de_documento`), y quien sabe
+donde estan es este objeto. La ruta se apunta al registrar el fichero y no vuelve a salir; asi no hay
+ninguna via por la que una peticion pueda elegir que fichero del servidor se lee.
 """
 
 from __future__ import annotations
@@ -30,6 +34,11 @@ class Registro:
     log: LogEventos | None = None
     partes: tuple[str, ...] = ()
     requerimientos: dict[str, tuple[object, object]] = field(default_factory=dict)
+    #: Huella → donde estan los bytes. Lo rellena el repositorio al registrar un documento; **nunca** lo
+    #: rellena una peticion. Es lo que permite pedir un documento por huella y no por ruta.
+    rutas: dict[str, Path] = field(default_factory=dict)
+    #: Huella → los bytes, cuando se guardan en memoria en vez de en disco (desarrollo y pruebas).
+    contenidos: dict[str, bytes] = field(default_factory=dict)
 
 
 class RepositorioMemoria:
@@ -112,12 +121,50 @@ class RepositorioMemoria:
         return self._registro(actuacion_id).requerimientos.get(requerimiento_id)
 
     def registrar_documento(self, actuacion_id: str, ruta: str) -> Mapping[str, object]:
-        self._registro(actuacion_id)
+        registro = self._registro(actuacion_id)
         fichero = Path(ruta)
         if not fichero.is_file():
             raise ErrorApi(f"no encuentro el fichero {ruta!r} que se quiere registrar")
         datos = fichero.read_bytes()
-        return {"nombre": fichero.name, "sha256": sha256_bytes(datos), "bytes": len(datos)}
+        huella = sha256_bytes(datos)
+        # Se apunta donde quedo, indexado **por su huella**: es la unica forma de que luego se pueda pedir
+        # por huella. La ruta entra aqui, al registrar, y no vuelve a salir de este objeto.
+        registro.rutas[huella] = fichero
+        return {"nombre": fichero.name, "sha256": huella, "bytes": len(datos)}
+
+    def guardar_documento(self, actuacion_id: str, contenido: bytes) -> str:
+        """Guarda unos bytes en memoria y devuelve su huella, calculada aqui sobre el contenido."""
+        registro = self._registro(actuacion_id)
+        huella = sha256_bytes(contenido)
+        registro.contenidos[huella] = bytes(contenido)
+        return huella
+
+    def bytes_de_documento(self, actuacion_id: str, sha256: str) -> bytes | None:
+        """Los bytes de esa huella **dentro de esa actuacion**, o `None`. Nunca resuelve una ruta ajena.
+
+        Tres sitios donde mirar, todos del lado del servidor: lo guardado en memoria, lo registrado por
+        `registrar_documento` y, por ultimo, la carpeta que ingesto el nucleo (`Documento.ruta`). Lo que
+        no hay es una cuarta via en la que la ruta la ponga quien pregunta.
+        """
+        registro = self._registro(actuacion_id)
+        contenido = registro.contenidos.get(sha256)
+        if contenido is not None:
+            return contenido
+        ruta = registro.rutas.get(sha256) or self._ruta_ingestada(registro, sha256)
+        if ruta is None or not ruta.is_file():
+            return None
+        return ruta.read_bytes()
+
+    @staticmethod
+    def _ruta_ingestada(registro: Registro, sha256: str) -> Path | None:
+        """La ruta que la ingesta adjudico a esa huella en esta actuacion, si la actuacion esta cargada."""
+        for documento in getattr(registro.actuacion, "documentos", ()) or ():
+            if str(getattr(documento, "sha256", "")) != sha256:
+                continue
+            ruta = getattr(documento, "ruta", None)
+            if ruta is not None:
+                return Path(ruta)
+        return None
 
 
 __all__ = ["Registro", "RepositorioMemoria"]

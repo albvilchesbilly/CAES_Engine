@@ -21,6 +21,7 @@ from __future__ import annotations
 from api.comandos import ejecutar
 from api.contrato import Peticion, Respuesta
 from api.lecturas import leer
+from api.lecturas.documentos import Documento, ErrorIntegridad, documento_a_transporte, leer_documento
 from api.permisos import (
     Contexto,
     ErrorApi,
@@ -37,7 +38,9 @@ from api.servicios import Repositorio, Servicios
 
 __all__ = [
     "Contexto",
+    "Documento",
     "ErrorApi",
+    "ErrorIntegridad",
     "ErrorMatriz",
     "ErrorPermiso",
     "Peticion",
@@ -47,9 +50,11 @@ __all__ = [
     "Respuesta",
     "Servicios",
     "concede",
+    "documento_a_transporte",
     "ejecutar",
     "exigir",
     "leer",
+    "leer_documento",
     "matriz",
     "rol_para",
 ]

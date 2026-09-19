@@ -10,6 +10,10 @@ eventos: `Respuesta.eventos` sale vacia siempre.
 
 Aqui no hay ni un `CAP-nn` ni un `if perfil == ...`: el despachador busca el manejador por el nombre que
 declara la matriz, y los bloques por el suyo.
+
+`leer_documento` (contrato C17, `ADR-012` §2) es la excepcion que confirma la regla: pasa por la **misma**
+puerta (`preparar`), pero no es un manejador de la matriz ni un bloque de proyeccion, porque unos bytes no
+son un bloque serializable. Se reexporta desde aqui para que el front tenga una sola direccion.
 """
 
 from __future__ import annotations
@@ -18,6 +22,7 @@ from collections.abc import Mapping, Sequence
 
 from api.contrato import Peticion, Respuesta, manejador_de, preparar
 from api.lecturas import actuaciones, paneles
+from api.lecturas.documentos import Documento, ErrorIntegridad, leer_documento
 from api.permisos import ErrorApi, Matriz, ambito_de
 from api.proyeccion import Vista, proyectar_vista
 from api.servicios import Servicios
@@ -54,4 +59,11 @@ def capacidades_atendidas(matriz_actual: Matriz) -> Sequence[str]:
     )
 
 
-__all__ = ["MANEJADORES", "capacidades_atendidas", "leer"]
+__all__ = [
+    "MANEJADORES",
+    "Documento",
+    "ErrorIntegridad",
+    "capacidades_atendidas",
+    "leer",
+    "leer_documento",
+]

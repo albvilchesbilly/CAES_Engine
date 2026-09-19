@@ -40,6 +40,25 @@ export const ORIGEN_REAL = "DATOS REALES";
  */
 export const ORIGEN_SIN_DECLARAR = "ORIGEN DE DATOS SIN DECLARAR";
 
+/**
+ * Lo que se le ensena a una persona cuando el servidor deniega una capacidad (`ADR-012` §3, regla 2).
+ *
+ * Se ensena, no se traga. Un control que desaparece sin explicacion es un control que nadie arregla; el
+ * motivo que manda el servidor ("esta capacidad espera la decision A3") es informacion, y va detras de
+ * este texto tal y como llego.
+ */
+export const ERROR_PERMISO = "El servidor no ha concedido esta acción:";
+
+/** Cualquier otro fallo del servidor. Tampoco se calla: se dice lo que el servidor ha contestado. */
+export const ERROR_API = "El servidor no ha podido atender la petición:";
+
+/** El servidor ha contestado algo que no es una respuesta del contrato. No se interpreta a medias. */
+export const ERROR_RESPUESTA =
+  "La respuesta del servidor no cumple el contrato y no se va a interpretar.";
+
+/** No hubo respuesta: red caída, servidor apagado. Se distingue de una denegación a propósito. */
+export const ERROR_TRANSPORTE = "No se ha podido contactar con el servidor.";
+
 /** Catalogo completo, para la comprobacion de `tests/textos.test.ts`. */
 export const TEXTOS = {
   ROTULO_AHORRO_PREVALIDADO,
@@ -51,4 +70,8 @@ export const TEXTOS = {
   ORIGEN_SINTETICO,
   ORIGEN_REAL,
   ORIGEN_SIN_DECLARAR,
+  ERROR_PERMISO,
+  ERROR_API,
+  ERROR_RESPUESTA,
+  ERROR_TRANSPORTE,
 } as const;
