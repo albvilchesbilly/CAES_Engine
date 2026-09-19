@@ -58,6 +58,11 @@ Se tomaron para que los documentos fueran coherentes entre sí y ejecutables por
 
 ## 3. Decisiones abiertas de Billy (no las toma Claude)
 
+**Aviso de nomenclatura** (19/09/2026): los identificadores de esta tabla los pone cada ADR de origen, y ya
+hay colisión. `C1`–`C10` de §2 son decisiones **tomadas** en la consolidación documental; `C1`–`C7` de
+`ADR-050` son decisiones **abiertas** del front. Se citan aquí con su ADR entre paréntesis. El siguiente ADR
+que abra una serie debería usar una letra libre (`D`, `E`…) en vez de reutilizar.
+
 | Asunto | Opciones sobre la mesa | Bloquea | Dónde se detalla |
 |---|---|---|---|
 | Aprobar `spec/propuestas/cabecera_v1.yaml` y el diff `IND240_v1.1 → v1.2` | Sí tal cual / revisar `n` de INT-08 y las severidades de R-CAB antes / no | S3.2 | `docs/04` §10–§11, `spec/propuestas/` |
@@ -83,6 +88,13 @@ Se tomaron para que los documentos fueran coherentes entre sí y ejecutables por
 | Umbrales de las métricas del catálogo (`umbral: POR DEFINIR`) | — | Dashboards | `ADR-007` |
 | Interfaz o herramienta de los dashboards (DB5); si es BI externa, se alimenta de la API de lectura | — | DB5 | `ADR-007` |
 | **Revisión jurídica de la monitorización de trabajadores** (CAP-31 y CAP-36) antes del primer cliente | Obligatoria | Perfiles de tenant | `ADR-006` |
+| C1 (`ADR-050`) · Stack de presentación del front (**subsume B1 de `ADR-007`**) | Recomendación: un solo stack web (React + TypeScript) para las cuatro superficies | FR0 y todo el plan FR | `ADR-050` |
+| C2 (`ADR-050`) · Rol ejercido en el workspace: inferido por capacidad y contexto, o cambio explícito | Recomendación: inferido, visible siempre y resuelto en servidor | `actor.rol` de todo evento humano | `ADR-050` |
+| C3 (`ADR-050`) · Forma del portal externo | Depende de A1 y A2 | FR4 | `ADR-050` |
+| C4 (`ADR-050`) · Aprobar el agente de front en `.claude/agents/` | — | FR0 en adelante | `ADR-050` |
+| C5 (`ADR-050`) · `ADM-MOD` en solo lectura hasta tener clientes | Recomendación: sí | FR6 | `ADR-050` |
+| C6 (`ADR-050`) · Idiomas de la interfaz y nivel de accesibilidad exigido | — | Todo el plan FR | `ADR-050` |
+| C7 (`ADR-050`) · Aprobar las cuatro superficies y el orden FR0–FR6 | — | Todo el plan FR | `ADR-050` |
 
 ---
 

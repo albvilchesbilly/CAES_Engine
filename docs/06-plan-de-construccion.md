@@ -76,7 +76,7 @@ Decidido el 17/09/2026 y reordenado el 18/09/2026 tras la confrontación con la 
 | S4.1 | **Expediente Builder**: reglas `R-GRP-*` y `R-EXP-*` desde `spec/composicion_v1.yaml`; propuesta de lotes válidos; avisos de huérfanas y contagio | Sobre 20 actuaciones sintéticas con distintos CCAA/año/verificador propone los lotes correctos y ningún lote mezcla `SUBSANABLE` con `PREVALIDADO`; metamórficas de composición pasan | Decisión de Billy (Expediente Builder en S4) y aprobación de `composicion_v1.yaml` | BLOQUEADO (decisión) |
 | S4.2 | A5 (subsanaciones) y A7 (informes por destinatario) sobre el campo `subsanacion` de cada regla | Petición al cliente generada para el caso B sin inventar documentos que la spec no pide; informe para cliente, instalador y tenant | S3.6 | PENDIENTE |
 | S4.3 | Segunda ficha con **cero cambios en `engine/`** | Checklist de `docs/04` §15 completo; si `engine/` cambia, se registra como defecto del marco en ADR | Decisión de Billy: vecina (IND170/IND280) o estresante (frío) — `docs/09` §6 | BLOQUEADO (decisión) |
-| S4.4 | Consola de revisión centrada en lo previo a la firma (S4) | Cola de escalados, conflictos, correcciones y tareas pendientes consumidas del simulador | S3.5 | PENDIENTE |
+| S4.4 | Consola de revisión centrada en lo previo a la firma → **la absorbe `FR1`** (`ADR-050`): es la cola y la vista de revisión del perfil `T-REV`. Su "hecho cuando" se mantiene literal como criterio de `FR1` | Cola de escalados, conflictos, correcciones y tareas pendientes consumidas del simulador | S3.5 | MOVIDO a `FR1` (§3 ter) |
 | S4.5 | Fábrica de casos: mismas variables, plantillas y calidades de escaneo distintas; conjunto reservado | El extractor por reglas y el LLM se evalúan sobre casos nunca usados para ajustar | F0.5 | PENDIENTE |
 
 ---
@@ -108,6 +108,42 @@ documentación viva: `docs/03` §5.2 (entidades), §6.1 y §6.2 (`actor.rol` y e
 (`metricas/`); `docs/00` §4 (glosario de perfiles).
 
 ---
+
+## 3 ter. Front por perfil (`ADR-050`, 19/09/2026) — `PROPUESTA`
+
+Billy añadió una cuarta decisión externa: **cómo es la interfaz de cada perfil**. Hasta ahora había 8 perfiles
+(`ADR-005`), 51 capacidades y 4 vistas de dashboard (`ADR-006`, `ADR-007`), pero ninguna pantalla. `ADR-050`
+lo cierra con **cuatro superficies que se adaptan a las capacidades del usuario**, no ocho aplicaciones.
+**El plan detallado vive en `ADR-050`; aquí solo el resumen y las dependencias, para que no haya dos planes.**
+
+El ADR está en estado `PROPUESTA`: siete decisiones (C1 a C7) siguen siendo de Billy, entre ellas el stack y
+si se aprueban las superficies y el orden. Las líneas de abajo nacen `BLOQUEADO` o `PENDIENTE` en consecuencia.
+
+| # | Entregable | Depende de | Estado |
+|---|---|---|---|
+| FR0 | Contrato de comandos y lecturas por capacidad en `api/`; sistema de diseño mínimo en `front/compartido/` | S3.1 (HECHO) · A8 de `ADR-005` · stack (C1) | BLOQUEADO (decisión) |
+| FR1 | Workspace `T-REV`: cola y vista de revisión. **Absorbe `S4.4`** | FR0, S3.5 (HECHO) | BLOQUEADO (depende de FR0) |
+| FR2 | Workspace `T-OPE`: bandeja, alta, subida y "qué te falta" | FR0 | BLOQUEADO (depende de FR0) |
+| FR3 | Workspace `T-RES`: pendiente de mí, registro de firma, equipo, `O-FUN` | FR0, DB1 | BLOQUEADO (depende de FR0) |
+| FR4 | Portal externo (`EXT-INS`, `EXT-CLI`) | FR0 · A1 y A2 de `ADR-005` | BLOQUEADO (decisión) |
+| FR5 | Consola `ADM-OPS` | FR0 · primer tenant real | BLOQUEADO (externo) |
+| FR6 | Consola `ADM-MOD`, **en solo lectura** | FR0, DB0 | BLOQUEADO (depende de FR0) |
+
+Tres reglas del ADR que condicionan todo lo demás y que no se reabren en una pantalla:
+
+1. **El contrato antes que las pantallas** (FR0 primero). Si se empieza por la interfaz, la lógica de negocio
+   acaba dentro de ella y los endpoints se inventan. Es la misma razón por la que `mapping/` es declarativo.
+2. **`R-UI-11`: el front no contiene lógica de negocio.** No calcula, no evalúa reglas y no decide
+   transiciones. Es la regla de oro 1 ("la IA lee, el motor calcula") llevada a la interfaz.
+3. **`R-UI-01`: ocultar un control no es autorización.** Cada comando valida capacidad y tenant **en el
+   servidor**. Un front que esconde un botón no protege nada.
+
+Las doce reglas de interfaz `R-UI-01` a `R-UI-12` están en `ADR-050`; tres de ellas son traducción directa de
+las reglas no negociables: ningún control fija un veredicto (`R-UI-02`), ningún control se llama "Firmar"
+(`R-UI-03`) y tras `EN_PLATAFORMA` todo es solo lectura salvo requerimiento oficial (`R-UI-05`).
+
+**Dependencia cruzada con los dashboards**: B1 de `ADR-007` (presentación) queda **subsumida en C1** de
+`ADR-050` (stack), y B2 (cuándo se construye DB5) queda ligada al orden FR. Decidir el stack cierra las dos.
 
 ## 4. Roadmap (decisiones de Billy)
 
@@ -158,6 +194,7 @@ Se rellena con hechos. Una línea por sesión de Claude Code: fecha, pasos tocad
 | 19/09/2026 | `/sprint`: S3.3 (manifiesto interno e integridad total) | 64 tests: el manifiesto del caso A se verifica, alterar un byte de cualquier adjunto lo detecta y lo nombra, y ausentes y sobrantes se distinguen. Nace `salida/` con el constructor; un adjunto ya alterado impide generar el manifiesto en vez de sellar una foto falsa | `ADR-008` §5: `hash_cabecera` se calcula hoy sobre la cabecera vacía y cambiará al aprobar `cabecera_v1.yaml`. Tres preguntas nuevas para el gestor de la plataforma sobre `API-02`, en `docs/HUECOS.md` §2 bis |
 | 19/09/2026 | `/sprint`: S3.4 (puerto de salida, mapeo declarativo, handoff, simulador y transporte) | **1679 tests en verde**, 7/7 casos y caso A = 305.829,6 kWh/año. El caso A recorre motor → handoff → simulador y el log proyecta hasta `EN_PLATAFORMA` sin traducción; un byte alterado se rechaza nombrando el fichero y la firma solo avanza con actor humano y perfil `Firma`. Construido en dos mitades paralelas sobre contratos cerrados (`ADR-009`); la revisión adversarial encontró cuatro defectos que ningún test de los constructores cubría —entre ellos una tolerancia de idempotencia que habría **borrado eventos del log del tenant**— y dos tests que no probaban lo que decían. Marcas de `salida/` y `mapping/` a `EXISTE`/`PARCIAL` | `ADR-009` §6: dónde vive el transporte (`API-09`), formato del handoff (es YAML, no código), perfil con el que operaríamos, y si el handoff debe negarse a construir lo que no está `PREVALIDADO`. Nueve preguntas nuevas para el gestor de la plataforma en `docs/HUECOS.md` §2 bis; las dos con filo comercial: si el detalle es por motor o agregado, y en qué formato viajan los decimales del ahorro (`API-08`) |
 | 19/09/2026 | `/sprint`: S3.5 (seguimiento P9, requerimientos, contagio y banco de requerimientos sintéticos) | Circuito post-envío completo **sin un solo LLM**: A9 se construye como interfaz `Interprete` con implementación determinista (`ADR-010` §1), porque el Agent Runtime está bloqueado esperando decisión de proveedor. Un requerimiento de GA deja las tres actuaciones del expediente en `PENDIENTE_SUBSANACION` con **una sola señalada**; el intérprete acierta 5 de 5 mapeos del banco y escala el motivo de prosa administrativa en vez de inventarse una regla. Cerrado un agujero real en `R-REQ-02`: la puerta humana vivía en la función y se rodeaba escribiendo el evento a mano; ahora el catálogo impide que ningún componente automático nuestro reabra una actuación | `ADR-010` §7: dónde vive la familia `R-REQ` como spec (propuesta: fichero propio, sin activar) · severidad de `R-REQ-01` · límite de rondas de CN (`API-03`) · A9 con LLM sigue esperando el proveedor. **Deuda declarada**: el contagio no sabe cerrarse, así que hoy un expediente contagiado se queda contagiado (cierre de ciclo, S4) |
+| 19/09/2026 | Integración de `ADR-050` (front por perfil) en la documentación viva, tras fusionar todas las ramas en `main` | Cuatro superficies adaptadas por capacidades, no ocho aplicaciones. Plan `FR0`–`FR6` en §3 ter con sus dependencias y bloqueos; **`S4.4` queda absorbida por `FR1`** para que no haya dos consolas en el plan. `docs/01` gana `api/`, `front/` y `docs/front/` con la regla de dependencias ampliada (`front/` solo habla con `api/`; nada importa de `api/` ni de `front/`). `B1` de `ADR-007` queda subsumida en `C1` y `B2` ligada al orden FR: decidir dos veces la misma cosa es como aparecen dos planes | `ADR-050` sigue en `PROPUESTA`: C1 a C7 son de Billy, y sin C1 (stack) y C7 (superficies y orden) no se construye nada de `api/` ni de `front/`. Detectada y anotada una colisión de nomenclatura: `C1`–`C10` de `ADR-001` §2 son decisiones tomadas y `C1`–`C7` de `ADR-050` son abiertas |
 
 ---
 

@@ -28,6 +28,9 @@ cae-engine/
 │   ├── 00 … 09-*.md
 │   ├── HUECOS.md                         TODO(API-xx): lo que la plataforma no ha documentado
 │   ├── decisiones/                       ADRs (una decisión = un fichero)
+│   ├── front/                       NUEVO  Spec y mockup por pantalla (ADR-050). Si discrepan, manda la spec
+│   │   ├── pantallas/                    <perfil>-<pantalla>.md: contrato y criterios de aceptación
+│   │   └── mockups/                      <perfil>-<pantalla>.html: referencia visual, nunca código base
 │   └── historico/                        Documentos superados; solo lectura
 │
 ├── spec/                            DOC  Fichas como CONFIGURACIÓN. YAML versionado. No es código
@@ -49,6 +52,8 @@ cae-engine/
 │   ├── EXP001-A_completo/ … EXP001-G_desordenado/
 │   └── _resultados_esperados/            GROUND TRUTH. Nunca se entrega al Engine. Solo cambia con ADR
 ├── metricas/                        NUEVO   Catálogo de métricas en YAML, proyecciones y render (ADR-007)
+├── api/                             NUEVO   Comandos y lecturas por capacidad; valida permisos en servidor (ADR-050)
+├── front/                           NUEVO   Cuatro superficies por capacidades; solo habla con api/ (ADR-050)
 ├── informes/                        EXISTE  Salida generada (markdown + JSON). No se commitea
 ├── tests/                           EXISTE  Pruebas: cálculo, spec, paquete, Engine end-to-end, metamórficas
 └── evaluar_casos.py                 EXISTE  Matriz esperado/obtenido sobre los casos de expedientes/
@@ -57,12 +62,15 @@ cae-engine/
 **Regla de dependencias (no negociable):** las importaciones apuntan hacia dentro.
 
 ```
-tests/ → evaluar_casos.py → salida/ → agentes/ → engine/ → spec/ + data/
-                              │           │
-                              └───────────┴──► nunca al revés: engine/ no importa de agentes/ ni de salida/
+front/ → api/ → engine/ ← agentes/ ← salida/ ← evaluar_casos.py ← tests/
+                   ▲                                    engine/ → spec/ + data/
+                   └── metricas/ y api/ leen de engine/; nada importa de api/, front/ ni metricas/
+                       nunca al revés: engine/ no importa de agentes/, salida/, api/ ni front/
 ```
 
-Con `agentes/` y `salida/` vacíos o apagados, `engine/` sigue produciendo veredicto (modo degradado = Engine 0.1). Un test lo comprueba desde la Fase 0.
+Con `agentes/`, `salida/`, `api/` y `front/` vacíos o apagados, `engine/` sigue produciendo veredicto (modo degradado = Engine 0.1). Un test lo comprueba desde la Fase 0.
+
+`api/` y `front/` son `NUEVO` (`ADR-050`, en `PROPUESTA`): la interfaz se construye contra un contrato, nunca al revés. **`front/` solo habla con `api/`**, y el front no calcula, no evalúa reglas y no decide transiciones (`R-UI-11`): es la regla de oro 1 llevada a la interfaz.
 
 ---
 
@@ -294,6 +302,38 @@ metricas/
 Una métrica se define **una sola vez en configuración**, con el mismo criterio que las fichas: el catálogo es
 YAML validado, no código. Una métrica sin fuente se muestra `SIN DATO` con su "desde", nunca como cero.
 Dependencias: `metricas/` lee de `engine/` y de `telemetria/`; **nada importa de `metricas/`**.
+
+### 3.9 ter `api/` — comandos y lecturas por capacidad (`NUEVO`, `ADR-050`)
+
+```
+api/
+  comandos/       Un comando por capacidad que produce un evento (CAP-nn de ADR-005)
+  lecturas/       Un lector por capacidad de consulta; nunca devuelve campos fuera del ámbito del perfil
+  permisos.py     Valida capacidad y tenant EN EL SERVIDOR (R-UI-01) e infiere `actor.rol` (R-UI de ADR-050)
+```
+
+El contrato se construye **antes** que las pantallas (`FR0`). Dos reglas que no se reabren en el código:
+**ocultar un control no es autorización** —cada comando valida capacidad y tenant aquí, no en el front
+(`R-UI-01`)— y **el portal externo no recibe campos que su perfil no puede ver**, no basta con no pintarlos
+(`R-UI-12`). `api/` lee de `engine/` y de `metricas/`; **nada importa de `api/`**.
+
+### 3.9 quater `front/` — cuatro superficies por capacidades (`NUEVO`, `ADR-050`)
+
+```
+front/
+  compartido/     Sistema de diseño, visor de evidencias con cita, rótulos obligatorios (R-UI-06 a R-UI-08)
+  workspace/      T-RES, T-OPE, T-REV — escritorio, cuenta del tenant
+  externo/        EXT-INS, EXT-CLI — móvil primero, sin navegación
+  consola/        ADM-MOD, ADM-OPS — cuenta interna, segundo factor, cambio de rol explícito
+```
+
+Cuatro superficies, **no ocho aplicaciones**: un perfil es un paquete de capacidades, no una app (`ADR-005`),
+así que cambiar un perfil no obliga a tocar pantallas. `SYS-API` no tiene front. Cada pantalla se entrega con
+su spec en `docs/front/pantallas/` y su mockup en `docs/front/mockups/`; **si discrepan, manda la spec**.
+
+Tres reglas de interfaz son traducción directa de las reglas no negociables: ningún control fija un veredicto
+(`R-UI-02`), ningún control se llama "Firmar" —la firma solo se registra— (`R-UI-03`) y tras `EN_PLATAFORMA`
+todo es solo lectura salvo requerimiento oficial (`R-UI-05`). Las doce están en `ADR-050`.
 
 ### 3.10 `informes/` (`EXISTE`, no se commitea)
 

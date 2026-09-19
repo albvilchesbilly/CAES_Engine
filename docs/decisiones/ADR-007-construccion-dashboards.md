@@ -203,8 +203,8 @@ Vistas: G = `O-GLO` · F = `O-FUN` · E = `O-EQU` · T = `T-TEC`. "Desde" = entr
   - Métrica norte principal sin medir ante el primer cliente.
   - Paneles con muchos `SIN DATO` durante semanas en demostraciones.
 - **Pendiente (Billy)**:
-  - B1 · Presentación: informes estáticos, consola propia (S4) o herramienta BI externa alimentada por la API de lectura.
-  - B2 · Cuándo se construye DB5: Sprint 4 con la consola de revisión o con el primer cliente.
+  - B1 · Presentación: informes estáticos, consola propia (S4) o herramienta BI externa alimentada por la API de lectura. **Subsumida en C1 de `ADR-050`** (19/09/2026): el stack del front decide también esto, y decidir dos veces la misma cosa es cómo aparecen dos planes.
+  - B2 · Cuándo se construye DB5: Sprint 4 con la consola de revisión o con el primer cliente. **Ligada al orden FR de `ADR-050`**: las vistas viven dentro de las superficies (`O-FUN` en FR3, `O-GLO` y `T-TEC` en FR5 y FR6), así que DB5 se construye con ellas y no aparte.
   - B3 · Vista de equipo por persona o por equipo (mismo punto que ADR-006 A5).
   - B4 · Línea base de horas manuales para M-OP-01: medida con el primer delegado partner o declarada por el tenant y rotulada como declarada.
   - B5 · Medición de minutos de revisión: tiempo de sesión en consola o duración declarada al aprobar.
