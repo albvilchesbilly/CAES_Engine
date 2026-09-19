@@ -1,6 +1,6 @@
 # ADR-002 — Reconstrucción del Engine 0.1 (Fase 0)
 
-**Estado**: EN CURSO
+**Estado**: ACEPTADA (§2–§5, decisiones técnicas) · PROPUESTA (§6, decisiones de Billy)
 **Fecha**: 2026-09-18
 **Decide**: Claude (técnica, §3–§5) · Billy (§6: ground truth de E y F, INT-xx propuestos)
 **Ámbito**: `engine/`, `generator/`, `expedientes/`, `tests/`, `data/`, `evaluar_casos.py`, `pyproject.toml`, `README.md`, marcas de `docs/03`/`docs/04`
@@ -275,14 +275,19 @@ Se rellena paso a paso. Formato: paso · decisión · por qué · alternativa de
 | F0.7 | `registro.datos_canonicos` se emite como evidencia con el texto canónico completo (≈138 KB en A), no solo su hash | `R-EVD-03` compara `hash_declarado` con `sha256(datos_canonicos)`: sin el texto la regla no podría recalcularlo | Emitir solo el hash |
 | plan | Caso G sin OCR debe dar el mismo resultado que A: el escaneo girado es `ficha_tecnica_variador` (EVD-04, no obligatorio) y las fotos sueltas se clasifican por EXIF | `docs/05` §8.2 exige 7/7 en un clon sin tesseract | Escanear un documento obligatorio (rompería 7/7 sin OCR) |
 
-## 3 bis. Estado al cierre de la sesión del 18/09/2026
+## 3 bis. Cómo se ejecutó la reconstrucción
 
-Hecho y verificado: F0.0–F0.4 (commits 8ebb723, 4f26284/4d715d5, 79956a0/62df530, 0c97217, 7700ba2); 321 tests en verde;
-`ruff` limpio; sin `eval`/`compile` ni importaciones prohibidas en `engine/`; caso A = 305.829,6 en memoria. QA de la oleada 1
-ejecutada y sus hallazgos cerrados. **Pendiente**: QA de F0.3/F0.4, F0.5 y F0.8 (oleada 3, lanzada y abortada por límite de
-sesión de la API), F0.6–F0.7, F0.9–F0.12. Al reanudar: relanzar la oleada 3 tal como la define §1 (los tres briefs no dependen
-de nada nuevo). Pendiente técnico para F0.9: soporte nativo de comparación encadenada en `expresiones.py` y retirada de la
-reescritura de `calculo.py`.
+Dos sesiones, 18 y 19 de septiembre de 2026, en oleadas de subagentes con revisión adversarial de
+`qa-evaluacion` después de cada una. Commits, en orden: `8ebb723` (F0.0) · `4f26284`+`4d715d5` (F0.1, el segundo
+tras QA) · `79956a0`+`62df530` (F0.2) · `0c97217`+`78c9e58` (F0.3) · `7700ba2`+`5f70caf` (F0.4) · `cff6411`
+(F0.5) · `f0e0c7c` (F0.8) · `225c1e1` (F0.6 y F0.7) · `bf01a52` (F0.9) · `84c90a4` (F0.10) · `6273434` (F0.11) ·
+`c673c92` (ADR-003, revisión normativa).
+
+Las revisiones de QA no fueron un trámite: devolvieron **NO APTO** en F0.2 (el esquema del cuadro 6 estaba
+cableado en `engine/tablas.py`, contra la regla de oro 4) y en F0.3 y F0.4 (una errata en una precondición pasaba
+en silencio, la reescritura de la comparación encadenada tenía semántica errónea, y el registro activaba specs que
+el cálculo rechazaba). Los tres se corrigieron antes de seguir, y sus tests se conservan como regresión en
+`tests/test_qa_hallazgos_f03.py` y `f04.py`.
 
 ## 4. Parámetros de los casos E y F y ground truth recalculado
 
@@ -318,7 +323,30 @@ parámetros de `docs/05` §2.3 y su 305.829,6 sigue siendo el criterio de acepta
 
 ## 5. Desviaciones respecto a `docs/05` y número de tests
 
-Se rellena en F0.12.
+Fase 0 cerrada el 19/09/2026. `python -m pytest -q`: **999 tests en verde** (976 y 23 saltados en un clon sin
+`tesseract`). `python evaluar_casos.py`: **7/7** con el caso A en `305829.6` y código de salida 0. `ruff` limpio.
+El número de tests no es criterio de aceptación (`CLAUDE.md` §7): lo es la cobertura de `docs/05` §8, que está
+completa.
+
+| # | Qué dice `docs/05` | Qué hace la reconstrucción | Por qué |
+|---|---|---|---|
+| D1 | E = 461.433 y F = 777.128 kWh/año (Engine 0.1) | E = **470.791,7875**, F = **832.770,2819125** (§4) | Los parámetros de M2 y M3 no estaban documentados fuera de aquel código; `docs/05` §2.3 ya ordenaba recalcularlos |
+| D2 | §1: columna "Extracción" de B = 4/4 | B = **5/6** (y C = 5/6) | Sin registro, N2 y P_prom siguen llegando como `declarado`: la única entrada ausente es `h_despues`. En C, `PM` está en conflicto y no tiene valor consumido. La deducción de `docs/05` no coincide con el diseño reconstruido |
+| D3 | §1: "Datos con evidencia" 43/34/43/43/72/101/47 | **31/24/31/32/50/69/31** | `docs/05` §1 define la columna de dos formas distintas. Queda fijada aquí: **datos consolidados (actuación + unidad) con al menos una evidencia con cita literal**. Es métrica orientativa, no criterio de aceptación |
+| D4 | §1: G tiene 15 ficheros | G tiene **13** | La columna cuenta ficheros entregados, no las partes en que el motor separa el PDF combinado |
+| D5 | §2.1: `reglas_no_evaluables_esperadas` de C | El motor añade `R-CAL-02` (necesita `PM`, que el conflicto dejó sin valor) | La lista del ground truth no es exhaustiva; se compara como subconjunto |
+| D6 | §4.1: 11 documentos por caso | A, C y D 11 · B 10 · E 16 · F 21 · G 13 | E y F añaden los documentos por motor; el reparto exacto lo fija el generator, como preveía `docs/05` §4.1 |
+| D7 | `interpretaciones_aplicadas` = "las que han influido" (`docs/04` §13) | Incluye las **citadas** por reglas evaluadas (INT-02 aparece con fila exacta) | Distinguir citada de aplicada exige un campo nuevo en la spec (§6.5). `evaluar_casos.py` compara como subconjunto |
+
+Variables de extracción (lo que `docs/05` §1 pedía dejar escrito aquí): son las `entradas_requeridas` del plan de
+cálculo, leídas de la spec y no escritas en código: **PM, N1, N2, h_antes, h_despues, P_prom**. La columna
+"Extracción" es *entradas con evidencia y valor consumido / (entradas × unidades)*.
+
+Criterios de la matriz de `evaluar_casos.py`: igualdad en veredicto, `AETOTAL` exacto (`Decimal`), truncado,
+`provisional` y reglas falladas; **subconjunto** en `NO_EVALUABLE` e interpretaciones, con nota en la salida.
+Tope de tiempo del end-to-end: 120 s para los siete casos sin OCR (hoy ~4 s; con OCR ~22 s), pensado para
+detectar regresiones de orden de magnitud. El modo degradado se comprueba **en subproceso** con `PYTHONPATH`,
+nunca recargando `engine.*` dentro de la sesión de pytest, y la regla de dependencias con `ast`, no por texto.
 
 ## 6. Decisiones que quedan para Billy (PROPUESTA)
 

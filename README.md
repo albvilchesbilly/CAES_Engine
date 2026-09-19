@@ -2,16 +2,75 @@
 
 Motor de prevalidación de actuaciones CAE (certificados de ahorro energético, España): convierte documentación desordenada de una actuación de eficiencia energética en una actuación trazable, calculada de forma determinista y prevalidada.
 
-**Estado (18/09/2026): Fase 0 en curso** (reconstrucción del Engine 0.1, `docs/06-plan-de-construccion.md`, plan en `docs/decisiones/ADR-002`). Este README se completa al cerrar la fase.
+**Estado (19/09/2026): Fase 0 cerrada.** El Engine procesa las siete carpetas de prueba de principio a fin y
+reproduce el ground truth: 7/7 veredictos y el caso A en **305.829,6 kWh/año** exactos. 999 tests en verde
+(976 y 23 saltados si no hay OCR). Lo que viene es el Sprint 3 (`docs/06` §2). Lo que la Fase 0 **no** hace, por
+diseño: modelo canónico completo, log de eventos, máquina de estados, cabecera común, salida a plataforma y
+agentes con LLM.
 
-## Instalación mínima
+## Instalación
+
+Python ≥ 3.11. El OCR es opcional: sin él la suite salta 23 tests y el banco de pruebas sigue dando 7/7.
+
+**Linux / macOS**
 
 ```bash
-python -m venv .venv && . .venv/bin/activate        # Windows: .venv\Scripts\Activate.ps1
+python3 -m venv .venv && . .venv/bin/activate
 pip install -e ".[dev]"
+sudo apt-get install -y tesseract-ocr tesseract-ocr-spa   # opcional (OCR)
+```
+
+**Windows (PowerShell)**
+
+```powershell
+py -3.11 -m venv .venv; .venv\Scripts\Activate.ps1
+pip install -e ".[dev]"
+# OCR opcional: instalar Tesseract (UB Mannheim) con el paquete de idioma `spa`
+# y añadir su carpeta al PATH; sin él, los tests marcados `ocr` se saltan solos.
+```
+
+## Cómo se usa
+
+```bash
+# Prevalidar una actuación: informe markdown + JSON en informes/
+python -m engine.cli expedientes/EXP001-A_completo --md informe.md --json informe.json
+python -m engine.cli <carpeta> --sin-ocr --fecha 2026-09-18      # sin OCR, fecha de evaluación fija
+
+# Banco de pruebas: matriz esperado/obtenido de los 7 casos
+python evaluar_casos.py                 # 7/7 y caso A = 305.829,6; código de salida 0
+python evaluar_casos.py --sin-ocr --caso A
+
+# Regenerar los casos sintéticos (determinista: mismos bytes)
+python -m generator.generar
+
+# Puerta de calidad completa
 python -m pytest -q
 ruff check . && ruff format --check .
 ```
+
+Códigos de salida de la CLI: `0` si el veredicto es `PREVALIDADO` o `SUBSANABLE`, `1` si es `BLOQUEADO` o
+`NO_ELEGIBLE`, `2` si no se pudo evaluar.
+
+## Qué hay dentro
+
+| Pieza | Qué hace |
+|---|---|
+| `spec/IND240_v1.1.yaml` | La ficha como configuración: ámbito, variables, fórmula, 26 reglas, INT-01..07 |
+| `engine/expresiones.py` | Parser de lista blanca que ejecuta la `logica` y la `formula` del YAML. Nunca `eval` |
+| `engine/spec_registry.py` | Carga y valida la spec; garantía `NO_EVALUABLE` → `SUBSANABLE`; `hash_reglas` |
+| `engine/ingesta.py` y `clasificacion.py` | SHA-256 de todo fichero, OCR, separación de PDF combinados, tipo con confianza |
+| `engine/extraccion.py` y `registro_xlsx.py` | Evidencias con documento, página, cita literal, método y confianza |
+| `engine/evidencias.py` | Tres capas por dato; ante conflicto entre fuentes fiables, no elige: se detiene |
+| `engine/reglas.py` y `calculo.py` | Veredicto por fases y cálculo determinista con `Decimal` y traza |
+| `engine/informe.py` y `cli.py` | Informe de prevalidación con evidencias, carencias e interpretaciones |
+
+## Lo que todavía no está cerrado
+
+El valor de pérdidas de 110 kW del cuadro 6 (5,55 kW) sostiene el criterio de aceptación y **no ha podido
+contrastarse contra el DOUE** en este entorno; 38 de las 39 filas de `data/reg_2019_1781_cuadro6.csv` están
+marcadas `verificado: pendiente`. La revisión normativa dejó 22 hallazgos y cinco interpretaciones nuevas
+propuestas en `docs/decisiones/ADR-003-hallazgos-normativos-fase-0.md`, ninguna aplicada. Ningún resultado del
+Engine implica CAE garantizado.
 
 ## Por dónde empezar
 
