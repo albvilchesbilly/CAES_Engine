@@ -1,4 +1,4 @@
-# ADR-005 — Catálogo de perfiles y matriz de permisos por capacidades
+# ADR-006 — Catálogo de perfiles y matriz de permisos por capacidades
 
 **Estado**: PROPUESTA
 **Fecha**: 2026-09-19
