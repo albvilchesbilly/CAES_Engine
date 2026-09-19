@@ -62,8 +62,8 @@ Operativo y técnico, en solo lectura para ambos perfiles. Catálogo de métrica
 
 - **Modelo canónico** (`docs/03`, `engine/modelo/`): entidades `Usuario` y `Rol`; `actor.rol` en todo evento de actor humano. Encaje en S3.1.
 - **Log de eventos**: eventos de administración (`SpecActivada`, `AgenteActivado`/`Desactivado`, `TenantAlta`/`Baja`, accesos de soporte). Catálogo completo en ADR-005.
-- **Dashboards**: se construyen según ADR-006.
-- **Catálogo de perfiles**: el de este ADR se amplía con los perfiles de tenant y externos en ADR-005, que es la referencia vigente para la matriz de permisos.
+- **Dashboards**: se construyen según ADR-007.
+- **Catálogo de perfiles**: el de este ADR se amplía con los perfiles de tenant y externos en ADR-006, que es la referencia vigente para la matriz de permisos.
 - **Riesgo aceptado**: con un solo aprobador no hay segunda firma. Control compensatorio técnico (tests, replay, ADR). Si entra una segunda persona, las activaciones de spec pasan a doble aprobación.
 - **Pendiente**: cuándo se construye la interfaz de administración (ADR-006); condiciones del acceso de soporte (ADR-005).
 
