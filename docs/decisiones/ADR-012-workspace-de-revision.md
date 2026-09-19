@@ -110,6 +110,32 @@ motivo y antigüedad. Cada fila dice por qué está ahí y cuánto lleva esperan
 - Puerta de siempre: `pytest -q` sin romper los 2.388 · `npm test` en `front/` · `evaluar_casos.py` 7/7 con
   el caso A en 305.829,6 · `ruff` limpio.
 
+## 5 bis. El hallazgo que cambia el alcance de FR1 (19/09/2026)
+
+Escribir la spec de la vista de revisión destapó que **el lazo no se cierra**. `R-UI-02` se justifica con una
+frase —«no hay control de veredicto porque se corrige el dato y el motor recalcula»— y **hoy la segunda mitad
+no ocurre**: `CAP-05` escribe `DatoCorregidoPorHumano` en el log y nada recalcula. `engine.motor` no lee el
+log ni acepta correcciones; comprobado, no hay una sola referencia al log en `motor.py`.
+
+Consecuencia honesta: **la pantalla no puede cumplir su promesa en el caso que más importa**, que es el
+conflicto. El revisor corrige y no ve el efecto; la spec obliga a rotular "pendiente de recálculo" en vez de
+presentar un veredicto como actualizado, que es lo correcto y a la vez reconoce que falta algo.
+
+Cerrarlo es trabajo de `engine/`, no del front: el motor tiene que tratar la corrección humana como **una
+fuente más con sus tres capas** (documento → interpretación → cálculo), y el repositorio saber reprocesar bajo
+demanda. Eso toca `docs/03` y el modelo de evidencias, así que es un ADR propio, no un parche.
+
+**Es la dependencia real de FR1**, por encima de cualquier detalle de interfaz. Con ella abierta, las pantallas
+se pueden construir y probar, pero el circuito de revisión queda a medias.
+
+Otros dos huecos que bloquean la segunda oleada:
+
+- **No hay lectura de lista.** `CAP-03`, `CAP-04` y `CAP-14` exigen `actuacion_id`, así que la cola no tiene de
+  dónde salir. Dónde cuelga —modo lista de `CAP-03` o capacidad nueva— toca la matriz de permisos y es
+  decisión de Billy.
+- **La matriz no declara pantalla para la vista de revisión**, solo `cola_revision`. Y la pantalla es lo que
+  desempata el rol en `CAP-02` y `CAP-09`, así que hoy la vista tendría que mentir sobre desde dónde actúa.
+
 ## 6. Lo que queda para Billy (PROPUESTA)
 
 1. **Servir el documento bajo `CAP-03`** (§1): es una lectura de lo que `CAP-03` ya nombra, pero conviene que

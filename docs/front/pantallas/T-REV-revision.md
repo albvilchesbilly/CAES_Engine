@@ -326,6 +326,32 @@ dice por qué.
 
 ---
 
+## 11 bis. El descargo del servidor y la lista de fórmulas prohibidas
+
+`front/compartido/tests/textos.test.ts` prohíbe en el **catálogo de textos del front** cuatro fórmulas:
+"CAE garantizado", cualquier forma de "garantizar", la palabra "verificador" y presentar un kWh como CAE
+emitido. El propio test deja dicho que, si `FR1` necesita nombrar al verificador, **la excepción se razona
+en `FR1`**. Se razona aquí:
+
+El descargo que sirve `api/` en `veredicto.descargo` es, literalmente:
+
+> Ningún estado implica CAE garantizado. La emisión requiere dictamen favorable de verificador acreditado y
+> solicitud por sujeto obligado o delegado.
+
+Lo dice la ficha (`spec/IND240_v1.1.yaml`) y lo sirve el motor. Contiene las dos palabras porque **las está
+negando**: es el texto que impide exactamente lo que la regla quiere impedir, y el "verificador acreditado"
+que nombra es el organismo del RD 36/2023, no `A8`.
+
+Reglas, para que la excepción no se convierta en una puerta:
+
+1. El descargo **se muestra literal y completo**, sin reescribirlo ni recortarlo, junto al veredicto.
+2. **No entra en el catálogo de textos del front.** Es dato del servidor, no texto de producto; el catálogo
+   de la pantalla sigue pasando la lista completa de fórmulas prohibidas, sin excepciones.
+3. En ningún texto propio de la pantalla se llama "verificador" a `A8`: sus salidas son **observaciones de
+   prerrevisión**.
+
+---
+
 ## 12. Criterios de aceptación
 
 | Id | Hecho cuando… |
@@ -344,7 +370,7 @@ dice por qué.
 | `CA-REV-12` | **Caso B**: las dos carencias (`R-DOC-01`, `R-EVD-04`) se ven con su severidad y el documento que las subsana, la cifra sale marcada "estimación no acreditada" y "Aprobar" está inhabilitado con el motivo |
 | `CA-REV-13` | **"Aprobar"**: activo únicamente con `veredicto.valor == "PREVALIDADO"` y sin conflictos ni carencias bloqueantes. Inhabilitado, muestra la regla concreta que lo impide y enlaza al dato |
 | `CA-REV-14` | **`R-UI-03`**: ningún texto de la pantalla contiene "Firmar" como acción |
-| `CA-REV-15` | **Textos**: ninguna cadena dice "CAE garantizado", ni llama "verificador" a A8, ni presenta un kWh prevalidado como CAE emitido |
+| `CA-REV-15` | **Textos**: el catálogo de textos de la pantalla pasa la misma lista de fórmulas prohibidas que `front/compartido/tests/textos.test.ts` (nada dice "CAE garantizado", nada "garantiza", A8 no se llama "verificador", ningún kWh prevalidado se presenta como CAE emitido). El descargo del servidor queda fuera del catálogo y se muestra literal: ver §11 bis |
 | `CA-REV-16` | **Documento**: el panel izquierdo enseña los bytes que sirve `leer_documento` sin transformarlos, y el sha256 de lo que decodifica el cliente coincide con el `doc_id`. Con `ErrorIntegridad`, no se enseña nada y se avisa |
 | `CA-REV-17` | **Parte de PDF combinado**: se muestra el aviso de `Respuesta.avisos` y el rango de páginas de la parte |
 | `CA-REV-18` | **Errores**: `ErrorPermiso` y `ErrorApi` se muestran literales; el test falla si alguno se traga o se traduce a "no hay datos" |

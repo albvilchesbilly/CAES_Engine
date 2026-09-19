@@ -188,7 +188,7 @@ Cada uno se convierte en un test de `front/workspace/` salvo donde se indique ot
 | `CA-COLA-07` | Con la lectura de una actuación devolviendo `ErrorApi`, su fila se pinta con `SIN DATO` y el motivo, y las demás filas siguen completas |
 | `CA-COLA-08` | Con `ErrorPermiso`, el mensaje del servidor aparece literal en pantalla (capacidad y motivo). El test falla si el error se traga o se sustituye por "no hay datos" |
 | `CA-COLA-09` | Con la lectura devolviendo cero filas, se ve el estado *vacío* con su texto, distinto del estado de error y del de carga |
-| `CA-COLA-10` | Ninguna cadena de la pantalla contiene "CAE garantizado", ni llama "verificador" a `A8`, ni presenta un kWh prevalidado como CAE emitido. Se comprueba sobre el catálogo de textos, como en `front/compartido/tests/textos.test.ts` |
+| `CA-COLA-10` | El catálogo de textos de la pantalla pasa la misma lista de fórmulas prohibidas que `front/compartido/tests/textos.test.ts` (nada dice "CAE garantizado", nada "garantiza", `A8` no se llama "verificador", ningún kWh prevalidado se presenta como CAE emitido). El descargo que sirve el servidor no es texto de producto y no entra en el catálogo: ver `T-REV-revision.md` §11 bis |
 | `CA-COLA-11` | Los identificadores de actuación no aparecen en ningún componente: el test busca `EXP001-` en `front/workspace/**` (excluidos los tests y el fichero de configuración) y no encuentra nada (`GAP-COLA-01`, modo degradado) |
 | `CA-COLA-12` | Una actuación en `EN_PLATAFORMA` sin `requerimiento_abierto` aparece marcada "solo lectura" en la cola (`R-UI-05` anticipado) |
 | `CA-COLA-13` | La cabecera muestra el rol que devuelve `Respuesta.rol` y la marca de origen de datos. Sin `origen_datos` (`GAP-COLA-03`), se lee `ORIGEN DE DATOS SIN DECLARAR` |

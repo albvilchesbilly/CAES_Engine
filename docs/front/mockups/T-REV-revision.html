@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup · T-REV — Vista de revisión</title>
+<style>
+  :root{
+    --tinta:#1b1f23; --tinta-suave:#5b646d; --linea:#dfe3e8; --fondo:#f6f7f9; --panel:#fff;
+    --rojo:#b3261e; --rojo-suave:#fdeceb; --ambar:#8a6100; --ambar-suave:#fdf4e3;
+    --verde:#1e6b3a; --verde-suave:#eaf5ee; --gris-suave:#eef0f3; --azul:#14507d;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--fondo);color:var(--tinta);
+       font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .aviso-mockup{background:#20242a;color:#fff;padding:14px 22px;font-size:13px;line-height:1.6}
+  .aviso-mockup b{color:#ffd479}
+  .marco{max-width:1280px;margin:0 auto;padding:22px}
+  .rotulo-caso{margin:26px 0 10px;font-size:12px;letter-spacing:.09em;text-transform:uppercase;
+               color:var(--tinta-suave);font-weight:700;border-top:2px solid var(--linea);padding-top:16px}
+  header.act{display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--panel);
+             border:1px solid var(--linea);border-radius:10px 10px 0 0;padding:13px 18px}
+  header.act h1{margin:0;font-size:17px;font-weight:650}
+  .crecer{flex:1}
+  .chip{display:inline-block;border:1px solid var(--linea);background:var(--gris-suave);
+        border-radius:999px;padding:3px 10px;font-size:12px;color:var(--tinta-suave);white-space:nowrap}
+  .chip.rol{background:#e8f0f7;border-color:#c7dcec;color:var(--azul)}
+  .origen{display:inline-block;border:1px solid #c9a227;background:#fff8dd;color:#6b5300;
+          border-radius:4px;padding:3px 9px;font-size:11px;font-weight:700;letter-spacing:.04em}
+  .split{display:grid;grid-template-columns:minmax(300px,1fr) minmax(420px,1.25fr);
+         border:1px solid var(--linea);border-top:none;border-radius:0 0 10px 10px;overflow:hidden;background:var(--panel)}
+  .doc{border-right:1px solid var(--linea);background:#eff1f4;padding:14px}
+  .doc-barra{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px;
+             color:var(--tinta-suave);margin-bottom:10px}
+  .doc-barra b{color:var(--tinta);font-size:13px}
+  .hoja{background:#fff;border:1px solid #cfd4da;border-radius:3px;padding:26px 24px;min-height:330px;
+        box-shadow:0 1px 3px rgba(0,0,0,.08);font-size:12.5px;line-height:1.85}
+  .hoja h4{margin:0 0 4px;font-size:13.5px}
+  .hoja .sello{font-size:9.5px;letter-spacing:.12em;color:#b0b6bd;border:1px dashed #cfd4da;
+               padding:2px 6px;display:inline-block;margin-bottom:14px}
+  .hoja .fila{display:flex;justify-content:space-between;border-bottom:1px dotted #e3e6ea;padding:3px 0}
+  mark{background:#ffe9a8;box-shadow:0 0 0 3px #ffe9a8;border-radius:2px}
+  .huella{margin-top:10px;font-size:11px;color:var(--tinta-suave);word-break:break-all}
+  .der{padding:16px 18px}
+  .veredicto{border-radius:9px;padding:13px 16px;margin-bottom:14px}
+  .v-rojo{background:var(--rojo-suave);border:1px solid #f1c4c0;border-left:6px solid var(--rojo)}
+  .v-verde{background:var(--verde-suave);border:1px solid #c6e2d0;border-left:6px solid var(--verde)}
+  .veredicto .tit{font-size:20px;font-weight:700;display:flex;align-items:center;gap:9px}
+  .pt{width:11px;height:11px;border-radius:50%;display:inline-block}
+  .pt.r{background:#c5372c}.pt.v{background:#2e9e5b}
+  .veredicto p{margin:6px 0 0;font-size:13.5px}
+  .descargo{margin-top:8px;font-size:11.5px;color:var(--tinta-suave);border-top:1px solid rgba(0,0,0,.08);padding-top:7px}
+  h2.sec{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--tinta-suave);
+         margin:20px 0 9px;font-weight:700}
+  .tarjeta{border:1px solid var(--linea);border-radius:9px;padding:14px 16px;margin-bottom:12px;background:#fff}
+  .tarjeta.conflicto{border:1px solid #f1c4c0;border-left:6px solid var(--rojo);background:#fffafa}
+  .tarjeta h3{margin:0 0 3px;font-size:15.5px}
+  .tarjeta .sub{font-size:13px;color:var(--rojo);font-weight:600;margin-bottom:11px}
+  table.ev{width:100%;border-collapse:collapse;font-size:12.5px}
+  table.ev th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;
+              color:var(--tinta-suave);padding:5px 7px;border-bottom:1px solid var(--linea)}
+  table.ev td{padding:8px 7px;border-bottom:1px solid #eef0f3;vertical-align:top}
+  table.ev tr.destacada td{background:#fdeceb}
+  .val{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .cita{color:var(--tinta-suave);font-style:italic}
+  .met{display:inline-block;font-size:10.5px;background:var(--gris-suave);border:1px solid var(--linea);
+       border-radius:3px;padding:1px 6px;color:var(--tinta-suave);white-space:nowrap}
+  .acc{display:inline-block;border:1px solid var(--linea);border-radius:6px;background:#fff;
+       padding:4px 9px;font-size:12px;font-weight:600;white-space:nowrap;margin:2px 3px 0 0;color:var(--tinta)}
+  .acc.principal{background:#20242a;color:#fff;border-color:#20242a}
+  .acc[aria-disabled="true"]{opacity:.45}
+  .nota{font-size:12px;color:var(--tinta-suave);margin-top:9px}
+  form.corr{margin-top:13px;border-top:1px solid var(--linea);padding-top:12px}
+  form.corr label{display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;
+                  color:var(--tinta-suave);font-weight:700;margin:9px 0 4px}
+  form.corr .campo{border:1px solid var(--linea);border-radius:6px;padding:8px 10px;font-size:13.5px;
+                   background:#fbfcfd;width:100%}
+  form.corr .campo.fijo{background:var(--gris-suave);color:var(--tinta-suave)}
+  form.corr textarea.campo{min-height:64px;color:#9aa1a9}
+  .obliga{color:var(--rojo);font-weight:700}
+  .sindato{display:inline-block;background:var(--gris-suave);border:1px dashed #b9c0c8;border-radius:4px;
+           padding:3px 10px;font-weight:700;color:#4a525a;letter-spacing:.03em;font-size:13px}
+  .ahorro{border:1px solid var(--linea);border-radius:9px;padding:15px 17px;background:#fbfcfd}
+  .ahorro .cifra{font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+  .ahorro .rot{font-size:11.5px;color:var(--tinta-suave);margin-top:3px}
+  .ahorro .cae{margin-top:9px;font-size:13px}
+  .ahorro .cae b{font-variant-numeric:tabular-nums}
+  ol.escalera{list-style:none;margin:14px 0 0;padding:0;counter-reset:paso}
+  ol.escalera li{counter-increment:paso;display:grid;grid-template-columns:26px 1fr auto;gap:10px;
+                 padding:8px 0;border-top:1px dotted #e3e6ea;align-items:baseline}
+  ol.escalera li::before{content:counter(paso);width:20px;height:20px;border-radius:50%;
+       background:var(--gris-suave);color:var(--tinta-suave);font-size:11px;font-weight:700;
+       display:grid;place-items:center}
+  ol.escalera .que{font-size:13.5px}
+  ol.escalera .que small{display:block;color:var(--tinta-suave);font-size:11.5px}
+  ol.escalera .cuanto{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;font-size:13.5px}
+  .enlace-cita{font-size:11.5px;color:var(--azul);text-decoration:underline;white-space:nowrap}
+  .int{display:inline-block;font-size:10.5px;font-weight:700;background:#f3e9fb;border:1px solid #dcc6ef;
+       color:#5b2a86;border-radius:3px;padding:1px 6px;margin-left:5px}
+  details{margin-top:11px;border:1px solid var(--linea);border-radius:8px;background:#fff}
+  summary{cursor:default;padding:9px 13px;font-size:13px;font-weight:600}
+  details .cuerpo{padding:0 13px 12px;font-size:12.5px;color:var(--tinta-suave)}
+  pre{background:#f4f6f8;border:1px solid var(--linea);border-radius:6px;padding:10px;
+      font-size:11.5px;overflow:auto;margin:8px 0 0}
+  .barra-acciones{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:16px;
+       border-top:1px solid var(--linea);padding-top:13px}
+  .motivo-bloqueo{font-size:12.5px;color:var(--rojo)}
+  .candado{background:var(--gris-suave);border:1px solid var(--linea);border-radius:7px;
+           padding:9px 13px;font-size:12.5px;color:#4a525a;margin-bottom:12px}
+  .pie{margin-top:16px;font-size:12.5px;color:var(--tinta-suave);line-height:1.75}
+  code{background:var(--gris-suave);padding:1px 5px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+
+<div class="aviso-mockup">
+  <b>MOCKUP — referencia visual de disposición y flujo. NO ES CÓDIGO BASE.</b>
+  No se copia a <code>front/workspace/</code>. El contrato es
+  <b>docs/front/pantallas/T-REV-revision.md</b>; <b>si el mockup y la spec discrepan, manda la spec</b>.
+  Datos reales del banco de pruebas: caso C (contradictorio) y caso A (completo).
+</div>
+
+<div class="marco">
+
+  <!-- ================= CASO C ================= -->
+  <div class="rotulo-caso">Estado «conflicto» — caso C · EXP001-C_contradictorio</div>
+
+  <header class="act">
+    <h1>EXP001-C_contradictorio</h1>
+    <span class="chip">Ficha IND240 v1.1</span>
+    <span class="chip">Ciclo: EVALUADA</span>
+    <span class="chip">Plataforma: SIN DATO</span>
+    <span class="chip rol">Actuando como Revisor técnico</span>
+    <span class="crecer"></span>
+    <span class="origen">DATOS SINTÉTICOS — SOLO PRUEBAS</span>
+  </header>
+
+  <div class="split">
+
+    <!-- panel izquierdo: el documento -->
+    <section class="doc">
+      <div class="doc-barra">
+        <b>05_certificado_instalador.pdf</b>
+        <span class="chip">certificado_instalador</span>
+        <span class="chip">página 1 de 1</span>
+      </div>
+      <div class="hoja">
+        <h4>Certificado de la empresa instaladora</h4>
+        <div class="sello">DOCUMENTO SINTÉTICO – SOLO PRUEBAS</div>
+        <div class="fila"><span>Titular</span><span>Industrias Sintéticas del Ebro, S.L.</span></div>
+        <div class="fila"><span>Nº de serie del motor</span><span>MTR-SYN-0001</span></div>
+        <div class="fila"><span>Nº de serie del variador</span><span>VSD-SYN-0001</span></div>
+        <div class="fila"><span><mark>a) Potencia nominal del motor PM (según ficha técnica)</mark></span>
+                          <span><mark>90 kW</mark></span></div>
+        <div class="fila"><span>a) Velocidad nominal N1 (según ficha técnica)</span><span>1.485 rpm</span></div>
+        <div class="fila"><span>b) Velocidad media con variador N2</span><span>1.188 rpm</span></div>
+        <div class="fila"><span>Fecha de puesta en marcha</span><span>02/03/2026</span></div>
+      </div>
+      <div class="huella">
+        Servido por huella, sin transformar (<code>ADR-012</code> §2) ·
+        sha256 e559c6a69ec0b5e75822aa55d4cbb24b9477b39d8cdda912c4e1c000ee784e00 · comprobada al servir
+      </div>
+    </section>
+
+    <!-- panel derecho -->
+    <section class="der">
+
+      <div class="veredicto v-rojo">
+        <div class="tit"><span class="pt r"></span>BLOQUEADO</div>
+        <p>Inconsistencia crítica: revisión documental antes de calcular.</p>
+        <div class="descargo">Ningún estado implica CAE garantizado. La emisión requiere dictamen favorable
+          de verificador acreditado y solicitud por sujeto obligado o delegado.</div>
+      </div>
+
+      <h2 class="sec">Lo que lo impide</h2>
+
+      <div class="tarjeta conflicto">
+        <h3>Conflicto en PM · motor MTR-SYN-0001</h3>
+        <div class="sub">El motor no elige entre fuentes fiables. Sin este dato no hay cálculo.</div>
+
+        <table class="ev">
+          <thead>
+            <tr><th>Valor</th><th>Documento · pág.</th><th>Texto literal</th><th>Método</th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="val">110 kW</td>
+              <td>01_ficha_IND240_cumplimentada.pdf · 1</td>
+              <td class="cita">“Potencia nominal del motor PM 110 kW”</td>
+              <td><span class="met">tabla · 1,00</span></td>
+              <td><span class="acc">Ver en el documento</span><span class="acc">Usar este valor</span></td>
+            </tr>
+            <tr>
+              <td class="val">110 kW</td>
+              <td>08_ficha_tecnica_motor_MTR-SYN-0001.pdf · 1 <span class="met">fuente primaria</span></td>
+              <td class="cita">“Potencia nominal PM 110 kW”</td>
+              <td><span class="met">tabla · 1,00</span></td>
+              <td><span class="acc">Ver en el documento</span><span class="acc">Usar este valor</span></td>
+            </tr>
+            <tr>
+              <td class="val">110 kW</td>
+              <td>04_informe_fotografico.pdf · 2 (placa)</td>
+              <td class="cita">“110 kw 1485 rpm”</td>
+              <td><span class="met">OCR · 0,75</span></td>
+              <td><span class="acc">Ver en el documento</span><span class="acc">Usar este valor</span></td>
+            </tr>
+            <tr class="destacada">
+              <td class="val">90 kW</td>
+              <td>05_certificado_instalador.pdf · 1</td>
+              <td class="cita">“a) Potencia nominal del motor PM (según ficha técnica) 90 kW”</td>
+              <td><span class="met">tabla · 1,00</span></td>
+              <td><span class="acc">Ver en el documento</span><span class="acc">Usar este valor</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="nota">
+          <b>Qué arrastra este dato:</b> PM entra en el cálculo del ahorro y en la búsqueda de la fila del
+          cuadro 6 del Reglamento (UE) 2019/1781. Mientras esté en conflicto,
+          <code>valor_consumido = null</code> y no hay ahorro publicable.
+        </div>
+
+        <form class="corr">
+          <div style="font-size:13px;font-weight:650">Corregir el dato (CAP-05)</div>
+          <label>Variable</label>
+          <div class="campo fijo">PM · motor MTR-SYN-0001</div>
+          <label>Valor</label>
+          <div class="campo">90</div>
+          <label>Justificación <span class="obliga">— obligatoria</span></label>
+          <textarea class="campo" placeholder="Por qué este valor y no el otro. Queda en el log con tu nombre."></textarea>
+          <div class="nota">
+            Se elige <b>90 kW</b> (certificado del instalador) y se descartan <b>110 kW</b> de la ficha
+            cumplimentada, la ficha técnica del motor y la placa (OCR 0,75). La justificación no se rellena
+            sola: <code>R-UI-04</code>.
+          </div>
+          <div style="margin-top:10px">
+            <span class="acc principal" aria-disabled="true">Guardar corrección</span>
+            <span class="motivo-bloqueo">Inhabilitado: falta la justificación.</span>
+          </div>
+        </form>
+      </div>
+
+      <h2 class="sec">Ahorro</h2>
+      <div class="ahorro">
+        <span class="sindato">SIN DATO</span>
+        <p style="margin:9px 0 0;font-size:13px">
+          Conflicto entre fuentes fiables en PM: el motor no elige valor ni calcula.</p>
+        <div class="rot">No se muestra ninguna cifra en su lugar. Un hueco no es un cero
+          (<code>R-UI-07</code>).</div>
+      </div>
+
+      <h2 class="sec">Comprobaciones</h2>
+      <div class="tarjeta">
+        <div style="font-size:13.5px"><b>1 falla</b> · R-CON-01 (BLOQUEANTE_DATOS) — PM coincide en todas
+          las fuentes. Se subsana con: ficha técnica del motor, placa, certificado del instalador, ficha
+          cumplimentada.</div>
+        <div style="font-size:13px;margin-top:7px;color:var(--tinta-suave)">
+          <b>3 no evaluables</b> · R-CAL-02, R-CON-06, R-CAL-03 — no se pudieron evaluar porque no hubo
+          cálculo.</div>
+        <details>
+          <summary>20 comprobaciones conformes</summary>
+          <div class="cuerpo">Ámbito (3), consistencia (8 de 9), documentación (5), evidencia (4),
+            plazos (2). No ocupan sitio hasta que se piden.</div>
+        </details>
+      </div>
+
+      <div class="barra-acciones">
+        <span class="acc principal" aria-disabled="true">Aprobar la revisión</span>
+        <span class="motivo-bloqueo">Falla R-CON-01 (BLOQUEANTE_DATOS): corrige PM.</span>
+        <span class="crecer"></span>
+        <span class="acc">Enviar subsanación</span>
+      </div>
+      <div class="nota">
+        <b>No hay ningún control para cambiar el veredicto</b> (<code>R-UI-02</code>): se corrige el dato y
+        el motor recalcula. Hoy el recálculo no está disponible (<code>GAP-REV-01</code>): al guardar, la
+        corrección queda registrada y el veredicto se marca <b>pendiente de recálculo</b>, no actualizado.
+      </div>
+
+    </section>
+  </div>
+
+  <!-- ================= CASO A ================= -->
+  <div class="rotulo-caso">Estado «prevalidado» — caso A · EXP001-A_completo</div>
+
+  <header class="act">
+    <h1>EXP001-A_completo</h1>
+    <span class="chip">Ficha IND240 v1.1</span>
+    <span class="chip">Ciclo: EVALUADA</span>
+    <span class="chip">Plataforma: SIN DATO</span>
+    <span class="chip rol">Actuando como Revisor técnico</span>
+    <span class="crecer"></span>
+    <span class="origen">DATOS SINTÉTICOS — SOLO PRUEBAS</span>
+  </header>
+
+  <div class="split">
+
+    <section class="doc">
+      <div class="doc-barra">
+        <b>08_ficha_tecnica_motor_MTR-SYN-0001.pdf</b>
+        <span class="chip">ficha_tecnica_motor</span>
+        <span class="chip">página 1 de 1</span>
+      </div>
+      <div class="hoja">
+        <h4>Ficha técnica del motor MTR-SYN-0001</h4>
+        <div class="sello">DOCUMENTO SINTÉTICO – SOLO PRUEBAS</div>
+        <div class="fila"><span><mark>Potencia nominal PM</mark></span><span><mark>110 kW</mark></span></div>
+        <div class="fila"><span>Velocidad nominal N1</span><span>1.485 rpm</span></div>
+        <div class="fila"><span>Nº de serie</span><span>MTR-SYN-0001</span></div>
+        <div class="fila"><span>Tipo de equipo accionado</span><span>Bomba centrífuga (rotodinámico)</span></div>
+      </div>
+      <div class="huella">
+        sha256 525e066cb491f7eda3570a967f133c24987e7ce6cfedaf419b4064f6f505a421 · comprobada al servir
+      </div>
+    </section>
+
+    <section class="der">
+
+      <div class="veredicto v-verde">
+        <div class="tit"><span class="pt v"></span>PREVALIDADO</div>
+        <p>No falla ninguna regla salvo AVISO.</p>
+        <div class="descargo">Ningún estado implica CAE garantizado. La emisión requiere dictamen favorable
+          de verificador acreditado y solicitud por sujeto obligado o delegado.</div>
+      </div>
+
+      <h2 class="sec">Ahorro prevalidado</h2>
+      <div class="ahorro">
+        <div class="cifra">305.829,6 kWh/año</div>
+        <div class="rot">Cifra prevalidada por el motor: no son CAE emitidos.</div>
+        <div class="cae">Para presentar: <b>305.829 kWh</b>
+          <span class="chip">truncado a kWh entero — criterio conservador (INT-06)</span></div>
+
+        <ol class="escalera">
+          <li>
+            <span class="que">Potencia nominal del motor
+              <small>ficha técnica (fuente primaria) · coincide en 4 fuentes</small></span>
+            <span class="cuanto">PM = 110 kW <a class="enlace-cita" href="#">ver cita</a></span>
+          </li>
+          <li>
+            <span class="que">Velocidad antes de la actuación
+              <small>ficha técnica · placa (OCR 0,75) · certificado · ficha cumplimentada</small></span>
+            <span class="cuanto">N1 = 1.485 rpm <a class="enlace-cita" href="#">ver cita</a></span>
+          </li>
+          <li>
+            <span class="que">Velocidad media con variador
+              <small>derivada del registro de funcionamiento, no solo declarada<span class="int">INT-03</span></small></span>
+            <span class="cuanto">N2 = 1.188 rpm <a class="enlace-cita" href="#">ver cita</a></span>
+          </li>
+          <li>
+            <span class="que">Horas de funcionamiento
+              <small>el menor de 6.000 (antes) y 6.570 (después)<span class="int">INT-04</span></small></span>
+            <span class="cuanto">h = 6.000 h <a class="enlace-cita" href="#">ver cita</a></span>
+          </li>
+          <li>
+            <span class="que">Pérdidas del variador
+              <small>5,55 kW / 110 kW · cuadro 6 del Reglamento (UE) 2019/1781, fila de 110 kW
+                <span class="int">INT-01</span></small></span>
+            <span class="cuanto">p = 5,0455 %</span>
+          </li>
+          <li>
+            <span class="que">Comprobaciones físicas
+              <small>FIS-01 (AEM ≤ PM·h) y FIS-02 (P_prom ≤ PM)</small></span>
+            <span class="cuanto">conformes</span>
+          </li>
+        </ol>
+
+        <div class="nota">
+          Los criterios <b>INT-xx</b> son criterios propios sin validar, no verdad normativa. La fila de
+          110 kW del cuadro 6 (5,55 kW) es una decisión abierta pendiente de revisión.
+        </div>
+
+        <details>
+          <summary>Ver la fórmula y la traza del motor</summary>
+          <div class="cuerpo">
+<pre>AEM = PM * (1 - (N2 / N1) ** 3) * (1 - p) * h
+unidad MTR-SYN-0001: (N2 / N1) = 0.8
+unidad MTR-SYN-0001: (1 - (N2 / N1) ** 3) = 0.488
+unidad MTR-SYN-0001: (1 - p) = 0.94954545454545454545…
+unidad MTR-SYN-0001: AEM = 305829.6
+total: AETOTAL = sum(AEM) = 305829.6
+total: AETOTAL_cae = 305829 (truncar a kWh entero; INT-06)</pre>
+            La traza se muestra tal y como la escribe el motor. Esta pantalla no calcula nada
+            (<code>R-UI-11</code>).
+          </div>
+        </details>
+      </div>
+
+      <h2 class="sec">Datos que entran en el cálculo</h2>
+      <div class="tarjeta">
+        <table class="ev">
+          <thead><tr><th>Dato</th><th>Valor</th><th>Tipo</th><th>Cita</th></tr></thead>
+          <tbody>
+            <tr><td>PM</td><td class="val">110 kW</td><td><span class="met">demostrado</span></td>
+                <td class="cita">ficha técnica · p.1 · “Potencia nominal PM 110 kW”
+                  <a class="enlace-cita" href="#">ir</a></td></tr>
+            <tr><td>N1</td><td class="val">1.485 rpm</td><td><span class="met">demostrado</span></td>
+                <td class="cita">ficha técnica · p.1 · “Velocidad nominal N1 1.485 rpm”
+                  <a class="enlace-cita" href="#">ir</a></td></tr>
+            <tr><td>N2</td><td class="val">1.188 rpm</td><td><span class="met">derivado</span></td>
+                <td class="cita">registro · “2592 de 3456 filas en MARCHA…”
+                  <a class="enlace-cita" href="#">ir</a></td></tr>
+            <tr><td>h_antes</td><td class="val">6.000 h</td><td><span class="met">demostrado</span></td>
+                <td class="cita">registro de horas previo <a class="enlace-cita" href="#">ir</a></td></tr>
+            <tr><td>h_despues</td><td class="val">6.570 h</td><td><span class="met">derivado</span></td>
+                <td class="cita">registro de funcionamiento <a class="enlace-cita" href="#">ir</a></td></tr>
+            <tr><td>P_prom</td><td class="val">60 kW</td><td><span class="met">derivado</span></td>
+                <td class="cita">certificado · registro <a class="enlace-cita" href="#">ir</a></td></tr>
+          </tbody>
+        </table>
+        <div class="nota">Ningún dato se pinta sin su cita (<code>R-UI-09</code>). Los otros 25 datos
+          consolidados están plegados: no hacen falta para decidir.</div>
+      </div>
+
+      <details>
+        <summary>24 comprobaciones conformes · 0 fallan · 0 no evaluables</summary>
+        <div class="cuerpo">Ámbito (3), consistencia (10), post-cálculo (2), documentación (5),
+          evidencia (4). Se despliegan cuando se piden.</div>
+      </details>
+      <details>
+        <summary>Historial · 11 documentos ingestados, 31 datos consolidados</summary>
+        <div class="cuerpo">Quién hizo qué y cuándo, con el actor y su rol. Las correcciones humanas
+          aparecen aquí con su justificación.</div>
+      </details>
+
+      <div class="barra-acciones">
+        <span class="acc principal">Aprobar la revisión</span>
+        <span class="nota" style="margin:0">Sin bloqueantes abiertos. Al aprobar queda pendiente de que
+          Operaciones prepare la entrega: aprobar no es enviar.</span>
+      </div>
+
+    </section>
+  </div>
+
+  <!-- ================= SOLO LECTURA ================= -->
+  <div class="rotulo-caso">Estado «solo lectura» tras EN_PLATAFORMA (R-UI-05)</div>
+  <div class="split" style="border-radius:10px;border-top:1px solid var(--linea)">
+    <section class="doc" style="min-height:0">
+      <div class="doc-barra"><b>La lectura es completa.</b></div>
+      <div class="hoja" style="min-height:90px">El documento se sigue sirviendo y se sigue pudiendo
+        consultar: lo que se cierra es la escritura.</div>
+    </section>
+    <section class="der">
+      <div class="candado">
+        <b>Solo lectura.</b> La actuación está en <b>EN_PLATAFORMA</b> y no hay requerimiento abierto.
+        Ningún control de escritura está activo (<code>R-UI-05</code>). Si llega un requerimiento oficial,
+        se abre el flujo de subsanación y se activan únicamente sus controles.
+      </div>
+      <div class="barra-acciones" style="border:none;padding-top:0">
+        <span class="acc" aria-disabled="true">Corregir dato</span>
+        <span class="acc" aria-disabled="true">Enviar subsanación</span>
+        <span class="acc" aria-disabled="true">Aprobar la revisión</span>
+      </div>
+      <div class="nota">Inhabilitar no es autorizar: el servidor valida igualmente
+        (<code>R-UI-01</code>).</div>
+    </section>
+  </div>
+
+  <div class="pie">
+    En ninguna de las tres composiciones hay un control que fije un veredicto (<code>R-UI-02</code>), ni
+    ninguno que se llame “Firmar” (<code>R-UI-03</code>). Ninguna cifra ausente se pinta como cero
+    (<code>R-UI-07</code>). Todo dato extraído lleva su documento, su página y su texto literal
+    (<code>R-UI-09</code>).
+  </div>
+
+</div>
+</body>
+</html>
