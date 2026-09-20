@@ -98,6 +98,7 @@ que abra una serie debería usar una letra libre (`D`, `E`…) en vez de reutili
 | A5 · Vista de equipo por persona o por equipo | Recomendación: por equipo hasta revisión jurídica | `O-EQU` | `ADR-006`, `ADR-007` B3 |
 | A6 · Preparar y aprobar la misma persona | Recomendación: configurable, por defecto permitido y señalado | CAP-10, CAP-33 | `ADR-006` |
 | A7 · Firma manual con API activa | Recomendación: rechazarla si la plataforma no la confirma | CAP-22, `SYS-API` | `ADR-006` |
+| **Si una corrección humana puede sacar una actuación de una exclusión de ámbito** | Hoy sí: corregir `tipo_equipo_accionado` lleva el caso D de `NO_ELEGIBLE` a `PREVALIDADO` (verificado). Alternativa: exigir documento nuevo para levantar una exclusión | El veredicto más fuerte de la ficha | `/contrastar` 20/09/2026, `ADR-013` §5 bis |
 | **INT-16, INT-17 e INT-18** · Cómo se trata una corrección humana: si sanea la coherencia documental, si es dato acreditado o afirmación, y qué pasa al corregir una variable que la ficha exige derivada | Propuesta en `spec/propuestas/IND240_v1.1_correcciones_INT-16-18.diff.md`, sin activar | Veredicto y ahorro de toda actuación corregida (medido: +33 % sin que falle ninguna regla) | `ADR-013`, `/contrastar` 20/09/2026 |
 | Umbrales de las métricas del catálogo (`umbral: POR DEFINIR`) | — | Dashboards | `ADR-007` |
 | Interfaz o herramienta de los dashboards (DB5); si es BI externa, se alimenta de la API de lectura | — | DB5 | `ADR-007` |

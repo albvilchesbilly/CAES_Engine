@@ -208,6 +208,20 @@ Reglas de parada:
 - Si alguna de la fase 2 falla, se evalúan todas las de la fase 2 y **se salta la fase 3 y la 4**; la fase 5 sí se evalúa, para que el informe liste todas las carencias documentales de una vez.
 - Las fases 6 y 7 no las ejecuta `evaluar_actuacion`; las ejecutan el puerto de salida (P8) y el compositor (P10) respectivamente.
 
+**Orden de ejecución frente a orden de la tabla.** La numeración de arriba es el orden en que el informe
+presenta los resultados (`Evaluacion.resultados` se entrega siempre ordenado por fase). El orden en que
+`evaluar_actuacion` las **ejecuta** no es el mismo: la fase 5 (`resto`) se evalúa **antes** del cálculo, no
+después de la 4. Es deliberado y no es una licencia: el Spec Registry manda a `post_calculo` toda regla que
+referencie una salida del cálculo, así que ninguna regla de `resto` puede depender del resultado, y evaluarla
+antes es lo que permite saber si procede un **cálculo provisional** (una `SUBSANABLE` que falla no impide
+calcular; una `BLOQUEANTE_DATOS` sí). El orden real es:
+
+`cabecera` → `ambito` → `consistencia` → **`resto`** → cálculo (N3) → `post_calculo`
+
+Esto lo documenta la cabecera de `engine/reglas.py` y lo fija `tests/test_reglas.py`. Si una futura regla de
+`resto` necesitase una salida del cálculo, el Spec Registry la derivaría a `post_calculo` por sí solo; si
+alguna vez hiciera falta una que no, habría que mover la fase, no relajar la derivación.
+
 ### 5.2 Asignación regla a regla de IND240 v1.1 — decisión de diseño de la Fase 0
 
 La spec activa no declara `fase`. Hasta que lo declare (diff v1.2 o posterior), el Spec Registry asigna cada una de sus 26 reglas según esta tabla, que es la que el Engine 0.1 aplicaba en su diseño. **Es una decisión de diseño de la Fase 0**: el código la obtiene **por derivación** (severidad y qué referencia la `logica`; §3.2), nunca por una lista de `id`, y `tests/test_spec_registry.py` verifica que la derivación reproduce las 26 filas.
@@ -244,9 +258,18 @@ La spec activa no declara `fase`. Hasta que lo declare (diff v1.2 o posterior), 
 
 Recuento: fase 1 = 3 · fase 2 = 10 · fase 4 = 2 · fase 5 = 11. **Total 26**, las 26 de la spec, ninguna más y ninguna menos.
 
+> **Los comentarios de `spec/IND240_v1.1.yaml` §6 no son fases.** La spec agrupa sus reglas bajo
+> `# Ámbito`, `# Documental`, `# Evidencia temporal`, `# Consistencia`, `# Temporal / procedimiento` y
+> `# Cálculo / física`. Son **familias temáticas de lectura humana**, no el orden de evaluación, y no
+> coinciden con esta tabla: `R-CAL-02` y `R-CAL-04` están bajo `# Cálculo / física` y se evalúan en fase 2;
+> `R-CAL-03`, en el mismo grupo, va en fase 4; `R-TMP-01` está bajo `# Evidencia temporal` y va en fase 2,
+> mientras `R-TMP-02` y `R-TMP-03` van en fase 5. El Spec Registry **ignora esos comentarios** (son
+> comentarios YAML: no llegan al cargador) y deriva la fase de la severidad y de lo que referencia la
+> `logica`. No uses la agrupación de la spec para razonar sobre el orden de parada.
+
 Notas de asignación:
 
-- `R-CAL-02` va en fase 2 aunque sea `AVISO` porque su resultado (hay fila exacta o no) decide cómo N3 obtiene `p` (INT-02: interpolación con aviso). Debe conocerse **antes** de calcular.
+- `R-CAL-02` va en fase 2 aunque sea `AVISO` porque su resultado (hay fila exacta o no) **debe conocerse antes de calcular para que el informe pueda explicar el INT-02**. No decide nada del cálculo: quien interpola es `engine/tablas.py`, que busca la fila exacta y, si no la hay, interpola entre adyacentes, con independencia de que la regla se haya evaluado o no. La regla observa y avisa; no dirige. Si se evaluase después del cálculo, el informe publicaría un ahorro interpolado sin decir que lo es.
 - `R-CAL-04` va en fase 2 porque comprueba el origen de `p`, no su valor; se conoce antes del cálculo.
 - `R-CON-06` va en fase 4 porque necesita `AETOTAL_cae`. Si no se calcula (fases 1 o 2 falladas), queda `NO_EVALUABLE`; la carencia la recogen las reglas que causaron la parada.
 - `R-EVD-01..04` van en fase 5 aunque condicionen el valor de N2: si el registro falta o es insuficiente, N2 derivado no existe, `R-CON-03` es `NO_EVALUABLE` y son estas las que fallan como `SUBSANABLE` (§4.2).

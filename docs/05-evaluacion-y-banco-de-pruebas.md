@@ -208,8 +208,37 @@ Son las decisiones probadas en Sprints 1–2 (`docs/historico/README_sprint1-2_e
 2. **Vinculación por número de serie y por huella.** Cada documento se asocia a su motor por `num_serie_motor` / `num_serie_variador` (`clave_union: true` en la spec); el registro SCADA se vincula por SHA-256, nunca por nombre de fichero. (`engine/ingesta.py`, `engine/evidencias.py`; `test_ingesta.py`.)
 3. **OCR con menos confianza.** Evidencias de foto o escaneo entran con confianza 0,75. Si discrepan de una fuente fiable no bloquean: se marcan como posible error de OCR. (`test_evidencias.py`.)
 4. **El cálculo se detiene ante un conflicto.** Con PM contradictorio el Engine no elige ni calcula: `valor_consumido = null`, se muestran las dos evidencias (`CLAUDE.md` regla 6). (`test_evidencias.py`, `test_engine_e2e.py` sobre C.)
-5. **El orden importa.** Cabecera bloqueante → ámbito → consistencia → cálculo → post-cálculo → resto. Nunca se publica un ahorro apoyado en datos incoherentes. (`engine/reglas.py`; `test_reglas.py` (fases), `test_engine_e2e.py` sobre C y D.)
+5. **El orden importa.** Cabecera bloqueante → ámbito → consistencia → cálculo → post-cálculo → resto (orden de presentación; el de ejecución evalúa `resto` antes del cálculo, `docs/04` §5.1). Nunca se publica un ahorro apoyado en datos incoherentes. (`engine/reglas.py`; `test_reglas.py` (fases), `test_engine_e2e.py` sobre C y D.) **Ojo: la parte de "nunca se publica" no está protegida en el caso general** — ver H3 en §4.5.
 6. **Tres capas por dato** (documento → interpretación → cálculo) y cita obligatoria: cada variable consolidada lleva documento, página, texto literal, método y confianza. El Engine 0.1 lo cumplía en 58/58 variables de cálculo; la reconstrucción debe cumplirlo en el 100 % de las variables que entren en la fórmula. (`test_evidencias.py`, `test_engine_e2e.py`.)
+
+
+### 4.5 Huecos conocidos del banco de pruebas (`/contrastar` 20/09/2026)
+
+Hallazgos **verificados por mutación** en esta pasada. No son defectos del motor: el motor hace lo correcto
+hoy. Son sitios donde el banco **no se daría cuenta si dejara de hacerlo**, que es justo lo que un banco de
+regresión existe para impedir. Están abiertos, con dueño `qa-evaluacion`.
+
+| Id | Qué no está protegido | Cómo se verificó | Qué pasa si se rompe | Prioridad |
+|---|---|---|---|---|
+| **H3** | La guarda `elif bloqueo_previo` de `engine/reglas.py` (la que impide calcular cuando una regla `BLOQUEANTE_DATOS` de `cabecera` o `consistencia` ha fallado **sin conflicto**) | Anulada la rama: **2.499 tests, 78 e2e y los 7/7 casos siguen en verde**, y caso A sigue en 305.829,6 | Una actuación `BLOQUEADO` por `R-TMP-01` (fecha de inicio posterior a la de fin) **publica 305.829,6 kWh/año**. Medido. Es la regla de oro «nunca se publica un ahorro apoyado en datos incoherentes» sin red | **ALTA** |
+| **H6** | El **valor** de las tolerancias y fronteras. `R-CON-03` declara `abs(N2.declarado - N2.derivado) <= 1`, y sus tests usan Δ = 0 (cumple) y Δ = 12 (falla) | Razonado sobre los dos tests: `< 1` y `<= 10` sobreviven ambos | La tolerancia se puede cambiar (o convertir en estricta) sin que nada avise. Mismo patrón en `rango_plausible` y en los ≥ 30 días de `R-EVD-01` | MEDIA |
+| **H4** | Que una `R-CAL-03` fallida deje el ahorro retirado **vista desde la evaluación**. La retirada sí está probada un nivel más abajo (`test_calculo.py::test_fis_02_retira_el_resultado`) | `test_reglas.py` afirma `FALLA` y `BLOQUEADO`, no que `evaluacion.calculo.total` sea `None`; comprobado que hoy lo es | Poco: `engine/calculo.py` retira por su cuenta y su test lo cubre. Es cierre de la cadena, no un agujero | BAJA |
+
+**Por qué H3 es el importante.** El motor tiene dos defensas contra publicar un ahorro incoherente: la guarda
+de política en `engine/reglas.py` (no se calcula si hay bloqueo) y las precondiciones físicas de
+`engine/calculo.py` (`N2 < N1` y demás). Las segundas tapan a las primeras en los casos que el banco recorre
+—por eso el mutante sobrevive—, pero **solo cubren los bloqueos que además son físicamente imposibles**. Un
+bloqueo documental o temporal (`R-TMP-01`, `R-CON-04`, `R-CON-05`) no tiene precondición física que lo pare,
+y ahí la única defensa es la guarda que ningún test sujeta. El caso C del banco no sirve: bloquea **por
+conflicto**, que entra por la otra rama (`if bloqueo_por_conflicto`).
+
+**Lo que cierra H3**: un test de `test_reglas.py` con una `BLOQUEANTE_DATOS` no física fallada que afirme
+`evaluacion.calculo is None`, y un caso del banco (o una metamórfica) con la misma forma. Mientras no exista,
+esta fila de §4.4 promete más de lo que el banco sostiene.
+
+**Comprobado y descartado en esta pasada**: se sospechó que una corrección humana no respetaba
+`rango_plausible`. **Es falso**: una corrección de `PM` a 999.999 kW produce el aviso «valor 999999 fuera del
+rango plausible [0.12, 1000]». La corrección pasa por la misma consolidación que cualquier evidencia.
 
 ---
 
