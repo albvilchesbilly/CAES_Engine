@@ -151,6 +151,9 @@ engine/
   estados.py            EXISTE N6  Cuatro niveles de estado, contagio, inalterabilidad post-firma (S3.1)
   estados_plataforma.yaml EXISTE — Tabla de mapeo: 8 estados de actuación confirmados y 11 de expediente
                                   provisionales (`oficial: false`, TODO(API-03))
+  correcciones.py       EXISTE P4  La correccion humana como evidencia con sus tres capas; `de_log` descarta
+                                  las que el ciclo rechazo, para que la inalterabilidad no dependa de quien
+                                  llame (S3.8, `ADR-013`)
   seguimiento.py        EXISTE P9  Lo que devuelve la plataforma, reflejado en el log: reconciliacion por
                                   codigo propio, literal desconocido que escala, contagio persistido (S3.5)
   requerimientos.py     EXISTE A9/P7  Requerimiento, interfaz `Interprete` e `InterpreteLexico` determinista;

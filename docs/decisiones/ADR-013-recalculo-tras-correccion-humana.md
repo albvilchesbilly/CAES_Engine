@@ -96,9 +96,13 @@ plataforma. **El núcleo no adquiere una dependencia de dónde viven los eventos
 - **No reprocesa solo.** Nadie dispara el recálculo automáticamente: lo pide quien tiene el log (hoy, `api/`
   en la siguiente iteración de `FR1`). Un motor que se reprocesa a sí mismo es un motor que no sabes cuándo
   corrió.
-- **No toca la inalterabilidad.** Tras `EN_PLATAFORMA`, la máquina de estados ya rechaza una corrección fuera
-  de un requerimiento abierto y la anota en `Proyeccion.rechazos`. Aquí no se reabre nada: si el evento no
-  debió escribirse, no está en el log.
+- **No toca la inalterabilidad**, pero sí la defiende. La frase original de este ADR —«si el evento no debió
+  escribirse, no está en el log»— **era falsa**, y lo destapó construirlo: `engine/estados.py` no levanta ante
+  un cambio de datos posterior a la firma, lo **anota** en `Proyeccion.rechazos`, y el evento queda sellado
+  igual. Sin filtro, reprocesar una actuación firmada aplicaba una corrección que la inalterabilidad prohíbe
+  (`docs/02` §5.4). **`de_log` descarta las correcciones que el ciclo rechazó**, y lo hace ahí porque tiene el
+  log y puede proyectarlo: una guarda que depende de que el llamante se acuerde no es una guarda. Sigue
+  faltando que `api/` emita `CorreccionRechazadaPostFirma` al intentarlo (§6 punto 4).
 - **No decide qué se puede corregir.** Que solo se corrija lo que está en conflicto, en desacuerdo o en
   carencia es criterio de la pantalla (`FR1`), no del motor. El motor acepta la corrección que le den y la
   hace trazable.
@@ -126,3 +130,10 @@ plataforma. **El núcleo no adquiere una dependencia de dónde viven los eventos
    permitir corregir cualquier dato, es cambiar la pantalla, no el motor — y se pierde saber qué leyó el motor.
 3. **Si una corrección debe caducar** cuando llega documentación nueva que la contradice. Hoy no caduca: manda
    la última corrección. No es obvio que sea lo correcto para siempre.
+4. **Corregir un hecho documental** (`factura.firmada`, `registro.dias`) no se puede hoy: la regla 4 se
+   implementó estricta contra `spec.variables`. La pantalla de `FR1` permite corregir carencias, y una
+   carencia puede caer sobre un hecho documental. Es un hueco funcional, no un defecto: decide si se abre.
+5. **`R-CON-03` deja de evaluarse tras corregir una variable con `cruce_con`** (`N2`, `P_prom`), porque la
+   corrección se queda sola y desaparece una de las dos mitades del cruce declarado ↔ derivado. Está probado
+   y documentado. Que la corrección sustituya solo **dentro de su tipo de evidencia** complicaría el
+   consolidador; no se hace sin decisión.

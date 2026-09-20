@@ -13,7 +13,7 @@ Que se reconstruye y de donde (todo sale del log; nada del disco):
 | `tipo` / `subtipo` de cada documento | `DocumentoClasificado` |
 | `documentos_por_tipo` | derivado de los legibles, en su orden (igual que `evidencias.consolidar`) |
 | `unidades` / `variables` | `DatoConsolidado` (payload entero: las tres capas de `docs/03` §5.3) |
-| `conflictos` | `ConflictoDetectado`, resuelto contra el dato ya reconstruido (misma identidad) |
+| `conflictos` | `ConflictoDetectado`, resuelto contra el dato ya reconstruido (misma identidad) y vigente |
 | `avisos`, `vinculos_por_huella` | `ObservacionRegistrada{origen: "consolidacion"}` |
 | `evidencias_no_asignadas` | `EvidenciaPropuesta{asignada: false}` |
 | `fecha_evaluacion` | `ActuacionAbierta` |
@@ -183,6 +183,9 @@ def consolidada_de(log: LogEventos) -> ActuacionConsolidada:
             unidades.setdefault(str(serie), {})[nombre] = dato
 
     # Un conflicto no es una copia del dato: es **el mismo** dato, como en `evidencias.consolidar`.
+    # Y es el dato quien dice si sigue habiendo conflicto: un log solo-anadir con un recalculo posterior
+    # (S3.8, correccion humana) conserva el `ConflictoDetectado` de la ejecucion vieja, que es historia y
+    # no un conflicto de hoy. Sin esta comprobacion el replay bloquearia un veredicto ya resuelto.
     conflictos: list[DatoConsolidado] = []
     for evento in log.por_tipo("ConflictoDetectado"):
         datos = evento.datos
@@ -193,7 +196,8 @@ def consolidada_de(log: LogEventos) -> ActuacionConsolidada:
             raise ErrorEvento(
                 f"el log declara un conflicto en {nombre!r} (unidad {serie!r}) sin su DatoConsolidado"
             )
-        conflictos.append(dato_conflicto)
+        if dato_conflicto.conflicto and not any(d is dato_conflicto for d in conflictos):
+            conflictos.append(dato_conflicto)
 
     avisos: list[str] = []
     vinculos: dict[str, str] = {}

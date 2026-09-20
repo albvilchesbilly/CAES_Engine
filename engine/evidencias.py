@@ -44,6 +44,12 @@ Pasos de `consolidar` (docs/03 §8), en este orden:
 4. **OCR** (`metodo == "ocr"` con confianza < 1): si coincide con una fuente fiable refuerza (entra en
    `valores_por_fuente`); si discrepa va a `posibles_errores_ocr` y no bloquea. Si solo hay OCR, se
    consume con aviso "solo evidencia OCR".
+   **4 bis. Correccion humana** (`metodo == "correccion_humana"`, `METODO_CORRECCION`): una fuente mas,
+   con la **maxima precedencia** (`ADR-013` §2 regla 2). Desplaza a las demas fuentes de esa variable en ese
+   ambito —manda la ultima, porque el log es solo-anadir— y con ellas desaparece el conflicto: eso es
+   resolverlo, no borrarlo. Las evidencias desplazadas siguen enteras en `evidencias` con su cita y un aviso
+   nombra lo que habia. Este modulo no sabe de donde sale una correccion ni quien la firmo: eso es de
+   `engine.correcciones`, que si importa este.
 5. **Conflicto** entre fuentes fiables → `valor_consumido = None`, `conflicto = True`, todas las
    evidencias conservadas, el dato en `ActuacionConsolidada.conflictos`. Nunca se elige (regla de oro 6).
    `fuente_primaria` marca la capa 2 pero no rompe el empate.
@@ -84,6 +90,11 @@ from engine.spec_registry import NIVELES_VARIABLE_UNIDAD, PREFIJO_TABLA, Spec
 TIPOS_EVIDENCIA = ("demostrado", "declarado", "derivado")
 PRIORIDAD_TIPO_EVIDENCIA: dict[str, int] = {"derivado": 0, "demostrado": 1, "declarado": 2}
 METODO_OCR = "ocr"
+#: Metodo de una evidencia que no sale de un documento sino de una persona (`ADR-013`; `engine.correcciones`
+#: la construye). Es el espejo de `METODO_OCR`: alli una fuente que vale menos que las nativas, aqui una que
+#: vale mas que todas. El consolidador solo necesita saber esto; quien la crea y con que cita, no es cosa
+#: suya (por eso este modulo no importa `engine.correcciones`, que si importa este).
+METODO_CORRECCION = "correccion_humana"
 CONFIANZA_FIABLE = Decimal("1")
 CRUCE_EXACTO = "exacto"
 CRUCE_NORMALIZADO = "normalizado"
@@ -569,6 +580,16 @@ def _consolidar_grupo(variable: str, evidencias: list[Evidencia], spec: Spec) ->
     if solo_ocr:
         avisos.append(AVISO_SOLO_OCR)
 
+    # precedencia: una correccion humana desplaza a las demas fuentes de esta variable (`ADR-013` §2).
+    # Manda la ultima (el log es solo-anadir: corregir dos veces es cambiar de opinion) y las demas
+    # evidencias se conservan enteras en el dato: el conflicto no se borra, se resuelve.
+    correcciones = [ev for ev in base if ev.metodo == METODO_CORRECCION]
+    if correcciones:
+        base = [correcciones[-1]]
+        aviso = _aviso_correccion(correcciones[-1], evidencias, normalizados)
+        if aviso is not None:
+            avisos.append(aviso)
+
     # capa 2: valores por fuente (fiables; el OCR solo si coincide con una fuente fiable)
     valores_por_fuente: dict[str, str] = {}
     for ev in base:
@@ -655,6 +676,30 @@ def _consolidar_grupo(variable: str, evidencias: list[Evidencia], spec: Spec) ->
         unidad=unidad,
         tipo=tipo_dato,
         avisos=avisos,
+    )
+
+
+def _aviso_correccion(
+    correccion: Evidencia, evidencias: list[Evidencia], normalizados: dict[int, str]
+) -> str | None:
+    """Que se descarto al aplicar una correccion humana: el conflicto se resuelve **a la vista**.
+
+    Sin este aviso, un dato corregido se leeria igual que uno que nunca tuvo discusion. Las evidencias
+    desplazadas siguen enteras en `DatoConsolidado.evidencias` con su cita; esto solo lo nombra.
+    """
+    elegido = normalizados[id(correccion)]
+    desplazados: list[str] = []
+    for ev in evidencias:
+        if ev.metodo == METODO_CORRECCION or not ev.fiable:
+            continue
+        texto = f"{ev.tipo_doc}={normalizados[id(ev)]}"
+        if texto not in desplazados:
+            desplazados.append(texto)
+    if not desplazados:
+        return None
+    return (
+        f"valor fijado por correccion humana ({elegido}) por {correccion.extractor_version}; "
+        "fuentes documentales: " + ", ".join(desplazados)
     )
 
 

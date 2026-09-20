@@ -32,7 +32,7 @@ Nada de `eval`, `exec` ni `compile`. No importa de `agentes/`, `salida/`, `gener
 from __future__ import annotations
 
 import time
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import date
 from importlib.metadata import PackageNotFoundError, version
@@ -40,6 +40,8 @@ from pathlib import Path
 
 from engine.calculo import ResultadoCalculo
 from engine.clasificacion import clasificar_todos
+from engine.correcciones import Correccion, a_evidencias
+from engine.correcciones import validar as validar_correcciones
 from engine.evidencias import ActuacionConsolidada, consolidar
 from engine.extraccion import extraer_todos
 from engine.ingesta import Documento, avisos_de, documentos_legibles, ingestar
@@ -178,12 +180,19 @@ def procesar_actuacion(
     fecha_evaluacion: date | None = None,
     ocr: bool = True,
     registro: SpecRegistry | None = None,
+    correcciones: Sequence[Correccion] = (),
 ) -> Actuacion:
     """Procesa la carpeta de una actuacion y devuelve la `Actuacion` con su veredicto (ver cabecera).
 
     `spec_id` es el codigo de la ficha a aplicar; `None` toma la unica activa. `fecha_evaluacion` es tambien
     `solicitud.fecha` (INT-10). `ocr=False` desactiva el reconocimiento optico: el veredicto no debe depender
     de el (`docs/05` §8.2).
+
+    `correcciones` son las decisiones humanas que se aplican a esta ejecucion (contrato C21 de `ADR-013`
+    §3). **El motor no lee el log**: las recibe ya leidas, como datos planos, igual que `engine.seguimiento`
+    recibe los estados de plataforma; quien tiene el log llama
+    `procesar_actuacion(carpeta, correcciones=engine.correcciones.de_log(log))`. Vacio —lo normal— la
+    ejecucion es identica a la de siempre, byte a byte.
     """
     carpeta = Path(carpeta)
     if not carpeta.is_dir():
@@ -210,6 +219,10 @@ def procesar_actuacion(
 
     reloj = time.perf_counter()
     evidencias = extraer_todos(documentos, spec)
+    if correcciones:
+        # Una correccion humana es una evidencia mas (`ADR-013` §1): entra en el mismo monton, en orden, y
+        # la consolidacion le da la precedencia. Aqui no se decide nada; solo se comprueba contra la ficha.
+        evidencias = list(evidencias) + a_evidencias(validar_correcciones(correcciones, spec))
     tiempos["extraccion"] = time.perf_counter() - reloj
 
     reloj = time.perf_counter()
