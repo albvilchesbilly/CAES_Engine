@@ -136,6 +136,29 @@ Otros dos huecos que bloquean la segunda oleada:
 - **La matriz no declara pantalla para la vista de revisión**, solo `cola_revision`. Y la pantalla es lo que
   desempata el rol en `CAP-02` y `CAP-09`, así que hoy la vista tendría que mentir sobre desde dónde actúa.
 
+## 5 ter. Un agujero de seguridad cerrado en la puerta de al lado (20/09/2026)
+
+Al cerrar el camino de lectura por huella, el agente que lo construyó miró el camino contrario y encontró el
+mismo defecto en `FR0`: **`CAP-02` aceptaba una ruta del servidor en la petición**. Cualquiera con esa
+capacidad podía hacer que el servidor leyera un fichero alcanzable y le devolviera su huella, su tamaño y si
+existía. No llegaba a servir los bytes —eso lo impide que la huella tenga que estar en `actuacion.documentos`,
+que la pone la ingesta— pero era un oráculo de existencia y contenido, y se habría convertido en traversal de
+verdad el día que un repositorio real construyera esa lista desde lo registrado.
+
+**Cerrado**: el documento se aporta por su **contenido**, y una ruta en la petición se rechaza diciendo por
+qué. Como hoy no hay canal de subida desde el navegador (`GAP-REV-03`), la capacidad falla diciendo que falta
+el canal, que es lo que hace el resto del contrato de `FR0` con lo que todavía no existe. Lo que no hace es
+funcionar por una vía que no debe existir.
+
+Merece quedar escrito **cómo apareció**: no lo encontró un test ni una revisión de seguridad, sino el hábito
+de mirar el camino simétrico al que se acaba de arreglar. Es la tercera vez en dos días que ese hábito
+encuentra algo (`R-REQ-02`, el log del tenant, y esto).
+
+**Queda abierto y relacionado** (`FR0`, no `FR1`): `comprobar_alcance` no deniega cuando el repositorio no
+sabe de qué tenant es una actuación. Hoy no se cuela nada porque el repositorio en memoria falla antes, pero
+una implementación real que conozca la actuación y no su tenant serviría datos sin control. Es una propiedad
+de **todas** las lecturas, no solo de la del documento.
+
 ## 6. Lo que queda para Billy (PROPUESTA)
 
 1. **Servir el documento bajo `CAP-03`** (§1): es una lectura de lo que `CAP-03` ya nombra, pero conviene que

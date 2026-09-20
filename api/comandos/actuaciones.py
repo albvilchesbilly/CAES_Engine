@@ -109,10 +109,41 @@ def abrir_actuacion(peticion: Peticion, servicios: Servicios, capacidad: Capacid
     return Salida(datos={"actuacion_id": identificador}, eventos=(apertura, asignacion))
 
 
+#: Claves que **no** se admiten al registrar un documento: nombran un fichero del servidor.
+CLAVES_DE_SERVIDOR = ("ruta", "nombre_fichero", "path")
+
+
 def registrar_documento(peticion: Peticion, servicios: Servicios, capacidad: Capacidad, rol: str) -> Salida:
-    """Registra un documento aportado (P1). La huella la calcula el nucleo sobre los bytes, no el cliente."""
-    ruta = str(peticion.exige("ruta"))
-    huella = servicios.repositorio.registrar_documento(peticion.actuacion_id, ruta)
+    """Registra un documento aportado (P1). La huella la calcula el nucleo sobre los bytes, no el cliente.
+
+    **El documento llega como contenido, nunca como ruta del servidor** (cerrado el 20/09/2026). Aceptar una
+    ruta de quien pregunta convertia esta capacidad en un oraculo: cualquiera con `CAP-02` podia hacer que el
+    servidor leyera un fichero alcanzable y le devolviera su huella, su tamano y si existia. Es el espejo
+    exacto del agujero que `ADR-012` §1 cierra en la lectura, y lo encontro el agente que cerro aquel.
+
+    Hoy no hay canal de subida desde el navegador (`GAP-REV-03`), asi que esta capacidad no se puede ejercer
+    de extremo a extremo: **falla diciendo que falta el canal**, que es lo que hace el resto del contrato de
+    `FR0` con lo que todavia no existe. Lo que no hace es funcionar por una via que no debe existir.
+    """
+    coladas = [clave for clave in CLAVES_DE_SERVIDOR if clave in peticion.datos]
+    if coladas:
+        raise ErrorApi(
+            f"{capacidad.id}: un documento se aporta por su contenido, nunca nombrando un fichero del "
+            f"servidor; sobra {coladas}. Una ruta en la peticion es un camino para leer ficheros ajenos"
+        )
+    contenido = peticion.exige("contenido")
+    if not isinstance(contenido, bytes | bytearray):
+        raise ErrorApi(
+            f"{capacidad.id}: `contenido` son los bytes del documento. Llego {type(contenido).__name__}"
+        )
+    guardar = getattr(servicios.repositorio, "guardar_documento", None)
+    if not callable(guardar):
+        raise ErrorApi(
+            f"{capacidad.id}: falta el canal de subida (`GAP-REV-03`): el repositorio no sabe guardar el "
+            "contenido de un documento aportado"
+        )
+    sha256 = str(guardar(peticion.actuacion_id, bytes(contenido)))
+    huella: Mapping[str, object] = {"sha256": sha256, "bytes": len(contenido)}
     if "sha256" not in huella:  # pragma: no cover - contrato del repositorio
         raise ErrorApi(f"{capacidad.id}: el repositorio no ha devuelto la huella del documento")
     evento = escribir(

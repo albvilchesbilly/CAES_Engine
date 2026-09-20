@@ -466,3 +466,42 @@ def test_el_caso_a_sirve_sus_pdf_reales_byte_a_byte() -> None:
         assert sha256_bytes(contenido) == documento.sha256
         servidos += 1
     assert servidos >= 5, "el caso A tiene varios documentos; si no, este test no prueba nada"
+
+
+# ---------------------------------------------------------------------------
+# El espejo: registrar un documento tampoco acepta una ruta del servidor
+# ---------------------------------------------------------------------------
+
+
+def _peticion_registro(**datos: object) -> Peticion:
+    """Una peticion de `CAP-02` del operador, que es quien aporta documentacion."""
+    return Peticion("CAP-02", Principal("u-ope", ("T-OPE",), TENANT_PROPIO), contexto(), datos)
+
+
+def _capacidad_cap02():
+    from engine.capacidades import matriz_capacidades
+
+    return matriz_capacidades().capacidades["CAP-02"]
+
+
+@pytest.mark.parametrize("clave", ["ruta", "nombre_fichero", "path"])
+def test_registrar_documento_no_acepta_una_ruta_del_servidor(clave: str, servicios: Servicios) -> None:
+    """El espejo exacto del agujero que cierra la lectura (`ADR-012` §1), cerrado el 20/09/2026.
+
+    Aceptar una ruta de quien pregunta convertia `CAP-02` en un oraculo: cualquiera con esa capacidad podia
+    hacer que el servidor leyera un fichero alcanzable y le devolviera su huella, su tamano y si existia.
+    """
+    from api.comandos.actuaciones import CLAVES_DE_SERVIDOR, registrar_documento
+
+    assert clave in CLAVES_DE_SERVIDOR
+    peticion = _peticion_registro(**{clave: "/etc/passwd", "contenido": b"%PDF-1.4"})
+    with pytest.raises(ErrorApi, match="nunca nombrando un fichero del servidor"):
+        registrar_documento(peticion, servicios, _capacidad_cap02(), "T-OPE")
+
+
+def test_registrar_documento_exige_los_bytes(servicios: Servicios) -> None:
+    from api.comandos.actuaciones import registrar_documento
+
+    peticion = _peticion_registro(contenido="no soy bytes")
+    with pytest.raises(ErrorApi, match="son los bytes del documento"):
+        registrar_documento(peticion, servicios, _capacidad_cap02(), "T-OPE")
