@@ -1,4 +1,4 @@
-"""Las seis propiedades metamorficas minimas de `docs/05` §6.1 (F0.11).
+"""Las seis propiedades metamorficas minimas de `docs/05` §6.1 (F0.11), mas M-07 (cierre de H3, §4.5).
 
 Una propiedad metamorfica no necesita ground truth: dice **como debe cambiar (o no cambiar) el resultado**
 cuando la entrada se transforma de una forma conocida. Por eso son la cuarta fuente de verdad de `docs/05`
@@ -12,6 +12,10 @@ cuando la entrada se transforma de una forma conocida. Por eso son la cuarta fue
 | M-04 | `tipo_equipo_accionado` excluido | `NO_ELEGIBLE` con `R-AMB-01` `FALLA`, aunque se declare ahorro |
 | M-05 | Añadir un documento irrelevante | Nada cambia salvo un aviso de documento no clasificado |
 | M-06 | Duplicar un documento | Nada cambia; el duplicado se reconoce por SHA-256 |
+| M-07 | Romper un dato que bloquea | El veredicto nunca mejora y un bloqueo no publica ahorro |
+
+M-07 no es una de las seis de `docs/05` §6.1: la añade el cierre de H3 (`docs/05` §4.5) como la
+formulacion general del invariante «nunca se publica un ahorro apoyado en datos incoherentes».
 
 **Como se construyen las entradas.** `expedientes/` **no se toca**: cada test copia el caso A en `tmp_path` y
 transforma la copia. Las transformaciones que no pueden hacerse sobre el PDF ya generado (alterar un valor,
@@ -30,7 +34,7 @@ from __future__ import annotations
 
 import shutil
 from dataclasses import replace
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from functools import cache
 from pathlib import Path
@@ -378,3 +382,81 @@ def test_m06_el_duplicado_se_reconoce_por_sha256(tmp_path):
     assert len({d.doc_id for d in ficheros}) == len(ficheros) - 1
     del_tipo = [d for d in ficheros if d.tipo == "ficha_tecnica_motor"]
     assert len(del_tipo) == 2 and del_tipo[0].sha256 == del_tipo[1].sha256
+
+
+# ---------------------------------------------------------------------------
+# M-07 · Romper un dato que bloquea nunca aumenta el ahorro publicado
+# ---------------------------------------------------------------------------
+
+#: M-07 no es una de las seis de `docs/05` §6.1: la añade el cierre de H3 (`docs/05` §4.5) como formulación
+#: general del invariante «nunca se publica un ahorro apoyado en datos incoherentes» (`CLAUDE.md` §3 y la
+#: precondición en prosa `ninguna regla con severidad BLOQUEANTE fallida` de `calculo.precondiciones`).
+#: Vale para cualquier rotura que bloquee, incluidas las que todavía no existen: si mañana una regla nueva
+#: bloquea por un motivo distinto, la propiedad la cubre sin tocar el test.
+
+
+def _caso_con_fechas_incoherentes(tmp_path: Path) -> Path:
+    """Caso A con la fecha de inicio 30 días **después** de la de fin, cambiada en el modelo de datos.
+
+    Al cambiarla en el modelo la dicen igual todos los documentos: no hay conflicto entre fuentes, así que el
+    bloqueo entra por la rama de regla bloqueante fallida (`R-TMP-01`) y no por la de conflicto, que es la
+    que ya cubre el caso C. Ninguna precondición física del cálculo (`N2 < N1`, `0 < h <= 8760`) impide
+    calcular: lo único que retira el ahorro es la política del motor de reglas.
+    """
+    caso = caso_base()
+    fechas = replace(caso.fechas, inicio=caso.fechas.fin + timedelta(days=30))
+    roto = replace(
+        caso,
+        id="M07",
+        carpeta="M07_fechas_incoherentes",
+        descripcion="Metamorfica M-07: fecha de inicio posterior a la de fin en todos los documentos",
+        fechas=fechas,
+        veredicto_esperado="BLOQUEADO",
+        reglas_falladas_esperadas=("R-TMP-01",),
+    )
+    assert roto.fechas.inicio > roto.fechas.fin
+    spec = _registro().obtener("IND240", fecha=FECHA)
+    return escribir_caso(generar_caso(roto, spec), tmp_path)
+
+
+def _caso_con_pm_alterado(tmp_path: Path) -> Path:
+    """Caso A con `PM` alterado solo en su fuente primaria: bloqueo por conflicto entre fuentes (M-02)."""
+    carpeta = copia(tmp_path)
+    motor = motor_del_caso_base()
+    (carpeta / FICHA_MOTOR).write_bytes(
+        construir_pdf([ficha_tecnica_motor.seccion(replace(motor, PM=Decimal("75")))])
+    )
+    return carpeta
+
+
+#: Las dos vías por las que una actuación queda bloqueada, para que la propiedad cubra las dos ramas.
+ROTURAS_QUE_BLOQUEAN = {
+    "fechas_incoherentes": _caso_con_fechas_incoherentes,  # R-TMP-01, sin conflicto
+    "pm_alterado": _caso_con_pm_alterado,  # R-CON-01, por conflicto
+}
+
+
+@pytest.mark.parametrize("rotura", sorted(ROTURAS_QUE_BLOQUEAN))
+def test_m07_romper_un_dato_que_bloquea_nunca_aumenta_el_ahorro_publicado(tmp_path, rotura):
+    actuacion = evaluar(ROTURAS_QUE_BLOQUEAN[rotura](tmp_path))
+    referencia = base()
+
+    assert ORDEN_VEREDICTOS.index(actuacion.veredicto) <= ORDEN_VEREDICTOS.index(referencia.veredicto)
+    assert actuacion.evaluacion.falladas, f"romper {rotura} deberia hacer fallar alguna regla"
+    total = total_de(actuacion)
+    assert total is None or total <= AETOTAL_A
+    if actuacion.veredicto in ("BLOQUEADO", "NO_ELEGIBLE"):
+        # Regla de oro: un veredicto bloqueado no publica ahorro, venga el bloqueo de donde venga.
+        assert total is None, f"{rotura}: {actuacion.veredicto} con ahorro publicado {total}"
+        assert actuacion.calculo is None or actuacion.calculo.total is None
+
+
+def test_m07_el_bloqueo_temporal_no_es_un_conflicto_entre_fuentes(tmp_path):
+    """Sin esta comprobación, M-07 podría estar pasando por la rama del caso C y no probar nada nuevo."""
+    actuacion = evaluar(_caso_con_fechas_incoherentes(tmp_path))
+    assert actuacion.veredicto == "BLOQUEADO"
+    assert actuacion.evaluacion.resultado("R-TMP-01").resultado is Resultado.FALLA
+    assert actuacion.evaluacion.bloqueo_por_conflicto == ()
+    assert actuacion.consolidada.conflictos == []
+    assert total_de(actuacion) is None
+    assert "calculo" in actuacion.evaluacion.fases_saltadas

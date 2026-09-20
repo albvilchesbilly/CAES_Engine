@@ -211,6 +211,71 @@ def test_mencionar_un_motor_existente_no_convierte_la_linea_en_compra_de_motor()
     assert categoria_de_linea("Portes y embalaje") == "otro"
 
 
+@pytest.mark.parametrize(
+    ("descripcion", "categoria"),
+    [
+        # H1: la compra del equipo manda sobre el verbo que abra la linea
+        ("Suministro e instalación de motor nuevo 110 kW", "motor"),
+        ("Montaje de bomba centrífuga nueva BCN-250", "bomba"),
+        ("Suministro de ventilador radial VR-400", "ventilador"),
+        ("Compresor centrífugo, suministro y puesta en marcha", "compresor"),
+        ("Suministro de conjunto motobomba nuevo con variador integrado", "equipo_completo"),
+        ("Sustitución del motor 110 kW", "motor"),
+        # ... y el trabajo sobre un equipo que ya esta ahi sigue siendo mano de obra
+        ("Instalación de variador sobre motor existente", "instalacion"),
+        ("Mano de obra de instalación del motor existente", "instalacion"),
+        ("Mantenimiento preventivo del motor", "instalacion"),
+        ("Motor: rebobinado", "instalacion"),
+        ("Retirada y gestión de residuos del motor existente", "instalacion"),
+        # el sujeto de la linea decide cuando no hay ni compra ni mano de obra
+        ("Variador de frecuencia para bomba centrífuga", "variador"),
+        ("Bomba centrífuga BCN-250-400", "bomba"),
+        ("Portes y embalaje", "otro"),
+        ("", "otro"),
+    ],
+)
+def test_la_categoria_responde_a_que_se_factura_no_a_que_palabra_va_antes(
+    descripcion: str, categoria: str
+) -> None:
+    """H1 (`/contrastar` 20/09/2026): `R-AMB-02` no disparaba con una factura de compra de motor.
+
+    Las seis primeras son las que no bloqueaban y deben bloquear (EXC-01/EXC-02, que excluyen la sustitucion
+    **total o parcial**). Las seis siguientes son el falso positivo que el arreglo no puede crear: instalar
+    un variador sobre un motor **existente** es el caso de uso central del producto y no puede salir
+    `NO_ELEGIBLE`. Reordenar el lexico sin mas convertia unas en otras.
+    """
+    assert categoria_de_linea(descripcion) == categoria
+
+
+def test_una_clausula_de_exclusion_no_convierte_la_linea_en_una_compra() -> None:
+    """La linea real del banco dice "no incluye suministro de motor": nombrar la compra para negarla no es
+    comprar. Es lo que sostiene el veredicto de los siete casos A-G."""
+    linea = (
+        "Instalación, parametrización y puesta en marcha del variador (1 motor(es) existente(s); "
+        "no incluye suministro de motor ni de equipo accionado)"
+    )
+    assert categoria_de_linea(linea) == "instalacion"
+    assert categoria_de_linea("Montaje de variador, sin suministro de motor") == "instalacion"
+
+
+def test_las_senales_se_buscan_por_palabra_y_no_por_subcadena() -> None:
+    """`venta` no puede casar dentro de `ventilador` ni de `ventilacion`: seria una compra inventada."""
+    assert categoria_de_linea("Ventilador radial existente y montaje de bomba centrífuga") == "instalacion"
+    assert categoria_de_linea("Rejillas de ventilación y montaje de bomba centrífuga") == "instalacion"
+
+
+def test_cada_calificativo_es_del_equipo_que_tiene_al_lado() -> None:
+    """`nuevo` y `existente` califican al sustantivo contiguo, no a todos los de la linea."""
+    assert categoria_de_linea("Suministro de motor nuevo y desmontaje de la bomba existente") == "motor"
+    assert categoria_de_linea("Montaje de variador y suministro de bomba nueva") == "bomba"
+    # INT propuesto: la sustitucion del variador sobre un motor que la linea llama existente no es exclusion
+    assert categoria_de_linea("Sustitución de variador sobre motor existente") == "variador"
+    # comprar el variador es la actuacion, no una exclusion: la categoria cambia, `R-AMB-02` no
+    assert categoria_de_linea("Instalación de variador nuevo sobre motor existente") == "variador"
+    # EXC-02 dice "sustitucion total o parcial del equipo existente": ahi `existente` no libra de la compra
+    assert categoria_de_linea("Sustitución de la soplante existente por una nueva") == "ventilador"
+
+
 def test_el_caso_d_declara_un_ahorro_que_el_motor_no_debe_usar() -> None:
     declarado = _evidencias_de("EXP001-D_fuera_ambito", "ficha_cumplimentada.ahorro_declarado_kwh")
     assert declarado and declarado[0].tipo_evidencia == "declarado"

@@ -1154,3 +1154,128 @@ def test_un_subsanable_posterior_al_calculo_marca_el_resultado_como_provisional(
     evaluacion = evaluar_actuacion(caso_a, spec_ind240, fecha_evaluacion=FECHA)
     assert evaluacion.veredicto == VEREDICTO_SUBSANABLE
     assert evaluacion.calculo is not None and evaluacion.calculo.provisional is True
+
+
+# ---------------------------------------------------------------------------
+# H3 (docs/05 §4.5) - la guarda que impide calcular con datos incoherentes
+# ---------------------------------------------------------------------------
+
+#: Precondicion del calculo declarada en la spec activa (`calculo.precondiciones`). Es prosa, no una
+#: expresion del vocabulario, asi que `engine/calculo.py` no la evalua: la delega y la aplica la rama
+#: `elif bloqueo_previo` de `evaluar_actuacion`. Los tests de esta seccion son su unica verificacion.
+PRECONDICION_DELEGADA = "ninguna regla con severidad BLOQUEANTE fallida"
+
+
+def espia_calculo() -> tuple[list[dict], object]:
+    """Envoltorio del calculo real que registra si se ha llegado a pedir."""
+    llamadas: list[dict] = []
+
+    def espia(spec_datos, unidades, tablas, **kwargs):
+        llamadas.append({"unidades": unidades, **kwargs})
+        from engine.calculo import calcular as real
+
+        return real(spec_datos, unidades, tablas, **kwargs)
+
+    return llamadas, espia
+
+
+def _sin_calculo_por_bloqueo(spec, act: ActuacionConsolidada, id_regla: str) -> Evaluacion:
+    """Comprueba la propiedad completa: bloqueante no fisica fallada -> ni se pide el calculo ni hay ahorro.
+
+    Es el test que mata el mutante de H3: sin la rama `elif bloqueo_previo` de `engine/reglas.py` el calculo
+    se pide igual, sale bien (ninguna precondicion fisica lo para) y una actuacion BLOQUEADA publica su
+    ahorro. `engine/calculo.py` no puede cubrir esto: la precondicion que lo prohibe (PRECONDICION_DELEGADA)
+    es prosa y esta delegada en el motor de reglas.
+    """
+    llamadas, espia = espia_calculo()
+    evaluacion = evaluar_actuacion(act, spec, fecha_evaluacion=FECHA, calcular_fn=espia)
+
+    fallada = evaluacion.resultado(id_regla)
+    assert fallada.resultado is Resultado.FALLA
+    assert fallada.severidad == "BLOQUEANTE_DATOS"
+    assert evaluacion.veredicto == VEREDICTO_BLOQUEADO
+    # Entra por la rama de bloqueo previo, no por la de conflicto entre fuentes (caso C).
+    assert evaluacion.bloqueo_por_conflicto == ()
+    assert act.conflictos == []
+    # No se pide el calculo...
+    assert llamadas == [], f"con {id_regla} fallada no se puede pedir el calculo"
+    # ...y no se publica ahorro por ninguna via.
+    assert evaluacion.calculo is None
+    assert evaluacion.a_dict()["veredicto"] == VEREDICTO_BLOQUEADO
+    assert "calculo" in evaluacion.fases_saltadas
+    assert "post_calculo" in evaluacion.fases_saltadas
+    motivo = evaluacion.resultado("R-CAL-03").motivo or ""
+    assert "sin calculo" in motivo and id_regla in motivo
+    # El aviso de la precondicion delegada solo se emite cuando el calculo procede.
+    assert not any(PRECONDICION_DELEGADA in aviso for aviso in evaluacion.avisos)
+    return evaluacion
+
+
+def test_bloqueo_temporal_sin_conflicto_no_calcula_ni_publica_ahorro(spec_ind240, caso_a):
+    """R-TMP-01 (fecha de inicio posterior a la de fin): bloqueo sin precondicion fisica que lo tape."""
+    con(caso_a, dato("fecha_inicio_actuacion", date(2026, 6, 1), fuentes=["ficha_cumplimentada"]))
+    evaluacion = _sin_calculo_por_bloqueo(spec_ind240, caso_a, "R-TMP-01")
+    assert evaluacion.resultado("R-CAL-01").resultado is Resultado.CUMPLE  # N2 < N1 se sigue cumpliendo
+
+
+def test_bloqueo_documental_sin_conflicto_no_calcula_ni_publica_ahorro(spec_ind240, caso_a):
+    """R-CON-05 (NIF del titular distinto entre documentos): tampoco hay precondicion fisica que lo pare."""
+    con(
+        caso_a,
+        dato(
+            "titular_nif",
+            "B99001018",
+            fuentes=["ficha_cumplimentada", "factura"],
+            valores_por_fuente={"ficha_cumplimentada": "B99001018", "factura": "B00000000"},
+        ),
+    )
+    _sin_calculo_por_bloqueo(spec_ind240, caso_a, "R-CON-05")
+
+
+def test_el_bloqueo_previo_no_depende_de_que_el_calculo_sea_imposible(spec_ind240, caso_a):
+    """El mismo caso A, sin la regla temporal rota, si calcula 305.829,6: lo que retira el ahorro es la
+    regla bloqueante fallida, no una imposibilidad fisica ni un dato ausente."""
+    llamadas, espia = espia_calculo()
+    evaluacion = evaluar_actuacion(caso_a, spec_ind240, fecha_evaluacion=FECHA, calcular_fn=espia)
+    assert len(llamadas) == 1
+    assert evaluacion.veredicto == VEREDICTO_PREVALIDADO
+    assert evaluacion.calculo is not None and evaluacion.calculo.total == Decimal("305829.6")
+
+    con(caso_a, dato("fecha_inicio_actuacion", date(2026, 6, 1), fuentes=["ficha_cumplimentada"]))
+    bloqueada = evaluar_actuacion(caso_a, spec_ind240, fecha_evaluacion=FECHA)
+    assert bloqueada.veredicto == VEREDICTO_BLOQUEADO
+    assert bloqueada.calculo is None
+
+
+def test_la_precondicion_en_prosa_de_la_spec_la_aplica_el_motor_de_reglas(spec_ind240, caso_a):
+    """Ata la precondicion declarada en `calculo.precondiciones` con el sitio donde se cumple.
+
+    `engine/calculo.py` la deja en `precondiciones_delegadas` porque es prosa; el unico sitio donde se aplica
+    es la rama `elif bloqueo_previo` de `engine/reglas.py`. Si desaparece de la spec o del codigo, este test
+    lo dice.
+    """
+    assert PRECONDICION_DELEGADA in spec_ind240.plan.precondiciones_delegadas
+    assert PRECONDICION_DELEGADA in spec_ind240.precondiciones_texto
+    assert PRECONDICION_DELEGADA not in {e.texto for e in spec_ind240.plan.precondiciones}
+
+    sin_bloqueo = evaluar_actuacion(caso_a, spec_ind240, fecha_evaluacion=FECHA)
+    comprobada = [a for a in sin_bloqueo.avisos if PRECONDICION_DELEGADA in a]
+    assert len(comprobada) == 1
+    assert "ninguna bloqueante fallida antes del calculo" in comprobada[0]
+
+    con(caso_a, dato("fecha_inicio_actuacion", date(2026, 6, 1), fuentes=["ficha_cumplimentada"]))
+    con_bloqueo = evaluar_actuacion(caso_a, spec_ind240, fecha_evaluacion=FECHA)
+    assert con_bloqueo.calculo is None
+    assert not any(PRECONDICION_DELEGADA in a for a in con_bloqueo.avisos)
+
+
+def test_r_cal_03_fallida_retira_el_ahorro_visto_desde_la_evaluacion(spec_ind240, caso_a):
+    """H4 (docs/05 §4.5): la retirada del control fisico FIS-02, cerrada en la evaluacion, no solo en N3."""
+    con(caso_a, unidad_dato("P_prom", Decimal("200"), tipo_evidencia="derivado"), SERIE)
+    evaluacion = evaluar_actuacion(caso_a, spec_ind240, fecha_evaluacion=FECHA)
+    assert evaluacion.resultado("R-CAL-03").resultado is Resultado.FALLA
+    assert evaluacion.veredicto == VEREDICTO_BLOQUEADO
+    assert evaluacion.calculo is not None, "el calculo se hace: el control fisico es posterior"
+    assert evaluacion.calculo.total is None
+    assert evaluacion.calculo.total_cae is None
+    assert evaluacion.a_dict()["resultados"]

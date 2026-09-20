@@ -446,6 +446,31 @@ def referencia_cumple(filas: Sequence[Mapping[str, object]]) -> bool:
     return obtenido is not None and Decimal(str(obtenido)) == AETOTAL_DE_REFERENCIA
 
 
+def avisos_de_carga(registro: object) -> list[str]:
+    """Los avisos de carga de las specs activas, a la vista.
+
+    Un aviso de carga es el Spec Registry diciendo que hay algo que **no puede comprobar solo**: una regla
+    bloqueante cuya carencia no sabe que este recogida, una precondicion en prosa que delega en el motor.
+    Hasta la auditoria del 20/09/2026 no los imprimia nadie, y los dos defectos mas serios que encontro
+    (H1 y H3) estaban senalados ahi desde F0.4. Quien rompe la puerta es
+    `tests/test_avisos_carga.py`, que compara la lista contra una linea base declarada; esto solo los pone
+    donde se leen.
+    """
+    lineas: list[str] = []
+    for codigo in getattr(registro, "codigos", list)():
+        for version in registro.versiones(codigo):
+            spec = registro.obtener(codigo, version)
+            for aviso in spec.avisos_carga:
+                lineas.append(f"  aviso de carga [{codigo} v{version}]: {aviso}")
+    if lineas:
+        lineas.insert(
+            0,
+            f"{len(lineas)} aviso(s) de carga de las specs activas (declarados en "
+            f"tests/test_avisos_carga.py; uno nuevo rompe la puerta):",
+        )
+    return lineas
+
+
 def codigo_de_salida(filas: Sequence[Mapping[str, object]]) -> int:
     if not filas:
         return CODIGO_ERROR
@@ -546,6 +571,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(linea)
     print()
     for linea in resumen(filas):
+        print(linea)
+    for linea in avisos_de_carga(registro_cargado()):
         print(linea)
     if args.informes and filas:
         print(f"informes en {CARPETA_INFORMES}")

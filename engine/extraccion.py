@@ -45,9 +45,16 @@ Heuristicas declaradas (van a `docs/03` §8):
 - **Respaldo por texto**: una etiqueta se busca por sus palabras significativas (>= 4 letras o con digito,
   sin lo que va entre parentesis); el valor es lo que queda en esa linea o, si no queda nada, la siguiente
   linea no vacia. Es tambien como se leen las paginas escaneadas (el OCR no da tablas).
-- **Categoria de una linea de factura**: la decide la **cabeza** de la linea (hasta la primera coma o
-  parentesis). Lo que va entre parentesis o tras "no incluye" es contexto: "instalacion sobre motor
-  existente MTR-SYN-0001" no convierte una linea de variador en una linea de motor (trampa de docs/05 §4.3).
+- **Categoria de una linea de factura**: la decide **que se factura**, no que palabra va antes (H1 de
+  `/contrastar`, 20/09/2026). Primero se mira si la linea **adquiere** un equipo (senal de compra en el
+  mismo segmento, o `nuevo`/`nueva` pegado al sustantivo, y sin marca de `existente`): entonces es del
+  equipo aunque empiece por "Montaje". Si no, una senal de mano de obra en la **cabeza** (hasta la primera
+  coma o parentesis) la hace `instalacion`. Si no, es del primer equipo que nombre la cabeza, por posicion.
+  Lo que va tras "no incluye" se descarta antes de mirar nada, y cada `nuevo`/`existente` califica al
+  sustantivo que tiene al lado: "instalacion sobre motor existente MTR-SYN-0001" no convierte una linea de
+  variador en una linea de motor (trampa de docs/05 §4.3), y "no incluye suministro de motor" tampoco.
+  El lexico de compra es amplio a proposito porque EXC-02 excluye la sustitucion "total o parcial"; el de
+  mano de obra es estrecho, para no llamar compra a un trabajo sobre el equipo que ya esta ahi.
 - **Placa de caracteristicas**: el OCR de una pagina con fotos (o de una foto suelta) cuyo texto habla de
   una placa se emite con `tipo_doc = "placa_caracteristicas_foto"`, que es la fuente que la spec declara
   para `PM` y `N1`; el resto de tipos documentales quedan como estan.
@@ -126,15 +133,113 @@ CATEGORIAS_LINEA = (
     "equipo_completo",
     "otro",
 )  # categorias admitidas para `factura.lineas` (ADR-002 §2.3)
-SENALES_CATEGORIA: tuple[tuple[str, tuple[str, ...]], ...] = (
-    ("instalacion", ("instalacion", "montaje", "puesta en marcha", "parametrizacion", "mano de obra")),
-    ("variador", ("variador", "convertidor de frecuencia", "vsd")),
-    ("equipo_completo", ("equipo completo", "grupo completo", "conjunto motobomba")),
-    ("motor", ("motor",)),
-    ("bomba", ("bomba",)),
-    ("ventilador", ("ventilador",)),
-    ("compresor", ("compresor",)),
+
+# --- Lexico de lineas de factura (consume `R-AMB-02`, BLOQUEANTE_AMBITO; EXC-01 y EXC-02) ---------------
+#
+# La categoria responde a **que se factura**, no a que palabra aparece antes. Una linea que **adquiere** el
+# equipo es del equipo aunque empiece por "Montaje"; una linea que solo hace **trabajo** sobre un equipo que
+# ya esta ahi es `instalacion` aunque nombre el motor. Decidir por la cabeza de la linea daba las dos cosas
+# mal: "Suministro e instalacion de motor nuevo" salia `instalacion` (H1 de `/contrastar` 20/09/2026) y
+# reordenar las senales habria dado `motor` a "Instalacion de variador sobre motor existente", que es el caso
+# de uso central del producto.
+
+# Sustantivos de equipo. `variador` esta aparte en `ORDEN_EQUIPOS`: comprar el variador es la actuacion, no
+# una exclusion; lo que excluyen EXC-01/EXC-02 es comprar el equipo accionado o el conjunto.
+SENALES_EQUIPO: dict[str, tuple[str, ...]] = {
+    "equipo_completo": ("equipo completo", "grupo completo", "conjunto motobomba", "grupo motobomba"),
+    "motor": ("motor",),
+    "bomba": ("bomba", "electrobomba", "motobomba", "grupo de bombeo"),
+    "ventilador": ("ventilador", "soplante", "extractor de aire"),
+    "compresor": ("compresor", "turbocompresor"),
+    "variador": ("variador", "convertidor de frecuencia", "vsd"),
+}
+# Precedencia cuando una linea adquiere mas de un equipo: el accionado manda sobre el variador.
+ORDEN_EQUIPOS: tuple[str, ...] = ("equipo_completo", "motor", "bomba", "ventilador", "compresor", "variador")
+
+# Adquisicion: amplio a proposito. EXC-02 excluye la sustitucion "total o parcial" del equipo existente, de
+# modo que comprar una parte ya es exclusion (las exclusiones las declara la spec, no este modulo).
+SENALES_ADQUISICION: tuple[str, ...] = (
+    "suministro",
+    "suministra",
+    "suministrado",
+    "venta",
+    "vendido",
+    "compra",
+    "adquisicion",
+    "adquirido",
+    "sustitucion",
+    "sustituye",
+    "sustituido",
+    "reposicion",
+    "repuesto",
+    "renovacion",
+    "reemplazo",
+    "cambio de",
+    "provision",
+    "entrega de",
 )
+# Trabajo sobre un equipo que ya esta ahi: estrecho a proposito (no marcar como compra la mano de obra).
+SENALES_TRABAJO: tuple[str, ...] = (
+    "instalacion",
+    "instalado",
+    "montaje",
+    "puesta en marcha",
+    "puesta en servicio",
+    "parametrizacion",
+    "programacion",
+    "configuracion",
+    "mano de obra",
+    "conexionado",
+    "cableado",
+    "desmontaje",
+    "desinstalacion",
+    "retirada",
+    "ajuste",
+    "revision",
+    "mantenimiento",
+    "reparacion",
+    "rebobinado",
+    "asistencia tecnica",
+    "horas de tecnico",
+)
+# Clausulas que niegan lo que viene detras hasta el final de su segmento ("no incluye suministro de motor").
+SENALES_EXCLUSION: tuple[str, ...] = (
+    "no incluye",
+    "no se incluye",
+    "no incluido",
+    "no comprende",
+    "sin suministro",
+    "excluye",
+    "excluido",
+    "salvo",
+)
+# Subconjunto de `SENALES_ADQUISICION`: EXC-02 excluye la sustitucion "del equipo existente", de modo que
+# con estas el `existente` no dice que no se compre; lo dice el `nuevo` que venga detras en el mismo segmento.
+SENALES_SUSTITUCION: tuple[str, ...] = (
+    "sustitucion",
+    "sustituye",
+    "sustituido",
+    "reemplazo",
+    "reposicion",
+    "renovacion",
+    "cambio de",
+)
+
+
+def _patron_de(senales: tuple[str, ...]) -> str:
+    """Alternativa anclada al principio de palabra: `venta` no puede casar dentro de `ventilador`."""
+    return r"\b(?:" + "|".join(re.escape(senal) for senal in senales) + ")"
+
+
+PATRON_ADQUISICION = _patron_de(SENALES_ADQUISICION)
+PATRON_TRABAJO = _patron_de(SENALES_TRABAJO)
+PATRON_SUSTITUCION = _patron_de(SENALES_SUSTITUCION)
+PATRON_EXCLUSION = _patron_de(SENALES_EXCLUSION)
+MARCA_NUEVO = r"\bnuev[oa]s?\b|\bsin estrenar\b|\ba estrenar\b"
+MARCA_EXISTENTE = r"\bpre-?existentes?\b|\bexistentes?\b|\bya instalad[oa]s?\b"
+VENTANA_PRE = 15  # caracteres antes del sustantivo donde cuenta "nueva bomba"
+VENTANA_POS = 45  # caracteres despues donde cuentan "motor existente" y "bomba centrifuga nueva"
+SEPARADORES_SEGMENTO = r"[(),;]"
 
 
 class ErrorExtraccion(Exception):
@@ -1197,12 +1302,125 @@ def _texto_decimal(valor: Decimal) -> str:
 
 
 def categoria_de_linea(descripcion: str) -> str:
-    """Categoria de una linea de factura, decidida por su **cabeza** (hasta la primera coma o parentesis)."""
-    cabeza = normalizar(re.split(r"[(,;]", descripcion or "", maxsplit=1)[0])
-    for categoria, senales in SENALES_CATEGORIA:
-        if any(senal in cabeza for senal in senales):
+    """Categoria de una linea de factura: **que se factura**, no que palabra aparece antes.
+
+    Tres preguntas en orden (el orden es el criterio; ver el lexico y `docs/03` §8):
+
+    1. **¿Se adquiere un equipo?** Un sustantivo de equipo con senal de compra (`suministro`, `sustitucion`,
+       ...) en su mismo segmento, o con `nuevo`/`nueva` pegado, y **sin** marca de `existente`, da la
+       categoria de ese equipo aunque la linea empiece por "Montaje" ("Montaje de bomba centrifuga nueva
+       BCN-250" es `bomba`). Lo que va tras "no incluye" no cuenta: es una clausula que niega.
+    2. **¿Es solo trabajo?** Una senal de mano de obra en la cabeza de la linea (hasta la primera coma o
+       parentesis) da `instalacion`: "Instalacion de variador sobre motor existente" es `instalacion`, que es
+       el caso de uso central del producto y **no** puede disparar `R-AMB-02`.
+    3. **¿Cual es el sujeto?** El primer sustantivo de equipo de la cabeza, por **posicion** y no por
+       precedencia de categoria ("Variador de frecuencia para bomba centrifuga" es `variador`), siempre que
+       no venga marcado como existente. Si no hay ninguno, `otro`.
+    """
+    texto = normalizar(descripcion or "")
+    if not texto:
+        return "otro"
+    util = _sin_clausulas_excluyentes(texto)
+    adquiridos = _equipos_adquiridos(util)
+    for categoria in ORDEN_EQUIPOS:
+        if categoria in adquiridos:
             return categoria
-    return "otro"
+    cabeza = re.split(SEPARADORES_SEGMENTO, util, maxsplit=1)[0]
+    if re.search(PATRON_TRABAJO, cabeza):
+        return "instalacion"
+    return _equipo_sujeto(cabeza) or "otro"
+
+
+def _sin_clausulas_excluyentes(texto: str) -> str:
+    """Quita "no incluye suministro de motor ..." y demas clausulas que niegan, hasta el fin del segmento."""
+    resultado = texto
+    while (marca := re.search(PATRON_EXCLUSION, resultado)) is not None:
+        inicio = marca.start()
+        siguiente = re.search(SEPARADORES_SEGMENTO, resultado[inicio:])
+        fin = inicio + siguiente.start() if siguiente else len(resultado)
+        resultado = f"{resultado[:inicio]} {resultado[fin:]}"
+    return resultado
+
+
+def _segmentos(texto: str) -> list[tuple[int, int]]:
+    """Tramos entre separadores (coma, punto y coma, parentesis): el alcance de una senal de compra."""
+    tramos: list[tuple[int, int]] = []
+    inicio = 0
+    for separador in re.finditer(SEPARADORES_SEGMENTO, texto):
+        tramos.append((inicio, separador.start()))
+        inicio = separador.end()
+    tramos.append((inicio, len(texto)))
+    return tramos
+
+
+def _ocurrencias(texto: str) -> list[tuple[int, int, str]]:
+    """Sustantivos de equipo del texto, en orden de aparicion: `(inicio, fin, categoria)`."""
+    encontradas: list[tuple[int, int, str]] = []
+    for categoria, nombres in SENALES_EQUIPO.items():
+        for nombre in nombres:
+            for hallazgo in re.finditer(rf"\b{re.escape(nombre)}\b", texto):
+                encontradas.append((*hallazgo.span(), categoria))
+    return sorted(encontradas)
+
+
+def _ventanas(texto: str, ocurrencias: Sequence[tuple[int, int, str]], indice: int) -> tuple[str, str]:
+    """Lo pegado a un sustantivo, **cortado en el sustantivo vecino**.
+
+    Sin el corte, "sustitucion de variador sobre motor existente" daria el `existente` del motor tambien al
+    variador. Cada calificativo (`nuevo`, `existente`) es del equipo que tiene al lado, no del de mas alla.
+    """
+    inicio, fin, _ = ocurrencias[indice]
+    anterior = max((f for _, f, _ in ocurrencias if f <= inicio), default=0)
+    siguiente = min((i for i, _, _ in ocurrencias if i >= fin), default=len(texto))
+    return texto[max(anterior, inicio - VENTANA_PRE) : inicio], texto[fin : min(siguiente, fin + VENTANA_POS)]
+
+
+def _hay(patron: str, *ventanas: str) -> bool:
+    return any(re.search(patron, ventana) for ventana in ventanas)
+
+
+def _equipos_adquiridos(texto: str) -> set[str]:
+    """Categorias de equipo que esta linea **compra** (EXC-01/EXC-02: tambien la sustitucion parcial)."""
+    tramos = _segmentos(texto)
+    ocurrencias = _ocurrencias(texto)
+    adquiridos: set[str] = set()
+    for indice, (inicio, fin, categoria) in enumerate(ocurrencias):
+        if categoria in adquiridos:
+            continue
+        antes, despues = _ventanas(texto, ocurrencias, indice)
+        if _hay(MARCA_EXISTENTE, antes, despues):
+            # "motor existente": la linea nombra el equipo, no lo compra. Salvo que lo sustituya (EXC-02).
+            if not _sustituido_por_uno_nuevo(texto, tramos, inicio, fin):
+                continue
+        if _hay(MARCA_NUEVO, antes, despues):
+            adquiridos.add(categoria)
+            continue
+        gobierna = next((texto[i:inicio] for i, f in tramos if i <= inicio <= f), "")
+        if re.search(PATRON_ADQUISICION, gobierna):
+            adquiridos.add(categoria)
+    return adquiridos
+
+
+def _sustituido_por_uno_nuevo(texto: str, tramos: Sequence[tuple[int, int]], inicio: int, fin: int) -> bool:
+    """Cuando "sustitucion de la soplante existente por una de nueva generacion" **si** es una compra.
+
+    EXC-02 excluye la sustitucion "total o parcial" del equipo **existente**: ahi la palabra `existente` no
+    dice que no se compre nada, dice cual se quita. Se exige que el mismo segmento traiga un `nuevo` detras,
+    para no tratar como compra "Sustitucion de fusibles del motor existente".
+    """
+    desde, hasta = next(((i, f) for i, f in tramos if i <= inicio <= f), (0, len(texto)))
+    if not re.search(PATRON_SUSTITUCION, texto[desde:inicio]):
+        return False
+    return bool(re.search(MARCA_NUEVO, texto[fin:hasta]))
+
+
+def _equipo_sujeto(cabeza: str) -> str | None:
+    """Categoria del **primer** sustantivo de equipo de la cabeza que no venga marcado como existente."""
+    ocurrencias = _ocurrencias(cabeza)
+    for indice, (_inicio, _fin, categoria) in enumerate(ocurrencias):
+        if not _hay(MARCA_EXISTENTE, *_ventanas(cabeza, ocurrencias, indice)):
+            return categoria
+    return None
 
 
 def _requisitos_de(spec: object, tipo_doc: str) -> list[str]:

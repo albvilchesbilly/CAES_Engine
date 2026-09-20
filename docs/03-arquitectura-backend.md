@@ -311,6 +311,57 @@ Cómo se pasa de N evidencias a un `valor_consumido`. Vive en `engine/evidencias
 
 El consolidador es determinista y no llama a modelos. Lo que A4 aporta en P4 es la explicación del conflicto para el profesional, nunca su resolución.
 
+
+### 8 bis. Hechos inferidos: la categoría de una línea de factura
+
+No todo lo que una regla consume es una variable de la spec. `R-AMB-02` —`BLOQUEANTE_AMBITO`, la que
+sostiene EXC-01 y EXC-02— evalúa
+`not exists(factura.linea where categoria in [motor, bomba, ventilador, compresor, equipo_completo])`,
+y **`categoria` no está declarada en ninguna ficha**: la infiere `engine/extraccion.py` de la prosa libre de
+cada línea. Es el único punto del motor donde una decisión de ámbito descansa en una heurística de lenguaje,
+así que se documenta aquí entera. (`EXISTE`; reescrita el 20/09/2026 al cerrar el hallazgo H1 de `docs/05`
+§4.5.)
+
+La pregunta que responde la heurística es **qué se factura**, no qué palabra aparece antes. Tres preguntas en
+orden, y el orden *es* el criterio:
+
+1. **¿Se adquiere un equipo?** → categoría de ese equipo. Un sustantivo de equipo cuenta como comprado si
+   lleva `nuevo`/`nueva` contiguo, o si hay una señal de compra en su mismo segmento (los cortan `( ) , ;`), y
+   no lleva `existente` contiguo. Por eso «Montaje de bomba centrífuga **nueva** BCN-250» es `bomba` pese a
+   empezar por «Montaje».
+2. **¿Es solo trabajo?** → `instalacion`. Una señal de mano de obra en la cabeza de la línea.
+3. **¿Cuál es el sujeto?** → el primer sustantivo de equipo de la cabeza **por posición**, no por precedencia
+   de categoría; de ahí que «Variador de frecuencia para bomba centrífuga» sea `variador`. Sin ninguno, `otro`.
+
+Cuatro decisiones que no son obvias y sin las cuales la heurística falla en un sentido o en el otro:
+
+- **Las cláusulas que niegan se descartan antes de mirar nada.** La factura real del caso A dice «no incluye
+  **suministro de motor** ni de equipo accionado». Cualquier criterio de «señal de compra + sustantivo» que no
+  las descarte convierte el caso A en `NO_ELEGIBLE`.
+- **Cada calificativo es del equipo contiguo.** Las ventanas de `nuevo`/`existente` se cortan en el sustantivo
+  vecino; si no, «Sustitución de variador sobre motor existente» le presta al variador el `existente` del
+  motor. Las ventanas (15 y 45 caracteres) son números arbitrarios y revisables.
+- **Las señales casan por principio de palabra, no por subcadena.** `"venta" in "ventilador"` es cierto, y sin
+  este cuidado «Ventilador radial existente y montaje de bomba centrífuga» se leía como compra de bomba.
+- **El equipo accionado va por delante del variador** en `ORDEN_EQUIPOS`: si una línea compra ambos, gana el
+  accionado, que es el que bloquea. Comprar el variador es la actuación, no una exclusión.
+
+**El sentido en que esto puede fallar importa más que la tasa de acierto.** Un falso negativo deja pasar una
+actuación excluida con ahorro publicado (eso fue H1). Un falso positivo bloquea el caso de uso central del
+producto —instalar un variador sobre un motor existente— y es igual de grave en la otra dirección. Por eso el
+banco fija los dos lados: `tests/test_ambito_factura.py` recorre la cadena completa en ambos sentidos, y
+`tests/test_extraccion.py` fija las líneas legítimas que **no** deben bloquear.
+
+**Dos límites conocidos**, ninguno resuelto en silencio:
+
+- `otro` es hoy **silencioso**: una línea con señal de compra y un sustantivo que el léxico no conoce
+  («Renovación integral del skid de bombeo») cae en `otro` y `R-AMB-02` cumple sin decir nada. Es la forma
+  exacta de H1. Propuesto un aviso cuando hay compra sin equipo reconocido (INT-C, `ADR-001` §3).
+- El léxico es **código, no configuración**, y ya son cuatro vocabularios y unas sesenta palabras de
+  castellano que cada ficha nueva hereda sin declararlas. La regla de oro 4 pide moverlo a la spec (INT-15,
+  `ADR-003` H-06). Mientras siga en `engine/`, el Spec Registry seguirá emitiendo en cada carga
+  `garantia no verificable estaticamente para R-AMB-02: categoria` — el aviso que señaló H1 y que nadie leía.
+
 ---
 
 ## 9. Integridad (N5) y manifiesto interno
