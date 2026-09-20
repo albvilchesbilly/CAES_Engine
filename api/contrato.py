@@ -132,8 +132,12 @@ def _comprobar_justificacion(peticion: Peticion, capacidad: Capacidad) -> None:
 def comprobar_alcance(matriz_actual: Matriz, rol: str, peticion: Peticion, servicios: Servicios) -> None:
     """Aislamiento: la actuacion es de su tenant y, si el perfil es externo, es parte en ella.
 
-    Si el repositorio no conoce la actuacion, no hay nada que comprobar aqui: el manejador que la necesite
-    fallara al pedirla. Lo que no puede pasar, y esto lo impide, es tocar una actuacion **de otro**.
+    **Falla cerrado** (20/09/2026): si la peticion nombra una actuacion y el repositorio no puede decir de
+    quien es, se deniega. Antes se dejaba pasar, confiando en que el manejador fallaria al pedirla; eso es
+    cierto con el repositorio en memoria y **falso** con uno real que conozca la actuacion y no su tenant, que
+    serviria datos sin control. Un permiso que depende de que otro componente falle no es un permiso.
+
+    Una peticion **sin** actuacion (abrir una nueva) no pasa por aqui: no hay nada de nadie que proteger.
     """
     ambito = ambito_de(matriz_actual, rol)
     identificador = peticion.contexto.actuacion_id or peticion.datos.get("actuacion_id")
@@ -147,7 +151,10 @@ def comprobar_alcance(matriz_actual: Matriz, rol: str, peticion: Peticion, servi
     identificador = str(identificador)
     propietario = servicios.repositorio.tenant_de(identificador)
     if propietario is None:
-        return
+        raise ErrorPermiso(
+            f"{peticion.capacidad}: no se puede comprobar de que tenant es la actuacion {identificador!r}, "
+            "asi que no se sirve. El aislamiento no se da por bueno por defecto"
+        )
     if propietario != peticion.principal.tenant_id:
         raise ErrorPermiso(
             f"cruce de tenant: la actuacion {identificador!r} es del tenant {propietario!r} y el "

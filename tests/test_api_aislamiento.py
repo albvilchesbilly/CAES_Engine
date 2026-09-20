@@ -319,3 +319,29 @@ def test_con_la_matriz_de_verdad_el_portal_externo_esta_cerrado(servicios: Servi
             Peticion("CAP-40", instalador, Contexto("enlace_actuacion", TENANT_PROPIO, "A-PROPIA")),
             servicios=servicios,
         )
+
+
+# ---------------------------------------------------------------------------
+# Falla cerrado: un tenant que no se puede comprobar no se da por bueno
+# ---------------------------------------------------------------------------
+
+
+def test_si_no_se_sabe_de_que_tenant_es_la_actuacion_no_se_sirve(servicios: Servicios) -> None:
+    """Cerrado el 20/09/2026. Antes se dejaba pasar y el manejador fallaba luego al pedir la actuacion.
+
+    Eso es cierto con el repositorio en memoria y **falso** con uno real que conozca la actuacion y no su
+    tenant: serviria datos sin control. Un permiso que depende de que otro componente falle no es un permiso.
+    """
+    revisor = Principal("u-rev", ("T-REV",), TENANT_PROPIO)
+    peticion = Peticion("CAP-03", revisor, Contexto("cola_revision", TENANT_PROPIO, "A-DESCONOCIDA"))
+    with pytest.raises(ErrorPermiso, match="no se puede comprobar de que tenant"):
+        leer(peticion, servicios=servicios)
+
+
+def test_abrir_una_actuacion_nueva_no_pasa_por_el_alcance(servicios: Servicios) -> None:
+    """La otra mitad de la regla: sin actuacion nombrada no hay nada de nadie que proteger."""
+    from api.contrato import comprobar_alcance
+
+    operador = Principal("u-ope", ("T-OPE",), TENANT_PROPIO)
+    peticion = Peticion("CAP-01", operador, Contexto("bandeja", TENANT_PROPIO))
+    comprobar_alcance(matriz(), "T-OPE", peticion, servicios)
