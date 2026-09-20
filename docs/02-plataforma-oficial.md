@@ -214,7 +214,7 @@ Regla: cada uno de estos nombres lleva en el código la marca `# TODO(API-03): v
 
 ### 5.4 Inalterabilidad
 
-"Inalterabilidad de la información revisada una vez firmada por el sujeto." Coherente con nuestro log de eventos solo-añadir (`docs/03`). Implicación: tras la firma, **solo el sujeto modifica y solo vía requerimiento oficial**. Cualquier corrección interna posterior a `EN_PLATAFORMA` se rechaza (evento `CorreccionRechazadaPostFirma`); P7 post-firma pasa obligatoriamente por el flujo de rectificación o subsanación oficial.
+"Inalterabilidad de la información revisada una vez firmada por el sujeto." Coherente con nuestro log de eventos solo-añadir (`docs/03`). Implicación: tras la firma, **solo el sujeto modifica y solo vía requerimiento oficial**. Cualquier corrección interna **posterior a la firma** se rechaza; P7 post-firma pasa obligatoriamente por el flujo de rectificación o subsanación oficial. (Corregido en el `/contrastar` del 20/09/2026: esta frase decía «posterior a `EN_PLATAFORMA`», y el código es **más estricto** y sigue la cita publicada — la inalterabilidad arranca en el evento `FirmaRegistrada`, no al llegar a ese estado. El evento `CorreccionRechazadaPostFirma` está en el catálogo y **todavía no lo emite nadie**: `engine/estados.py` anota el rechazo en `Proyeccion.rechazos` y `engine/correcciones.py` lo filtra al reprocesar.)
 
 ### 5.5 Desistimiento
 

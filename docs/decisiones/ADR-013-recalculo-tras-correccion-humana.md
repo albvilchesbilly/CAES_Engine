@@ -121,11 +121,38 @@ plataforma. **El núcleo no adquiere una dependencia de dónde viven los eventos
 - **Variable que la spec no declara**: error.
 - Puerta de siempre: `pytest -q` sin romper los 2.441 · `ruff` limpio · `engine/` sin importar de nadie.
 
+## 5 bis. Hallazgos de código abiertos por el `/contrastar` del 20/09/2026
+
+Tres, ninguno arreglado aquí porque `/contrastar` cambia documentación y abre hallazgos, no toca código.
+**Ninguno necesita a Billy para decidirse: solo para priorizarse.**
+
+1. **El filtro de inalterabilidad falla abierto.** `engine/correcciones.py::_rechazados_por_el_ciclo` captura
+   `ErrorEstado`, `AttributeError` y `TypeError` y devuelve un conjunto vacío, es decir: **un log que no se
+   puede proyectar aplica todas las correcciones, incluidas las que el ciclo rechazó**. Lo escribí yo hace unas
+   horas para que un log de prueba no impidiera leer sus correcciones, y es exactamente el error que llevo tres
+   días persiguiendo en otros sitios: una guarda que cede ante un fallo interno no es una guarda. Debe fallar
+   cerrado. Añadido: el descarte es **mudo** — quien corrigió no se entera de que su corrección se ignoró.
+2. **El límite de qué se puede corregir vive solo en la pantalla.** `api/comandos/actuaciones.py::_correccion`
+   acepta cualquier variable declarada en la ficha, sin comprobar que el dato esté en conflicto, en desacuerdo
+   o en carencia. `ADR-013` §4 lo declaró como criterio de producto, y choca con el principio que este mismo
+   ADR defiende doce líneas más abajo. Es el habilitador de `INT-16` y `INT-17` **fuera de los casos que los
+   justifican**: se puede corregir un dato que nadie discutía.
+3. **La traza miente tras una corrección.** Corregir `h_despues` deja `interpretaciones_aplicadas` citando
+   `INT-04` (extrapolación) aunque no se extrapoló nada, y no cita nada por la corrección. Agrava `H-18` de
+   `ADR-003` y se cierra con el mismo diff. El campo `interpretacion` de la evidencia de corrección se dejó
+   vacío **a propósito**, por no inventar un `INT-xx` que no existía; en cuanto `INT-17` exista, ahí va.
+
 ## 6. Lo que queda para Billy (PROPUESTA)
 
 1. **Precedencia de la corrección humana sobre la evidencia documental** (§2 regla 2). Es lo razonable —una
    persona que ve las dos evidencias decide mejor que un extractor— pero significa que **un humano puede fijar
    un valor contra lo que dice un documento**. Queda trazado y justificado, nunca oculto; aun así, confírmalo.
+   **Precisión del `/contrastar` del 20/09/2026, que es el dato que hace falta para decidir**: la precedencia
+   no solo desbloquea el cálculo. Retira las fuentes documentales de `valores_por_fuente`, así que las reglas
+   de coherencia (`R-CON-01` y compañía, severidad `BLOQUEANTE_DATOS`) **pasan a `CUMPLE`**: el conflicto
+   documental deja de existir a ojos de la regla que existe para detectarlo. Esa es la diferencia entre
+   `SUBSANABLE` y `PREVALIDADO` con ahorro no provisional. Declarado como **`INT-16`** en
+   `spec/propuestas/IND240_v1.1_correcciones_INT-16-18.diff.md`, sin activar.
 2. **Qué se puede corregir**: hoy la pantalla lo limita a conflicto, desacuerdo y carencia. Si se quiere
    permitir corregir cualquier dato, es cambiar la pantalla, no el motor — y se pierde saber qué leyó el motor.
 3. **Si una corrección debe caducar** cuando llega documentación nueva que la contradice. Hoy no caduca: manda

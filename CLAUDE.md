@@ -154,7 +154,9 @@ ruff check . && ruff format --check .
 **Qué no cambias sin revisión de Billy:** `spec/*.yaml` activa, `data/`, `expedientes/_resultados_esperados/`,
 severidades de reglas, criterios INT-xx, cualquier texto de `docs/00`. Prepara el diff y déjalo listo.
 
-**Diff pendiente, NO aprobado:** `spec/propuestas/IND240_v1.2.diff.md` (R-TMP-03 con INT-08, R-DOC-01
+**Diffs pendientes, NO aprobados:** `spec/propuestas/IND240_v1.1_correcciones_INT-16-18.diff.md` (cómo se
+trata una corrección humana; medido un +33 % de ahorro sin que falle ninguna regla) y
+`spec/propuestas/IND240_v1.2.diff.md` (R-TMP-03 con INT-08, R-DOC-01
 `diferencial: false`, herencia de `cabecera_v1.yaml`, INT-09, `version_spec 0.2.0`). No lo actives.
 
 ---
