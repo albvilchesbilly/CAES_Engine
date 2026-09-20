@@ -150,9 +150,13 @@ filas**; reordenar el fichero ya no puede cambiar el comportamiento en silencio.
 
 ## Consecuencias
 
-- `engine/motor.py` gana la construcción del modelo canónico y la emisión de eventos **sin cambiar su interfaz
-  pública** (`docs/03` §6.2): `procesar_actuacion` sigue devolviendo lo mismo y los 999 tests de la Fase 0 siguen
-  en verde. El log es opcional en la Fase 0 y obligatorio desde aquí.
+- `engine/motor.py` **no llegó a ganar ninguna de las dos cosas**, y conviene decirlo aquí en vez de dejar la
+  consecuencia escrita como si hubiera ocurrido (corregido en el `/contrastar` del 20/09/2026). Ni construye el
+  modelo canónico ni emite eventos: `desde_motor(actuacion)` y `grabar(actuacion)` se invocan **desde fuera**,
+  y su docstring lo dice. Fue deliberado —mantiene el motor tal cual y hace que la grabación se pueda probar
+  sola— y tiene una consecuencia real: **nadie graba automáticamente**, así que un log solo existe si alguien
+  lo pide. Lo mismo vale para el recálculo de S3.8 (`ADR-013` §4). Quien cierre el circuito en `api/` tendrá
+  que decidir si el motor pasa a emitir eventos o si sigue haciéndolo el llamante; hoy, el llamante.
 - `docs/03` §3.1 pasa `N6`, `N7` y `N8` de `NUEVO` a `EXISTE`; `docs/01` §3.3 añade `modelo/`, `eventos/` y
   `estados.py`.
 - Cada actuación procesada pasa a ser una prueba de regresión reproducible (F-22 de `docs/03` §13).

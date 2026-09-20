@@ -364,7 +364,7 @@ Cómo se pasa de N evidencias a un `valor_consumido` (agrupación por clave de u
 | `R-GRP` | grupo | Composición válida de un grupo de actuaciones | `spec/propuestas/composicion_v1.yaml` | `NUEVO` (§10.2) |
 | `R-EXP` | expediente | Composición válida de un expediente y avisos de contagio | `spec/propuestas/composicion_v1.yaml` | `NUEVO` (§10.2) |
 | `R-XCK` | actuación | Control cruzado con la plataforma (cálculo y validaciones tratables) | `spec/propuestas/cabecera_v1.yaml` + `mapping/` | `NUEVO` (§10.3); necesita sandbox |
-| `R-REQ` | actuación / expediente | Coherencia de la respuesta a un requerimiento oficial | `spec/propuestas/composicion_v1.yaml` | `NUEVO` (§10.4) |
+| `R-REQ` | actuación / expediente | Coherencia de la respuesta a un requerimiento oficial | `spec/propuestas/composicion_v1.yaml` | `PARCIAL` (§10.4): `R-REQ-01` y `R-REQ-02` en código (`engine/requerimientos.py` y el catálogo de eventos), `R-REQ-03` en `engine/estados.py`, `R-REQ-04` como invariante de test. **La familia como spec sigue sin escribirse y sin activarse** |
 
 `EXISTE`: 3 + 5 + 4 + 7 + 3 + 4 = **26 reglas**, las de `spec/IND240_v1.1.yaml`, todas evaluadas desde su `logica` y cubiertas por un test que cumple y otro que falla.
 

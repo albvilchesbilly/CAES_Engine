@@ -499,17 +499,17 @@ Visto desde el producto. Cada línea dice qué producto la vende, qué proceso l
 | F-09 | Control cruzado con el cálculo de la plataforma; bloqueo ante discrepancia | CAE Check / Platform | P5, P8 / N3, R-XCK | Sí | `NUEVO` S3 (necesita sandbox) |
 | F-10 | "Qué te falta": lista de carencias por regla, en lenguaje llano, con documentos concretos | CAE Check | P7 / campo `subsanacion`, A5 | Sí | `EXISTE` carencias por regla fallada con documentos derivados · redacción A5 `NUEVO` S4 |
 | F-11 | Cabecera común completa (precio de cesión, inversión, localización, propietario, subvención…) extraída de documentos | CAE Platform | P3 / `cabecera_v1.yaml`, R-CAB | Sí (la plataforma la pide; nosotros la rellenamos con evidencia) | `NUEVO` S3 (tras aprobación de Billy) |
-| F-12 | Payload de actuación (cabecera + detalle + manifiesto) listo para `BORRADOR` → `COMPLETA` | CAE Platform | P8 / S5 constructor | Sí | `NUEVO` S3 |
-| F-13 | Handoff al tenant (carpeta + manifiesto + informe) por el cauce vigente | CAE Platform | S5 handoff | Sí | `NUEVO` S3 |
-| F-14 | Consumo de notificaciones y **tareas pendientes** de la plataforma; cola priorizada por tenant | CAE Platform | P9 / S4 | Sí | `NUEVO` S3 (simulador) · S4 (consola) |
-| F-15 | Interpretación de requerimientos de verificador, GA y CN → reglas y documentos; reapertura de subsanación con contagio | CAE Platform | P9, P7 / A9, N6 | Sí | `NUEVO` S3 |
+| F-12 | Payload de actuación (cabecera + detalle + manifiesto) listo para `BORRADOR` → `COMPLETA` | CAE Platform | P8 / S5 constructor | Sí | `PARCIAL` (S3.3 y S3.4): manifiesto y detalle `EXISTE`; la **cabecera sigue vacía** hasta S3.2 |
+| F-13 | Handoff al tenant (carpeta + manifiesto + informe) por el cauce vigente | CAE Platform | S5 handoff | Sí | `EXISTE` (S3.4, `ADR-009`): carpeta, manifiesto, payload e informe, reverificados tras escribir |
+| F-14 | Consumo de notificaciones y **tareas pendientes** de la plataforma; cola priorizada por tenant | CAE Platform | P9 / S4 | Sí | `PARCIAL`: `EXISTE` el consumo desde el simulador (S3.4 y S3.5) · la cola priorizada en la consola es `FR1` |
+| F-15 | Interpretación de requerimientos de verificador, GA y CN → reglas y documentos; reapertura de subsanación con contagio | CAE Platform | P9, P7 / A9, N6 | Sí | `PARCIAL` (S3.5, `ADR-010`): `EXISTE` el intérprete determinista, la puerta humana y el contagio · A9 con LLM es S3.6 |
 | F-16 | **Expediente Builder**: propuesta de grupos y expedientes válidos (CCAA + año + sector + verificador), avisos de huérfanas y de contagio | CAE Platform | P10 / N9, R-GRP, R-EXP | Sí | `NUEVO` S4 (decisión de Billy) |
 | F-17 | Informe de prevalidación por destinatario (cliente, instalador, tenant) | CAE Check / Platform | A7, `engine/informe.py` | Sí | `EXISTE` markdown/JSON único · por destinatario `NUEVO` S4 |
 | F-18 | Revisor sombra (A8): observaciones sin alterar el veredicto; promoción a regla cuando anticipe rectificaciones | CAE Platform | P6 | Sí | `NUEVO` |
 | F-19 | Preparación de actuaciones singulares y vinculación a CVP | Roadmap | — | Sí | Decisión de Billy · fase II de la plataforma |
 | F-20 | Registro de resultado real (dictamen, resolución) como etiqueta para el banco de pruebas | CAE Monetization | P9 / S6 | Sí (activo defendible) | `NUEVO` S3 |
-| F-21 | Multi-tenant: delegados y sujetos obligados directos, aislamiento, capacidad disponible | CAE Platform | S7 | — | `NUEVO` S3 |
-| F-22 | Replay de cualquier actuación pasada contra nueva spec/regla/agente (regresión automática) | Interno | N8 | — | `NUEVO` S3 |
+| F-21 | Multi-tenant: delegados y sujetos obligados directos, aislamiento, capacidad disponible | CAE Platform | S7 | — | `PARCIAL` (FR0): `EXISTE` el aislamiento por tenant en `api/permisos.py`, que **falla cerrado** · capacidad disponible sigue `TODO(API-11)` |
+| F-22 | Replay de cualquier actuación pasada contra nueva spec/regla/agente (regresión automática) | Interno | N8 | — | `EXISTE` (S3.1): `engine/eventos/replay.py` reproduce veredicto y ahorro solo con el log, y desde S3.8 también el veredicto corregido |
 | F-23 | Vigilancia normativa con propuesta de diff sobre el YAML | Interno / A6 | S8 | — | `NUEVO` (hoy vigilancia manual, fuera de código) |
 | F-24 | Dashboard operativo (vista global, funcional del tenant y de equipo) y dashboard técnico, en solo lectura y filtrados por capacidad | CAE Platform / Interno | S9 | Sí | `NUEVO` (`ADR-007`; DB0 no depende de nada) |
 | F-25 | Administración en dos planos con permisos sin solapamiento y toda acción trazada en el log | Interno | S7, N8 | — | `NUEVO` (`ADR-005`, `ADR-006`) |
