@@ -214,33 +214,80 @@ expedientes/
 
 Se regeneran con `python -m generator.generar`; se commitean para que los tests no dependan de reportlab/pillow. **Nota sobre E y F**: los totales proceden del Engine 0.1 original; los parámetros exactos de los motores 2 y 3 no están documentados fuera de aquel código, así que el generator reconstruido fija los suyos y el ground truth de E y F se recalcula y se registra en ADR (`docs/05` §2). El caso A sí es reproducible exactamente: 110 kW, 1.485 → 1.188 rpm, 6.000 h, p = 5,55/110.
 
-### 3.6 `tests/` — banco de pruebas (`EXISTE`: 999 tests al cerrar la Fase 0)
+### 3.6 `tests/` — banco de pruebas (`EXISTE`: 2.532 tests, 29 saltados sin OCR)
 
 ```
 tests/
   conftest.py                    Fixtures: spec cargada, tabla, caso A en memoria
+  apoyo_permisos.py              Ayudas de capacidades y perfiles para los tests de api/ y del log
+
+  — Núcleo determinista —
   test_expresiones.py            Parser: funciones permitidas, error en función desconocida, sin eval
   test_calculo.py                Caso A = 305.829,6 exacto; Decimal; truncado; FIS-01/02; min(h)
   test_tablas.py                 110 kW → 5,55; fila inexistente → INT-02
   test_spec_registry.py          Carga IND240; rechaza propuestas/; garantía NO_EVALUABLE→SUBSANABLE
-  test_reglas.py                 Por regla: un caso que cumple y uno que falla; fases; veredicto
+  test_avisos_carga.py           Línea base cerrada de `Spec.avisos_carga`: un aviso nuevo rompe la puerta
+  test_reglas.py                 Por regla: un caso que cumple y uno que falla; fases; veredicto; la
+                                 guarda de bloqueo previo y la precondición en prosa de la spec (H3)
   test_evidencias.py             Tres capas; conflicto → null; OCR 0,75; normalización S.L./SL
+  test_correcciones.py           Corrección humana como evidencia; precedencia; replay del veredicto
+
+  — Lectura de documentos —
   test_ingesta.py                SHA-256 de todo; separación de PDF; vinculación por hash no por nombre
-  test_extraccion.py             Cobertura de variables por caso; cita obligatoria; trampas; la spec manda
+  test_extraccion.py             Cobertura de variables por caso; cita obligatoria; trampas; la spec manda;
+                                 compra frente a trabajo en la línea de factura (H1)
+  test_ambito_factura.py         Circuito completo de `R-AMB-02` en los dos sentidos: una línea de compra
+                                 de motor deja la actuación `NO_ELEGIBLE`; el caso A sigue `PREVALIDADO`
+
+  — Modelo, log y ciclo —
+  test_modelo.py                 Modelo canónico contra su JSON Schema; los 7 casos validan
+  test_eventos.py                Log solo-añadir con hash encadenado; replay bit a bit
+  test_estados.py                Máquina de estados; marcas del YAML de plataforma; firma humana
+  test_permisos_modelo.py        `actor.rol` obligatorio en actor humano (A8)
+  test_permisos_log.py           Capacidades y actores admitidos por tipo de evento
+
+  — Salida y plataforma —
+  test_manifiesto.py             Manifiesto interno; un byte alterado se detecta y se nombra
+  test_mapeo.py                  Mapeo declarativo al payload; ningún literal de estado en código
+  test_handoff.py                Adaptador de entrega; idempotencia; verificación de lo entregado
+  test_simulador.py              Simulador de plataforma derivado de marcas, sin literales
+  test_transporte.py             Transporte y reintentos
+  test_salida_e2e.py             Caso A de motor a plataforma sin traducción por el camino
+  test_seguimiento.py            Estados y tareas leídos del puerto; sincronización
+  test_puente_seguimiento.py     Puente entre el puerto y el log
+  test_requerimientos.py         Requerimientos: intérprete determinista, contagio, `R-REQ-*`
+  test_requerimientos_e2e.py     Un requerimiento de grupo deja las tres actuaciones pendientes
+
+  — Contrato de API —
+  test_api_contrato.py           Capacidad exigida por operación; el contrato antes que las pantallas
+  test_api_capacidades.py        Matriz de `engine/capacidades.yaml`; las celdas `pendiente` se deniegan
+  test_api_aislamiento.py        Alcance por tenant: falla cerrado si no se puede comprobar
+  test_api_documento.py          Alta de documento por contenido; rechaza rutas del servidor
+  test_api_rol_inferido.py       Rol inferido frente a cambio explícito (C2, pendiente de Billy)
+  test_api_tipos_front.py        Los tipos que consume `front/` salen del contrato, no de las pantallas
+
+  — Banco, transversales y regresión —
+  test_generator.py              Los 7 casos se generan; marca sintética en cada página; ground truth coherente
+  test_generator_requerimientos.py  Banco sintético de requerimientos
   test_motor.py                  Encadenado completo y `Actuacion`; los 7 casos contra el ground truth
   test_informe.py                Markdown y JSON: tres capas, traza, descargo de la spec, provisional
-  test_generator.py              Los 7 casos se generan; marca sintética en cada página; ground truth coherente
   test_engine_e2e.py             7/7 veredictos; A/E/F/G ahorro esperado; tiempos razonables
-  test_metamorficas.py           Renombrar/reordenar/duplicar/añadir irrelevante no cambia nada; alterar PM → BLOQUEADO
+  test_metamorficas.py           Renombrar/reordenar/duplicar/añadir irrelevante no cambia nada; alterar PM
+                                 → BLOQUEADO; romper un dato que bloquea nunca aumenta el ahorro (M07)
   test_modo_degradado.py         Con agentes/ y salida/ ausentes, engine/ produce veredicto (en subproceso)
   test_qa_hallazgos_f03.py       Defectos que encontró la revisión QA del cálculo; se conservan como regresión
   test_qa_hallazgos_f04.py       Ídem para el Spec Registry
 ```
 
-Los tests que necesitan `tesseract` llevan `@pytest.mark.ocr` y se saltan si no está instalado: en un clon sin OCR
-la suite queda en 976 pasados y 23 saltados, y `evaluar_casos.py` sigue dando 7/7.
+Los tests que necesitan `tesseract` llevan `@pytest.mark.ocr` y se saltan si no está instalado: en un clon sin
+OCR la suite queda en 2.532 pasados y 29 saltados, y `evaluar_casos.py` sigue dando 7/7. En una máquina donde
+`tesseract` va lento conviene correrlos aparte (`pytest -m ocr`): el caso A con OCR puede pasar de cuatro
+minutos él solo.
 
-Definición de hecho para cualquier cambio: `pytest -q` en verde, `evaluar_casos.py` 7/7, caso A en 305.829,6 kWh/año. Un test que rompe no se borra ni se relaja: se explica.
+Definición de hecho para cualquier cambio: `pytest -q` en verde, `evaluar_casos.py` 7/7, caso A en
+305.829,6 kWh/año, `ruff` limpio. Un test que rompe no se borra ni se relaja: se explica. **Un aviso de carga
+nuevo tampoco se silencia**: se declara en `tests/test_avisos_carga.py` con su razón, o se arregla lo que lo
+causa (Billy, 20/09/2026).
 
 ### 3.7 `agentes/` — periferia con LLM (`S3`)
 

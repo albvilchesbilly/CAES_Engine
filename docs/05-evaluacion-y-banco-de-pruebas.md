@@ -212,17 +212,20 @@ Son las decisiones probadas en Sprints 1–2 (`docs/historico/README_sprint1-2_e
 6. **Tres capas por dato** (documento → interpretación → cálculo) y cita obligatoria: cada variable consolidada lleva documento, página, texto literal, método y confianza. El Engine 0.1 lo cumplía en 58/58 variables de cálculo; la reconstrucción debe cumplirlo en el 100 % de las variables que entren en la fórmula. (`test_evidencias.py`, `test_engine_e2e.py`.)
 
 
-### 4.5 Huecos conocidos del banco de pruebas (`/contrastar` 20/09/2026)
+### 4.5 Huecos del banco de pruebas detectados el 20/09/2026 — **cerrados**
 
-Hallazgos **verificados por mutación** en esta pasada. No son defectos del motor: el motor hace lo correcto
-hoy. Son sitios donde el banco **no se daría cuenta si dejara de hacerlo**, que es justo lo que un banco de
-regresión existe para impedir. Están abiertos, con dueño `qa-evaluacion`.
+Hallazgos **verificados por mutación** en la auditoría `/contrastar`. **Cerrados el mismo 20/09/2026**, antes
+de FR1, por decisión de Billy. Se conservan aquí porque el banco de pruebas se entiende mejor por lo que una
+vez no vio: los tres describen la misma forma de fallo —una defensa que existe y funciona, y un banco que no
+se enteraría de su desaparición— y esa forma volverá.
+
+H1 no estaba en esta lista: era un defecto real del motor, no un hueco del banco, y vive en `docs/06` §6.
 
 | Id | Qué no está protegido | Cómo se verificó | Qué pasa si se rompe | Prioridad |
 |---|---|---|---|---|
-| **H3** | La guarda `elif bloqueo_previo` de `engine/reglas.py` (la que impide calcular cuando una regla `BLOQUEANTE_DATOS` de `cabecera` o `consistencia` ha fallado **sin conflicto**) | Anulada la rama: **2.499 tests, 78 e2e y los 7/7 casos siguen en verde**, y caso A sigue en 305.829,6 | Una actuación `BLOQUEADO` por `R-TMP-01` (fecha de inicio posterior a la de fin) **publica 305.829,6 kWh/año**. Medido. Es la regla de oro «nunca se publica un ahorro apoyado en datos incoherentes» sin red | **ALTA** |
-| **H6** | El **valor** de las tolerancias y fronteras. `R-CON-03` declara `abs(N2.declarado - N2.derivado) <= 1`, y sus tests usan Δ = 0 (cumple) y Δ = 12 (falla) | Razonado sobre los dos tests: `< 1` y `<= 10` sobreviven ambos | La tolerancia se puede cambiar (o convertir en estricta) sin que nada avise. Mismo patrón en `rango_plausible` y en los ≥ 30 días de `R-EVD-01` | MEDIA |
-| **H4** | Que una `R-CAL-03` fallida deje el ahorro retirado **vista desde la evaluación**. La retirada sí está probada un nivel más abajo (`test_calculo.py::test_fis_02_retira_el_resultado`) | `test_reglas.py` afirma `FALLA` y `BLOQUEADO`, no que `evaluacion.calculo.total` sea `None`; comprobado que hoy lo es | Poco: `engine/calculo.py` retira por su cuenta y su test lo cubre. Es cierre de la cadena, no un agujero | BAJA |
+| **H3** | La guarda `elif bloqueo_previo` de `engine/reglas.py` (la que impide calcular cuando una regla `BLOQUEANTE_DATOS` de `cabecera` o `consistencia` ha fallado **sin conflicto**) | Anulada la rama: **2.499 tests, 78 e2e y los 7/7 casos siguen en verde**, y caso A sigue en 305.829,6 | Una actuación `BLOQUEADO` por `R-TMP-01` (fecha de inicio posterior a la de fin) **publica 305.829,6 kWh/año**. Medido. Es la regla de oro «nunca se publica un ahorro apoyado en datos incoherentes» sin red | **ALTA** · cerrado |
+| **H6** | El **valor** de las tolerancias y fronteras. `R-CON-03` declara `abs(N2.declarado - N2.derivado) <= 1`, y sus tests usan Δ = 0 (cumple) y Δ = 12 (falla) | Razonado sobre los dos tests: `< 1` y `<= 10` sobreviven ambos | La tolerancia se puede cambiar (o convertir en estricta) sin que nada avise. Mismo patrón en `rango_plausible` y en los ≥ 30 días de `R-EVD-01` | MEDIA · abierto |
+| **H4** | Que una `R-CAL-03` fallida deje el ahorro retirado **vista desde la evaluación**. La retirada sí está probada un nivel más abajo (`test_calculo.py::test_fis_02_retira_el_resultado`) | `test_reglas.py` afirma `FALLA` y `BLOQUEADO`, no que `evaluacion.calculo.total` sea `None`; comprobado que hoy lo es | Poco: `engine/calculo.py` retira por su cuenta y su test lo cubre. Es cierre de la cadena, no un agujero | BAJA · cerrado |
 
 **Por qué H3 es el importante.** El motor tiene dos defensas contra publicar un ahorro incoherente: la guarda
 de política en `engine/reglas.py` (no se calcula si hay bloqueo) y las precondiciones físicas de
@@ -232,9 +235,24 @@ bloqueo documental o temporal (`R-TMP-01`, `R-CON-04`, `R-CON-05`) no tiene prec
 y ahí la única defensa es la guarda que ningún test sujeta. El caso C del banco no sirve: bloquea **por
 conflicto**, que entra por la otra rama (`if bloqueo_por_conflicto`).
 
-**Lo que cierra H3**: un test de `test_reglas.py` con una `BLOQUEANTE_DATOS` no física fallada que afirme
-`evaluacion.calculo is None`, y un caso del banco (o una metamórfica) con la misma forma. Mientras no exista,
-esta fila de §4.4 promete más de lo que el banco sostiene.
+**Cómo se cerró H3** (commit `567733e`). Cinco tests en `tests/test_reglas.py` y la metamórfica **M07**
+(«romper un dato que bloquea nunca aumenta el ahorro publicado», §6.1), que es la formulación general y
+protege también los bloqueos que aún no existen. Verificado por mutación en los dos sentidos: anular la rama
+`elif bloqueo_previo` tumba cuatro tests; restaurada, la suite vuelve a verde y `engine/reglas.py` queda sin
+un solo byte cambiado.
+
+Lo que la investigación añadió al enunciado, y que es lo que conviene recordar: esa rama **no es una decisión
+de código**, es la única implementación de una precondición **declarada en la spec activa** —«ninguna regla
+con severidad BLOQUEANTE fallida»—. Por ser prosa, el parser de lista blanca no puede evaluarla y el cálculo
+no la aplica; el Spec Registry lo dice en cada carga. De ahí uno de los tests: que la precondición declarada
+y su implementación sigan atadas, para que borrar cualquiera de las dos rompa algo.
+
+**H4** se cerró en el mismo commit: la retirada del ahorro por `R-CAL-03`, afirmada desde la evaluación y no
+solo desde `test_calculo.py`.
+
+**H6 sigue abierto** y es el único que queda. No se cerró porque fijar el valor de una tolerancia es decidir
+cuál es —`<= 1` frente a `< 1`— y eso toca criterio normativo, no cobertura: entra en la revisión de la spec
+v1.2, no en una sesión de tests.
 
 **Comprobado y descartado en esta pasada**: se sospechó que una corrección humana no respetaba
 `rango_plausible`. **Es falso**: una corrección de `PM` a 999.999 kW produce el aviso «valor 999999 fuera del
