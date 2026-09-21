@@ -57,13 +57,28 @@ AETOTAL_A = "305829.6"
 
 
 @pytest.fixture(scope="module")
-def salida(tmp_path_factory) -> Path:
+def _carpeta(tmp_path_factory) -> Path:
+    """La carpeta a secas, **vacia**. Solo la usan `generados` y `salida`; ningun test la pide."""
     return tmp_path_factory.mktemp("expedientes")
 
 
 @pytest.fixture(scope="module")
-def generados(salida: Path) -> dict[str, generar.CasoGenerado]:
-    return {g.caso.id: g for g in generar.generar_todos(salida)}
+def generados(_carpeta: Path) -> dict[str, generar.CasoGenerado]:
+    return {g.caso.id: g for g in generar.generar_todos(_carpeta)}
+
+
+@pytest.fixture(scope="module")
+def salida(_carpeta: Path, generados) -> Path:
+    """La carpeta **ya poblada**: pedir `salida` garantiza que los siete casos estan en disco.
+
+    Antes `salida` devolvia la carpeta vacia y quien la poblaba era `generados`, asi que los seis tests
+    que pedian `salida` sin pedir tambien `generados` solo pasaban **si otro test del modulo se habia
+    ejecutado antes**. Con `pytest-randomly` reordenando, eso es un rojo aleatorio esperando su turno; y
+    con `-m ocr` los tests que poblaban la carpeta se deseleccionan, que es como salio a la luz
+    (`test_ocr_lee_la_placa_y_el_escaneo`, 20/09/2026). Depender aqui de `generados` arregla la clase
+    entera sin tocar ninguno de los tests.
+    """
+    return _carpeta
 
 
 @pytest.fixture(scope="module")
