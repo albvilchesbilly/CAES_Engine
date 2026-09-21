@@ -254,6 +254,32 @@ solo desde `test_calculo.py`.
 cuál es —`<= 1` frente a `< 1`— y eso toca criterio normativo, no cobertura: entra en la revisión de la spec
 v1.2, no en una sesión de tests.
 
+**H8 · el OCR que expira no deja rastro** (21/09/2026, **medido**). `engine/ingesta.py` da 120 s a
+`tesseract` por página; si expira, `_tesseract` captura `subprocess.SubprocessError` y devuelve `("", 0)`
+**sin un solo aviso**. El documento sale con la página en blanco y el motor sigue como si esa página no
+tuviera nada que leer.
+
+El contraste es lo que lo convierte en defecto: cuando tesseract **no está instalado** sí se avisa
+(`ocr_no_disponible`, dos sitios en `ingesta.py`). Cuando está y falla o tarda de más, no. Una placa que no
+se pudo leer produce exactamente el mismo resultado que una placa ilegible, y no hay forma de distinguirlas
+aguas abajo.
+
+Por qué importa fuera del banco: `PM` y `N1` tienen otras fuentes (ficha técnica, certificado), así que el
+motor **calcularía igual** con el dato de la ficha. Lo que se pierde en silencio es el **cruce** que
+`R-CON-01` y `R-CON-02` hacen entre la placa fotografiada y lo declarado, que es justamente la comprobación
+que la foto existe para sostener. Una consistencia degradada sin que nadie se entere: la misma forma que H1,
+H3 y la dependencia de orden del fixture.
+
+Medido en este contenedor: la página 2 de `04_informe_fotografico.pdf` (caso A) tarda **288,8 s** en
+tesseract, más del doble del límite. De ahí que los tests de OCR que pasan por la ingesta fallen aquí
+mientras `test_ocr_lee_la_placa_y_el_escaneo`, que invoca tesseract **directamente y sin límite**, pase en
+492 s. La lentitud es del entorno; **tragarse el fallo es del código**.
+
+Propuesta (no implementada, decisión de Billy): avisar cuando el OCR se intenta y no produce texto,
+distinguiendo expiración de error, con el mismo prefijo `ocr_` que ya usa el aviso de tesseract ausente.
+Cambio pequeño en `engine/ingesta.py`; no altera ningún veredicto, solo hace visible una carencia que hoy
+es muda. Conviene decidir a la vez si 120 s es el límite correcto o debe ser configurable.
+
 **Comprobado y descartado en esta pasada**: se sospechó que una corrección humana no respetaba
 `rango_plausible`. **Es falso**: una corrección de `PM` a 999.999 kW produce el aviso «valor 999999 fuera del
 rango plausible [0.12, 1000]». La corrección pasa por la misma consolidación que cualquier evidencia.
