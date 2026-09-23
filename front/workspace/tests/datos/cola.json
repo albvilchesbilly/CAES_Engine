@@ -1,0 +1,206 @@
+{
+  "capacidad": "CAP-17",
+  "rol": "T-REV",
+  "eventos": [],
+  "datos": {
+    "cola": [
+      {
+        "identificacion": {
+          "actuacion_id": "C",
+          "codigo_identificativo_propio": "EXP001-C_contradictorio",
+          "ficha": "IND240",
+          "fecha_evaluacion": "2026-09-18"
+        },
+        "veredicto": {
+          "valor": "BLOQUEADO",
+          "semaforo": "🔴",
+          "mensaje": "Inconsistencia crítica: revisión documental antes de calcular."
+        },
+        "motivos": [
+          {
+            "motivo": "conflicto",
+            "prioridad": 1,
+            "detalle": {
+              "variables": [
+                {
+                  "variable": "PM",
+                  "num_serie_motor": "MTR-SYN-0001"
+                }
+              ]
+            }
+          },
+          {
+            "motivo": "correccion_pendiente",
+            "prioridad": 3,
+            "detalle": {
+              "severidad": "BLOQUEANTE_DATOS",
+              "carencias": [
+                "R-CON-01"
+              ]
+            }
+          }
+        ],
+        "antiguedad": {
+          "abierta_en": "2026-09-17T09:12:00+00:00",
+          "ultimo_movimiento_en": "2026-09-17T09:12:00+00:00"
+        },
+        "estado": {
+          "estado_ciclo": "EN_PROCESO",
+          "estado_plataforma": null,
+          "requerimiento_abierto": null,
+          "afectada_directamente": null,
+          "literales_desconocidos": [],
+          "secuencia": 1
+        }
+      },
+      {
+        "identificacion": {
+          "actuacion_id": "D",
+          "codigo_identificativo_propio": "EXP001-D_fuera_ambito",
+          "ficha": "IND240",
+          "fecha_evaluacion": "2026-09-18"
+        },
+        "veredicto": {
+          "valor": "NO_ELEGIBLE",
+          "semaforo": "🔴",
+          "mensaje": ""
+        },
+        "motivos": [
+          {
+            "motivo": "correccion_pendiente",
+            "prioridad": 3,
+            "detalle": {
+              "severidad": "BLOQUEANTE_AMBITO",
+              "carencias": [
+                "R-AMB-01"
+              ]
+            }
+          }
+        ],
+        "antiguedad": {
+          "abierta_en": "2026-09-16T11:05:00+00:00",
+          "ultimo_movimiento_en": "2026-09-16T11:05:00+00:00"
+        },
+        "estado": {
+          "estado_ciclo": "EN_PROCESO",
+          "estado_plataforma": null,
+          "requerimiento_abierto": null,
+          "afectada_directamente": null,
+          "literales_desconocidos": [],
+          "secuencia": 1
+        }
+      },
+      {
+        "identificacion": {
+          "actuacion_id": "B",
+          "codigo_identificativo_propio": "EXP001-B_falta_registro",
+          "ficha": "IND240",
+          "fecha_evaluacion": "2026-09-18"
+        },
+        "veredicto": {
+          "valor": "SUBSANABLE",
+          "semaforo": "🟡",
+          "mensaje": ""
+        },
+        "motivos": [
+          {
+            "motivo": "correccion_pendiente",
+            "prioridad": 3,
+            "detalle": {
+              "severidad": "SUBSANABLE",
+              "carencias": [
+                "R-DOC-01",
+                "R-EVD-04"
+              ]
+            }
+          }
+        ],
+        "antiguedad": {
+          "abierta_en": "2026-09-16T17:40:00+00:00",
+          "ultimo_movimiento_en": "2026-09-16T17:40:00+00:00"
+        },
+        "estado": {
+          "estado_ciclo": "EN_PROCESO",
+          "estado_plataforma": null,
+          "requerimiento_abierto": null,
+          "afectada_directamente": null,
+          "literales_desconocidos": [],
+          "secuencia": 1
+        }
+      },
+      {
+        "identificacion": {
+          "actuacion_id": "G",
+          "codigo_identificativo_propio": "EXP001-G_desordenado",
+          "ficha": "IND240",
+          "fecha_evaluacion": "2026-09-18"
+        },
+        "veredicto": {
+          "valor": "PREVALIDADO",
+          "semaforo": "🟢",
+          "mensaje": ""
+        },
+        "motivos": [
+          {
+            "motivo": "tarea_plataforma",
+            "prioridad": 4,
+            "detalle": {
+              "tareas": [
+                "TAR-G-1"
+              ]
+            }
+          }
+        ],
+        "antiguedad": {
+          "abierta_en": "2026-09-12T08:30:00+00:00",
+          "ultimo_movimiento_en": "2026-09-13T08:30:00+00:00"
+        },
+        "estado": {
+          "estado_ciclo": "EN_PLATAFORMA",
+          "estado_plataforma": null,
+          "requerimiento_abierto": null,
+          "afectada_directamente": null,
+          "literales_desconocidos": [],
+          "secuencia": 11
+        }
+      },
+      {
+        "identificacion": {
+          "actuacion_id": "A",
+          "codigo_identificativo_propio": "EXP001-A_completo",
+          "ficha": "IND240",
+          "fecha_evaluacion": "2026-09-18"
+        },
+        "veredicto": {
+          "valor": "PREVALIDADO",
+          "semaforo": "🟢",
+          "mensaje": ""
+        },
+        "motivos": [
+          {
+            "motivo": "tarea_plataforma",
+            "prioridad": 4,
+            "detalle": {
+              "tareas": [
+                "TAR-A-1"
+              ]
+            }
+          }
+        ],
+        "antiguedad": {
+          "abierta_en": "2026-09-14T12:00:00+00:00",
+          "ultimo_movimiento_en": "2026-09-14T12:00:00+00:00"
+        },
+        "estado": {
+          "estado_ciclo": "ABIERTA",
+          "estado_plataforma": null,
+          "requerimiento_abierto": null,
+          "afectada_directamente": null,
+          "literales_desconocidos": [],
+          "secuencia": 1
+        }
+      }
+    ]
+  },
+  "avisos": []
+}

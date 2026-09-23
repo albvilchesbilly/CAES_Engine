@@ -1,0 +1,4668 @@
+{
+  "C": {
+    "CAP-03": {
+      "capacidad": "CAP-03",
+      "rol": "T-REV",
+      "eventos": [],
+      "datos": {
+        "identificacion": {
+          "actuacion_id": "EXP001-C_contradictorio",
+          "codigo_identificativo_propio": "EXP001-C_contradictorio",
+          "ficha": "IND240",
+          "fecha_evaluacion": "2026-09-18"
+        },
+        "documentos": [
+          {
+            "doc_id": "2e1ed3667b23fb370f5988f098df569696d67861763aa0ce4574d95766f3b21b",
+            "sha256": "2e1ed3667b23fb370f5988f098df569696d67861763aa0ce4574d95766f3b21b",
+            "nombre": "01_ficha_IND240_cumplimentada.pdf",
+            "bytes": 4146,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "ficha_cumplimentada",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "31a7c8901bea6290ae3f8cb001f4d2dbea88cc1d31715f5c56d000be438aae3e",
+            "sha256": "31a7c8901bea6290ae3f8cb001f4d2dbea88cc1d31715f5c56d000be438aae3e",
+            "nombre": "02_declaracion_responsable.pdf",
+            "bytes": 3668,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "declaracion_responsable",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "cdc3d48329cf7d6c40cbb1c0d53b5d2268e0af66a8e8defcbba069dd53c0d1b0",
+            "sha256": "cdc3d48329cf7d6c40cbb1c0d53b5d2268e0af66a8e8defcbba069dd53c0d1b0",
+            "nombre": "03_factura.pdf",
+            "bytes": 3598,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "factura",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "451ac214712d20a612f57295978891ac998b6f26dc166c088c2327c3c691a278",
+            "sha256": "451ac214712d20a612f57295978891ac998b6f26dc166c088c2327c3c691a278",
+            "nombre": "04_informe_fotografico.pdf",
+            "bytes": 213197,
+            "formato": "pdf",
+            "paginas": 2,
+            "tipo": "informe_fotografico",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "e559c6a69ec0b5e75822aa55d4cbb24b9477b39d8cdda912c4e1c000ee784e00",
+            "sha256": "e559c6a69ec0b5e75822aa55d4cbb24b9477b39d8cdda912c4e1c000ee784e00",
+            "nombre": "05_certificado_instalador.pdf",
+            "bytes": 4343,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "certificado_instalador",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "09f3e4140f42afcf7985bb35112646636469578c7fc756a144bf5c0ae54cc761",
+            "sha256": "09f3e4140f42afcf7985bb35112646636469578c7fc756a144bf5c0ae54cc761",
+            "nombre": "06_registro_funcionamiento_MTR-SYN-0001.xlsx",
+            "bytes": 70734,
+            "formato": "xlsx",
+            "paginas": 0,
+            "tipo": "registro_funcionamiento",
+            "confianza_tipo": "0.9",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "a4878512f85b93ce9ff649b2f118b7302b7fceae1a8da5273eed8720f5465fd9",
+            "sha256": "a4878512f85b93ce9ff649b2f118b7302b7fceae1a8da5273eed8720f5465fd9",
+            "nombre": "07_registro_horas_previo_MTR-SYN-0001.pdf",
+            "bytes": 3379,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "registro_horas_previo",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "525e066cb491f7eda3570a967f133c24987e7ce6cfedaf419b4064f6f505a421",
+            "sha256": "525e066cb491f7eda3570a967f133c24987e7ce6cfedaf419b4064f6f505a421",
+            "nombre": "08_ficha_tecnica_motor_MTR-SYN-0001.pdf",
+            "bytes": 2990,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "ficha_tecnica_motor",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "4fd933e6404a439b37aff7056324350303a38be5b2c8773d495144bd195a1d7f",
+            "sha256": "4fd933e6404a439b37aff7056324350303a38be5b2c8773d495144bd195a1d7f",
+            "nombre": "09_ficha_tecnica_variador_VSD-SYN-0001.pdf",
+            "bytes": 2905,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "ficha_tecnica_variador",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "1c1b10044cab1ff7ac8697115684670d7555413641d83746b1e6b156f0f57bdf",
+            "sha256": "1c1b10044cab1ff7ac8697115684670d7555413641d83746b1e6b156f0f57bdf",
+            "nombre": "10_ficha_tecnica_equipo_accionado_MTR-SYN-0001.pdf",
+            "bytes": 2762,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "ficha_tecnica_equipo_accionado",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "3b1c26b4a5626d242054d71fb9fd7551548cd3946b9c768cb7d6690fe0aa35d7",
+            "sha256": "3b1c26b4a5626d242054d71fb9fd7551548cd3946b9c768cb7d6690fe0aa35d7",
+            "nombre": "11_convenio_cae.pdf",
+            "bytes": 5092,
+            "formato": "pdf",
+            "paginas": 2,
+            "tipo": "convenio_cae",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          }
+        ],
+        "evidencias": [
+          {
+            "descripcion": null,
+            "definicion": null,
+            "referencia": null,
+            "unidad": "kWh",
+            "num_serie_motor": null,
+            "variable": "convenio.ahorro_kwh",
+            "evidencias": [
+              {
+                "variable": "convenio.ahorro_kwh",
+                "valor": "305829",
+                "doc_id": "3b1c26b4a5626d242054d71fb9fd7551548cd3946b9c768cb7d6690fe0aa35d7",
+                "tipo_doc": "convenio_cae",
+                "pagina": 1,
+                "texto_literal": "Ahorro anual de energía final 305.829 kWh",
+                "metodo": "tabla",
+                "confianza": "1",
+                "extractor_version": "reglas-0.1.0",
+                "tipo_evidencia": "declarado",
+                "num_serie_motor": null,
+                "num_serie_variador": null,
+                "unidad": "kWh",
+                "interpretacion": null
+              }
+            ],
+            "valor_normalizado": "305829",
+            "tipo_evidencia": "declarado",
+            "fuente_primaria": null,
+            "interpretacion": null,
+            "valores_por_fuente": {
+              "convenio_cae": "305829"
+            },
+            "valor_consumido": "305829",
+            "conflicto": false,
+            "posibles_errores_ocr": [],
+            "valores_por_tipo_evidencia": {
+              "declarado": "305829"
+            },
+            "valores_tipados_por_tipo_evidencia": {
+              "declarado": "305829"
+            },
+            "nivel": "actuacion",
+            "tipo": "decimal",
+            "avisos": [],
+            "tratable_por_plataforma": false
+          },
+          {
+            "descripcion": null,
+            "definicion": null,
+            "referencia": null,
+            "unidad": null,
+            "num_serie_motor": null,
+            "variable": "convenio.fecha_firma",
+            "evidencias": [
+              {
+                "variable": "convenio.fecha_firma",
+                "valor": "2026-04-20",
+                "doc_id": "3b1c26b4a5626d242054d71fb9fd7551548cd3946b9c768cb7d6690fe0aa35d7",
+                "tipo_doc": "convenio_cae",
+                "pagina": 2,
+                "texto_literal": "Fecha de firma del convenio 20/04/2026",
+                "metodo": "tabla",
+                "confianza": "1",
+                "extractor_version": "reglas-0.1.0",
+                "tipo_evidencia": "demostrado",
+                "num_serie_motor": null,
+                "num_serie_variador": null,
+                "unidad": null,
+                "interpretacion": null
+              }
+            ],
+            "valor_normalizado": "2026-04-20",
+            "tipo_evidencia": "demostrado",
+            "fuente_primaria": null,
+            "interpretacion": null,
+            "valores_por_fuente": {
+              "convenio_cae": "2026-04-20"
+            },
+            "valor_consumido": "2026-04-20",
+            "conflicto": false,
+            "posibles_errores_ocr": [],
+            "valores_por_tipo_evidencia": {
+              "demostrado": "2026-04-20"
+            },
+            "valores_tipados_por_tipo_evidencia": {
+              "demostrado": "2026-04-20"
+            },
+            "nivel": "actuacion",
+            "tipo": "date",
+            "avisos": [],
+            "tratable_por_plataforma": false
+          },
+          {
+            "descripcion": null,
+            "definicion": null,
+            "referencia": null,
+            "unidad": null,
+            "num_serie_motor": null,
+            "variable": "convenio.requisitos_presentes",
+            "evidencias": [
+              {
+                "variable": "convenio.requisitos_presentes",
+                "valor": "[\"identificación de partes (NIF y razón social)\", \"título descriptivo\", \"localización (UTM y referencia catastral)\", \"ahorro anual (kWh)\", \"tipo de contraprestación\", \"vida útil de la actuación\", \"declaración de no suscribir otros convenios por la misma actuación\"]",
+                "doc_id": "3b1c26b4a5626d242054d71fb9fd7551548cd3946b9c768cb7d6690fe0aa35d7",
+                "tipo_doc": "convenio_cae",
+                "pagina": 1,
+                "texto_literal": "identificación de partes (NIF y razón social); título descriptivo; localización (UTM y referencia catastral); ahorro anual (kWh); tipo de contraprestación; vida útil de la actuación; declaración de no suscribir otros convenios por la misma actuación",
+                "metodo": "regex",
+                "confianza": "1",
+                "extractor_version": "reglas-0.1.0",
+                "tipo_evidencia": "demostrado",
+                "num_serie_motor": null,
+                "num_serie_variador": null,
+                "unidad": null,
+                "interpretacion": null
+              }
+            ],
+            "valor_normalizado": "[\"identificación de partes (NIF y razón social)\", \"título descriptivo\", \"localización (UTM y referencia catastral)\", \"ahorro anual (kWh)\", \"tipo de contraprestación\", \"vida útil de la actuación\", \"declaración de no suscribir otros convenios por la misma actuación\"]",
+            "tipo_evidencia": "demostrado",
+            "fuente_primaria": null,
+            "interpretacion": null,
+            "valores_por_fuente": {
+              "convenio_cae": "[\"identificación de partes (NIF y razón social)\", \"título descriptivo\", \"localización (UTM y referencia catastral)\", \"ahorro anual (kWh)\", \"tipo de contraprestación\", \"vida útil de la actuación\", \"declaración de no suscribir otros convenios por la misma actuación\"]"
+            },
+            "valor_consumido": [
+              "identificación de partes (NIF y razón social)",
+              "título descriptivo",
+              "localización (UTM y referencia catastral)",
+              "ahorro anual (kWh)",
+              "tipo de contraprestación",
+              "vida útil de la actuación",
+              "declaración de no suscribir otros convenios por la misma actuación"
+            ],
+            "conflicto": false,
+            "posibles_errores_ocr": [],
+            "valores_por_tipo_evidencia": {
+              "demostrado": "[\"identificación de partes (NIF y razón social)\", \"título descriptivo\", \"localización (UTM y referencia catastral)\", \"ahorro anual (kWh)\", \"tipo de contraprestación\", \"vida útil de la actuación\", \"declaración de no suscribir otros convenios por la misma actuación\"]"
+            },
+            "valores_tipados_por_tipo_evidencia": {
+              "demostrado": [
+                "identificación de partes (NIF y razón social)",
+                "título descriptivo",
+                "localización (UTM y referencia catastral)",
+                "ahorro anual (kWh)",
+                "tipo de contraprestación",
+                "vida útil de la actuación",
+                "declaración de no suscribir otros convenios por la misma actuación"
+              ]
+            },
+            "nivel": "actuacion",
+            "tipo": "list",
+            "avisos": [],
+            "tratable_por_plataforma": false
+          }
+        ],
+        "conflictos": [
+          {
+            "variable": "PM",
+            "num_serie_motor": "MTR-SYN-0001",
+            "valor_consumido": null,
+            "evidencias": [
+              {
+                "variable": "PM",
+                "valor": "110",
+                "doc_id": "2e1ed3667b23fb370f5988f098df569696d67861763aa0ce4574d95766f3b21b",
+                "tipo_doc": "ficha_cumplimentada",
+                "pagina": 1,
+                "texto_literal": "Potencia nominal del motor PM 110 kW",
+                "metodo": "tabla",
+                "confianza": "1",
+                "extractor_version": "reglas-0.1.0",
+                "tipo_evidencia": "demostrado",
+                "num_serie_motor": "MTR-SYN-0001",
+                "num_serie_variador": "VSD-SYN-0001",
+                "unidad": "kW",
+                "interpretacion": null
+              },
+              {
+                "variable": "PM",
+                "valor": "90",
+                "doc_id": "e559c6a69ec0b5e75822aa55d4cbb24b9477b39d8cdda912c4e1c000ee784e00",
+                "tipo_doc": "certificado_instalador",
+                "pagina": 1,
+                "texto_literal": "a) Potencia nominal del motor PM (según ficha técnica) 90 kW",
+                "metodo": "tabla",
+                "confianza": "1",
+                "extractor_version": "reglas-0.1.0",
+                "tipo_evidencia": "demostrado",
+                "num_serie_motor": "MTR-SYN-0001",
+                "num_serie_variador": "VSD-SYN-0001",
+                "unidad": "kW",
+                "interpretacion": null
+              },
+              {
+                "variable": "PM",
+                "valor": "110",
+                "doc_id": "525e066cb491f7eda3570a967f133c24987e7ce6cfedaf419b4064f6f505a421",
+                "tipo_doc": "ficha_tecnica_motor",
+                "pagina": 1,
+                "texto_literal": "Potencia nominal PM 110 kW",
+                "metodo": "tabla",
+                "confianza": "1",
+                "extractor_version": "reglas-0.1.0",
+                "tipo_evidencia": "demostrado",
+                "num_serie_motor": "MTR-SYN-0001",
+                "num_serie_variador": null,
+                "unidad": "kW",
+                "interpretacion": null
+              }
+            ]
+          }
+        ],
+        "calculo": {
+          "total_exacto": null,
+          "total_exacto_presentable": null,
+          "total_cae": null,
+          "total_cae_presentable": null,
+          "provisional": false,
+          "motivo_no_calculo": "conflicto entre fuentes fiables en PM: el motor no elige valor ni calcula",
+          "traza": [],
+          "variables": {},
+          "por_unidad": []
+        },
+        "veredicto": {
+          "valor": "BLOQUEADO",
+          "semaforo": "🔴",
+          "mensaje": "Inconsistencia crítica: revisión documental antes de calcular.",
+          "descargo": "Ningún estado implica CAE garantizado. La emisión requiere dictamen favorable de verificador acreditado y solicitud por sujeto obligado o delegado.",
+          "reglas_falladas": [
+            "R-CON-01"
+          ],
+          "reglas_no_evaluables": [
+            "R-CAL-02",
+            "R-CON-06",
+            "R-CAL-03"
+          ],
+          "reglas": [
+            {
+              "id": "R-AMB-01",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_AMBITO",
+              "fase": "ambito",
+              "nivel": "unidad",
+              "descripcion": "El equipo accionado es rotodinámico e incluido en el ámbito",
+              "referencia": "EXC-03",
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-AMB-02",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_AMBITO",
+              "fase": "ambito",
+              "nivel": "actuacion",
+              "descripcion": "El motor es existente (no hay factura de motor ni de equipo nuevo)",
+              "referencia": "EXC-01, EXC-02",
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-AMB-03",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_AMBITO",
+              "fase": "ambito",
+              "nivel": "unidad",
+              "descripcion": "El régimen previo era constante y sin modulación",
+              "referencia": "SRC-FICHA §1",
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CON-01",
+              "resultado": "FALLA",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "PM coincide en todas las fuentes",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "FALLA"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CON-02",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "N1 coincide en todas las fuentes",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CON-03",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "N2 declarado coincide con N2 derivado del registro (±1 rpm)",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CON-04",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "Nº de serie de variador y motor coinciden entre documentos",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CON-05",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "actuacion",
+              "descripcion": "Titular (NIF) coincide entre ficha, factura, declaración y convenio",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-CON-07",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "actuacion",
+              "descripcion": "Número de motores coherente entre factura, certificado, ficha y registro",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-TMP-01",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "actuacion",
+              "descripcion": "fecha_inicio <= fecha_fin",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-CAL-01",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "N2 < N1",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CAL-02",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "AVISO",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "Existe fila exacta en cuadro 6 para PM",
+              "referencia": null,
+              "interpretacion": "INT-02",
+              "por_unidad": {
+                "MTR-SYN-0001": "NO_EVALUABLE"
+              },
+              "motivo": "MTR-SYN-0001: datos ausentes: PM, REG1781_CUADRO6.kw_motor"
+            },
+            {
+              "id": "R-CAL-04",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "p no procede de la ficha técnica del variador",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CON-06",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "SUBSANABLE",
+              "fase": "post_calculo",
+              "nivel": "actuacion",
+              "descripcion": "El ahorro anual del convenio coincide con AETOTAL calculado",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": "fase no evaluada: sin calculo (conflicto en PM)"
+            },
+            {
+              "id": "R-CAL-03",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "post_calculo",
+              "nivel": "unidad",
+              "descripcion": "Controles físicos FIS-01 y FIS-02",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": "fase no evaluada: sin calculo (conflicto en PM)"
+            },
+            {
+              "id": "R-DOC-01",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "Están presentes todos los documentos obligatorios",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-DOC-02",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "unidad",
+              "descripcion": "El informe fotográfico contiene fotos ANTES y DESPUÉS por motor",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-DOC-03",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "La factura contiene los datos mínimos (número, fecha, NIF emisor y receptor, base, IVA, total)",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-DOC-04",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "El convenio CAE contiene todos los campos del art. 11.2",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-DOC-05",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "Ficha firmada por el representante legal",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-EVD-01",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "unidad",
+              "descripcion": "El registro de funcionamiento cubre al menos 30 días",
+              "referencia": "SRC-FICHA §3 nota 1",
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-EVD-02",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "unidad",
+              "descripcion": "El registro es posterior a la puesta en marcha",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-EVD-03",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "unidad",
+              "descripcion": "Existe prueba de inalterabilidad del registro y la huella coincide",
+              "referencia": null,
+              "interpretacion": "INT-05",
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-EVD-04",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "unidad",
+              "descripcion": "N2 es un dato demostrado (derivado del registro), no solo declarado",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-TMP-02",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "Convenio CAE firmado antes de la solicitud",
+              "referencia": "SRC-ORDEN815 art. 11.3",
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-TMP-03",
+              "resultado": "CUMPLE",
+              "severidad": "AVISO",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "La solicitud se presenta dentro de la validez del CAE (3 años desde fin de actuación)",
+              "referencia": "SRC-ORDEN815 art. 17.1",
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            }
+          ],
+          "interpretaciones_aplicadas": [
+            "INT-03",
+            "INT-04",
+            "INT-05",
+            "INT-10"
+          ],
+          "hash_reglas": "78b0f020d928dbe2a89d9e547a4bb8880e65024a64857371ec1c6462e5b9a9df"
+        },
+        "historial": [
+          {
+            "evento_id": "1b8a3476-c40e-5595-bb52-f3a17803d819",
+            "actuacion_id": "C",
+            "secuencia": 1,
+            "tipo": "DocumentoRegistrado",
+            "ocurrido_en": "2026-09-17T09:12:00+00:00",
+            "actor": {
+              "clase": "motor",
+              "id": "engine"
+            },
+            "payload": {
+              "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+            }
+          }
+        ]
+      },
+      "avisos": []
+    },
+    "CAP-04": {
+      "capacidad": "CAP-04",
+      "rol": "T-REV",
+      "eventos": [],
+      "datos": {
+        "identificacion": {
+          "actuacion_id": "EXP001-C_contradictorio",
+          "codigo_identificativo_propio": "EXP001-C_contradictorio",
+          "ficha": "IND240",
+          "fecha_evaluacion": "2026-09-18"
+        },
+        "que_te_falta": {
+          "carencias": [
+            {
+              "id": "R-CON-01",
+              "severidad": "BLOQUEANTE_DATOS",
+              "mensaje": "PM coincide en todas las fuentes",
+              "documentos": [
+                "ficha_tecnica_motor",
+                "placa_caracteristicas_foto",
+                "certificado_instalador",
+                "ficha_cumplimentada"
+              ]
+            }
+          ],
+          "hay_carencias": true
+        },
+        "estado_simplificado": {
+          "semaforo": "🔴",
+          "mensaje": "Inconsistencia crítica: revisión documental antes de calcular."
+        }
+      },
+      "avisos": []
+    },
+    "CAP-14": {
+      "capacidad": "CAP-14",
+      "rol": "T-REV",
+      "eventos": [],
+      "datos": {
+        "identificacion": {
+          "actuacion_id": "EXP001-C_contradictorio",
+          "codigo_identificativo_propio": "EXP001-C_contradictorio",
+          "ficha": "IND240",
+          "fecha_evaluacion": "2026-09-18"
+        },
+        "estados_plataforma": {
+          "actuacion_id": "C",
+          "estado_ciclo": "EN_PROCESO",
+          "estado_plataforma": null,
+          "veredicto": null,
+          "revisada_por_humano": false,
+          "firmada": false,
+          "via_entrega": null,
+          "origen_subsanacion": null,
+          "afectada_directamente": null,
+          "requerimiento_abierto": null,
+          "resultado": null,
+          "grupo_id": null,
+          "expediente_id": null,
+          "secuencia": 1,
+          "literales_desconocidos": [],
+          "rechazos": [],
+          "tareas_pendientes": [],
+          "abierta_en": "2026-09-17T09:12:00+00:00",
+          "ultimo_movimiento_en": "2026-09-17T09:12:00+00:00"
+        }
+      },
+      "avisos": []
+    }
+  },
+  "D": {
+    "CAP-03": {
+      "capacidad": "CAP-03",
+      "rol": "T-REV",
+      "eventos": [],
+      "datos": {
+        "identificacion": {
+          "actuacion_id": "EXP001-D_fuera_ambito",
+          "codigo_identificativo_propio": "EXP001-D_fuera_ambito",
+          "ficha": "IND240",
+          "fecha_evaluacion": "2026-09-18"
+        },
+        "documentos": [
+          {
+            "doc_id": "90fb36961569aa4184d4e70054e7798e0eaaecd5a18939c40ff5c3a0109ec752",
+            "sha256": "90fb36961569aa4184d4e70054e7798e0eaaecd5a18939c40ff5c3a0109ec752",
+            "nombre": "01_ficha_IND240_cumplimentada.pdf",
+            "bytes": 5474,
+            "formato": "pdf",
+            "paginas": 2,
+            "tipo": "ficha_cumplimentada",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "31a7c8901bea6290ae3f8cb001f4d2dbea88cc1d31715f5c56d000be438aae3e",
+            "sha256": "31a7c8901bea6290ae3f8cb001f4d2dbea88cc1d31715f5c56d000be438aae3e",
+            "nombre": "02_declaracion_responsable.pdf",
+            "bytes": 3668,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "declaracion_responsable",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "cdc3d48329cf7d6c40cbb1c0d53b5d2268e0af66a8e8defcbba069dd53c0d1b0",
+            "sha256": "cdc3d48329cf7d6c40cbb1c0d53b5d2268e0af66a8e8defcbba069dd53c0d1b0",
+            "nombre": "03_factura.pdf",
+            "bytes": 3598,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "factura",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "8b4baea69e6cb9905be663fad71b526c93d14e1db3e72db123ed6c280632754a",
+            "sha256": "8b4baea69e6cb9905be663fad71b526c93d14e1db3e72db123ed6c280632754a",
+            "nombre": "04_informe_fotografico.pdf",
+            "bytes": 212988,
+            "formato": "pdf",
+            "paginas": 2,
+            "tipo": "informe_fotografico",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "99ffd52df7761e2a522df19571036c62a96c7f2ea7814e162e5b69b14f054a1c",
+            "sha256": "99ffd52df7761e2a522df19571036c62a96c7f2ea7814e162e5b69b14f054a1c",
+            "nombre": "05_certificado_instalador.pdf",
+            "bytes": 4368,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "certificado_instalador",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "09f3e4140f42afcf7985bb35112646636469578c7fc756a144bf5c0ae54cc761",
+            "sha256": "09f3e4140f42afcf7985bb35112646636469578c7fc756a144bf5c0ae54cc761",
+            "nombre": "06_registro_funcionamiento_MTR-SYN-0001.xlsx",
+            "bytes": 70734,
+            "formato": "xlsx",
+            "paginas": 0,
+            "tipo": "registro_funcionamiento",
+            "confianza_tipo": "0.9",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "2dc31849ff1796ab5d23bb6cfc5ec03bd47e4e0255ed06b8538858807ec3c849",
+            "sha256": "2dc31849ff1796ab5d23bb6cfc5ec03bd47e4e0255ed06b8538858807ec3c849",
+            "nombre": "07_registro_horas_previo_MTR-SYN-0001.pdf",
+            "bytes": 3379,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "registro_horas_previo",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "525e066cb491f7eda3570a967f133c24987e7ce6cfedaf419b4064f6f505a421",
+            "sha256": "525e066cb491f7eda3570a967f133c24987e7ce6cfedaf419b4064f6f505a421",
+            "nombre": "08_ficha_tecnica_motor_MTR-SYN-0001.pdf",
+            "bytes": 2990,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "ficha_tecnica_motor",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "4fd933e6404a439b37aff7056324350303a38be5b2c8773d495144bd195a1d7f",
+            "sha256": "4fd933e6404a439b37aff7056324350303a38be5b2c8773d495144bd195a1d7f",
+            "nombre": "09_ficha_tecnica_variador_VSD-SYN-0001.pdf",
+            "bytes": 2905,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "ficha_tecnica_variador",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "66db2922baa78a63e0ca9fad4e8851dd5b9d7d92840ba99a8a5941c9e70b2ce7",
+            "sha256": "66db2922baa78a63e0ca9fad4e8851dd5b9d7d92840ba99a8a5941c9e70b2ce7",
+            "nombre": "10_ficha_tecnica_equipo_accionado_MTR-SYN-0001.pdf",
+            "bytes": 2828,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "ficha_tecnica_equipo_accionado",
+            "confianza_tipo": "0.900",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "4d9ef29c7857b4544b7eeeef10b5ae409c9f96833d99fb47fcf0e1b30e6eb0d6",
+            "sha256": "4d9ef29c7857b4544b7eeeef10b5ae409c9f96833d99fb47fcf0e1b30e6eb0d6",
+            "nombre": "11_convenio_cae.pdf",
+            "bytes": 5090,
+            "formato": "pdf",
+            "paginas": 2,
+            "tipo": "convenio_cae",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          }
+        ],
+        "evidencias": [
+          {
+            "descripcion": null,
+            "definicion": null,
+            "referencia": null,
+            "unidad": "kWh",
+            "num_serie_motor": null,
+            "variable": "convenio.ahorro_kwh",
+            "evidencias": [
+              {
+                "variable": "convenio.ahorro_kwh",
+                "valor": "305829",
+                "doc_id": "4d9ef29c7857b4544b7eeeef10b5ae409c9f96833d99fb47fcf0e1b30e6eb0d6",
+                "tipo_doc": "convenio_cae",
+                "pagina": 1,
+                "texto_literal": "Ahorro anual de energía final 305.829 kWh",
+                "metodo": "tabla",
+                "confianza": "1",
+                "extractor_version": "reglas-0.1.0",
+                "tipo_evidencia": "declarado",
+                "num_serie_motor": null,
+                "num_serie_variador": null,
+                "unidad": "kWh",
+                "interpretacion": null
+              }
+            ],
+            "valor_normalizado": "305829",
+            "tipo_evidencia": "declarado",
+            "fuente_primaria": null,
+            "interpretacion": null,
+            "valores_por_fuente": {
+              "convenio_cae": "305829"
+            },
+            "valor_consumido": "305829",
+            "conflicto": false,
+            "posibles_errores_ocr": [],
+            "valores_por_tipo_evidencia": {
+              "declarado": "305829"
+            },
+            "valores_tipados_por_tipo_evidencia": {
+              "declarado": "305829"
+            },
+            "nivel": "actuacion",
+            "tipo": "decimal",
+            "avisos": [],
+            "tratable_por_plataforma": false
+          },
+          {
+            "descripcion": null,
+            "definicion": null,
+            "referencia": null,
+            "unidad": null,
+            "num_serie_motor": null,
+            "variable": "convenio.fecha_firma",
+            "evidencias": [
+              {
+                "variable": "convenio.fecha_firma",
+                "valor": "2026-04-20",
+                "doc_id": "4d9ef29c7857b4544b7eeeef10b5ae409c9f96833d99fb47fcf0e1b30e6eb0d6",
+                "tipo_doc": "convenio_cae",
+                "pagina": 2,
+                "texto_literal": "Fecha de firma del convenio 20/04/2026",
+                "metodo": "tabla",
+                "confianza": "1",
+                "extractor_version": "reglas-0.1.0",
+                "tipo_evidencia": "demostrado",
+                "num_serie_motor": null,
+                "num_serie_variador": null,
+                "unidad": null,
+                "interpretacion": null
+              }
+            ],
+            "valor_normalizado": "2026-04-20",
+            "tipo_evidencia": "demostrado",
+            "fuente_primaria": null,
+            "interpretacion": null,
+            "valores_por_fuente": {
+              "convenio_cae": "2026-04-20"
+            },
+            "valor_consumido": "2026-04-20",
+            "conflicto": false,
+            "posibles_errores_ocr": [],
+            "valores_por_tipo_evidencia": {
+              "demostrado": "2026-04-20"
+            },
+            "valores_tipados_por_tipo_evidencia": {
+              "demostrado": "2026-04-20"
+            },
+            "nivel": "actuacion",
+            "tipo": "date",
+            "avisos": [],
+            "tratable_por_plataforma": false
+          },
+          {
+            "descripcion": null,
+            "definicion": null,
+            "referencia": null,
+            "unidad": null,
+            "num_serie_motor": null,
+            "variable": "convenio.requisitos_presentes",
+            "evidencias": [
+              {
+                "variable": "convenio.requisitos_presentes",
+                "valor": "[\"identificación de partes (NIF y razón social)\", \"título descriptivo\", \"localización (UTM y referencia catastral)\", \"ahorro anual (kWh)\", \"tipo de contraprestación\", \"vida útil de la actuación\", \"declaración de no suscribir otros convenios por la misma actuación\"]",
+                "doc_id": "4d9ef29c7857b4544b7eeeef10b5ae409c9f96833d99fb47fcf0e1b30e6eb0d6",
+                "tipo_doc": "convenio_cae",
+                "pagina": 1,
+                "texto_literal": "identificación de partes (NIF y razón social); título descriptivo; localización (UTM y referencia catastral); ahorro anual (kWh); tipo de contraprestación; vida útil de la actuación; declaración de no suscribir otros convenios por la misma actuación",
+                "metodo": "regex",
+                "confianza": "1",
+                "extractor_version": "reglas-0.1.0",
+                "tipo_evidencia": "demostrado",
+                "num_serie_motor": null,
+                "num_serie_variador": null,
+                "unidad": null,
+                "interpretacion": null
+              }
+            ],
+            "valor_normalizado": "[\"identificación de partes (NIF y razón social)\", \"título descriptivo\", \"localización (UTM y referencia catastral)\", \"ahorro anual (kWh)\", \"tipo de contraprestación\", \"vida útil de la actuación\", \"declaración de no suscribir otros convenios por la misma actuación\"]",
+            "tipo_evidencia": "demostrado",
+            "fuente_primaria": null,
+            "interpretacion": null,
+            "valores_por_fuente": {
+              "convenio_cae": "[\"identificación de partes (NIF y razón social)\", \"título descriptivo\", \"localización (UTM y referencia catastral)\", \"ahorro anual (kWh)\", \"tipo de contraprestación\", \"vida útil de la actuación\", \"declaración de no suscribir otros convenios por la misma actuación\"]"
+            },
+            "valor_consumido": [
+              "identificación de partes (NIF y razón social)",
+              "título descriptivo",
+              "localización (UTM y referencia catastral)",
+              "ahorro anual (kWh)",
+              "tipo de contraprestación",
+              "vida útil de la actuación",
+              "declaración de no suscribir otros convenios por la misma actuación"
+            ],
+            "conflicto": false,
+            "posibles_errores_ocr": [],
+            "valores_por_tipo_evidencia": {
+              "demostrado": "[\"identificación de partes (NIF y razón social)\", \"título descriptivo\", \"localización (UTM y referencia catastral)\", \"ahorro anual (kWh)\", \"tipo de contraprestación\", \"vida útil de la actuación\", \"declaración de no suscribir otros convenios por la misma actuación\"]"
+            },
+            "valores_tipados_por_tipo_evidencia": {
+              "demostrado": [
+                "identificación de partes (NIF y razón social)",
+                "título descriptivo",
+                "localización (UTM y referencia catastral)",
+                "ahorro anual (kWh)",
+                "tipo de contraprestación",
+                "vida útil de la actuación",
+                "declaración de no suscribir otros convenios por la misma actuación"
+              ]
+            },
+            "nivel": "actuacion",
+            "tipo": "list",
+            "avisos": [],
+            "tratable_por_plataforma": false
+          }
+        ],
+        "conflictos": [],
+        "calculo": {
+          "total_exacto": null,
+          "total_exacto_presentable": null,
+          "total_cae": null,
+          "total_cae_presentable": null,
+          "provisional": false,
+          "motivo_no_calculo": "reglas bloqueantes falladas: R-AMB-01",
+          "traza": [],
+          "variables": {},
+          "por_unidad": []
+        },
+        "veredicto": {
+          "valor": "NO_ELEGIBLE",
+          "semaforo": "🔴",
+          "mensaje": "",
+          "descargo": "Ningún estado implica CAE garantizado. La emisión requiere dictamen favorable de verificador acreditado y solicitud por sujeto obligado o delegado.",
+          "reglas_falladas": [
+            "R-AMB-01"
+          ],
+          "reglas_no_evaluables": [
+            "R-CON-01",
+            "R-CON-02",
+            "R-CON-03",
+            "R-CON-04",
+            "R-CON-05",
+            "R-CON-07",
+            "R-TMP-01",
+            "R-CAL-01",
+            "R-CAL-02",
+            "R-CAL-04",
+            "R-CON-06",
+            "R-CAL-03",
+            "R-DOC-01",
+            "R-DOC-02",
+            "R-DOC-03",
+            "R-DOC-04",
+            "R-DOC-05",
+            "R-EVD-01",
+            "R-EVD-02",
+            "R-EVD-03",
+            "R-EVD-04",
+            "R-TMP-02",
+            "R-TMP-03"
+          ],
+          "reglas": [
+            {
+              "id": "R-AMB-01",
+              "resultado": "FALLA",
+              "severidad": "BLOQUEANTE_AMBITO",
+              "fase": "ambito",
+              "nivel": "unidad",
+              "descripcion": "El equipo accionado es rotodinámico e incluido en el ámbito",
+              "referencia": "EXC-03",
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "FALLA"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-AMB-02",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_AMBITO",
+              "fase": "ambito",
+              "nivel": "actuacion",
+              "descripcion": "El motor es existente (no hay factura de motor ni de equipo nuevo)",
+              "referencia": "EXC-01, EXC-02",
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-AMB-03",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_AMBITO",
+              "fase": "ambito",
+              "nivel": "unidad",
+              "descripcion": "El régimen previo era constante y sin modulación",
+              "referencia": "SRC-FICHA §1",
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CON-01",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "PM coincide en todas las fuentes",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": "fase no evaluada: detenido en ambito"
+            },
+            {
+              "id": "R-CON-02",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "N1 coincide en todas las fuentes",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": "fase no evaluada: detenido en ambito"
+            },
+            {
+              "id": "R-CON-03",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "N2 declarado coincide con N2 derivado del registro (±1 rpm)",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": "fase no evaluada: detenido en ambito"
+            },
+            {
+              "id": "R-CON-04",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "Nº de serie de variador y motor coinciden entre documentos",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": "fase no evaluada: detenido en ambito"
+            },
+            {
+              "id": "R-CON-05",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "actuacion",
+              "descripcion": "Titular (NIF) coincide entre ficha, factura, declaración y convenio",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": "fase no evaluada: detenido en ambito"
+            },
+            {
+              "id": "R-CON-07",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "actuacion",
+              "descripcion": "Número de motores coherente entre factura, certificado, ficha y registro",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": "fase no evaluada: detenido en ambito"
+            },
+            {
+              "id": "R-TMP-01",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "actuacion",
+              "descripcion": "fecha_inicio <= fecha_fin",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": "fase no evaluada: detenido en ambito"
+            },
+            {
+              "id": "R-CAL-01",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "N2 < N1",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": "fase no evaluada: detenido en ambito"
+            },
+            {
+              "id": "R-CAL-02",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "AVISO",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "Existe fila exacta en cuadro 6 para PM",
+              "referencia": null,
+              "interpretacion": "INT-02",
+              "por_unidad": {},
+              "motivo": "fase no evaluada: detenido en ambito"
+            },
+            {
+              "id": "R-CAL-04",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "p no procede de la ficha técnica del variador",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": "fase no evaluada: detenido en ambito"
+            },
+            {
+              "id": "R-CON-06",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "SUBSANABLE",
+              "fase": "post_calculo",
+              "nivel": "actuacion",
+              "descripcion": "El ahorro anual del convenio coincide con AETOTAL calculado",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": "fase no evaluada: detenido en ambito"
+            },
+            {
+              "id": "R-CAL-03",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "post_calculo",
+              "nivel": "unidad",
+              "descripcion": "Controles físicos FIS-01 y FIS-02",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": "fase no evaluada: detenido en ambito"
+            },
+            {
+              "id": "R-DOC-01",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "Están presentes todos los documentos obligatorios",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": "fase no evaluada: detenido en ambito"
+            },
+            {
+              "id": "R-DOC-02",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "unidad",
+              "descripcion": "El informe fotográfico contiene fotos ANTES y DESPUÉS por motor",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": "fase no evaluada: detenido en ambito"
+            },
+            {
+              "id": "R-DOC-03",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "La factura contiene los datos mínimos (número, fecha, NIF emisor y receptor, base, IVA, total)",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": "fase no evaluada: detenido en ambito"
+            },
+            {
+              "id": "R-DOC-04",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "El convenio CAE contiene todos los campos del art. 11.2",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": "fase no evaluada: detenido en ambito"
+            },
+            {
+              "id": "R-DOC-05",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "Ficha firmada por el representante legal",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": "fase no evaluada: detenido en ambito"
+            },
+            {
+              "id": "R-EVD-01",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "unidad",
+              "descripcion": "El registro de funcionamiento cubre al menos 30 días",
+              "referencia": "SRC-FICHA §3 nota 1",
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": "fase no evaluada: detenido en ambito"
+            },
+            {
+              "id": "R-EVD-02",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "unidad",
+              "descripcion": "El registro es posterior a la puesta en marcha",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": "fase no evaluada: detenido en ambito"
+            },
+            {
+              "id": "R-EVD-03",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "unidad",
+              "descripcion": "Existe prueba de inalterabilidad del registro y la huella coincide",
+              "referencia": null,
+              "interpretacion": "INT-05",
+              "por_unidad": {},
+              "motivo": "fase no evaluada: detenido en ambito"
+            },
+            {
+              "id": "R-EVD-04",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "unidad",
+              "descripcion": "N2 es un dato demostrado (derivado del registro), no solo declarado",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": "fase no evaluada: detenido en ambito"
+            },
+            {
+              "id": "R-TMP-02",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "Convenio CAE firmado antes de la solicitud",
+              "referencia": "SRC-ORDEN815 art. 11.3",
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": "fase no evaluada: detenido en ambito"
+            },
+            {
+              "id": "R-TMP-03",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "AVISO",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "La solicitud se presenta dentro de la validez del CAE (3 años desde fin de actuación)",
+              "referencia": "SRC-ORDEN815 art. 17.1",
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": "fase no evaluada: detenido en ambito"
+            }
+          ],
+          "interpretaciones_aplicadas": [
+            "INT-03",
+            "INT-04",
+            "INT-05"
+          ],
+          "hash_reglas": "78b0f020d928dbe2a89d9e547a4bb8880e65024a64857371ec1c6462e5b9a9df"
+        },
+        "historial": [
+          {
+            "evento_id": "2d2224dc-93c2-56bf-86a1-988e134befdb",
+            "actuacion_id": "D",
+            "secuencia": 1,
+            "tipo": "DocumentoRegistrado",
+            "ocurrido_en": "2026-09-16T11:05:00+00:00",
+            "actor": {
+              "clase": "motor",
+              "id": "engine"
+            },
+            "payload": {
+              "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+            }
+          }
+        ]
+      },
+      "avisos": []
+    },
+    "CAP-04": {
+      "capacidad": "CAP-04",
+      "rol": "T-REV",
+      "eventos": [],
+      "datos": {
+        "identificacion": {
+          "actuacion_id": "EXP001-D_fuera_ambito",
+          "codigo_identificativo_propio": "EXP001-D_fuera_ambito",
+          "ficha": "IND240",
+          "fecha_evaluacion": "2026-09-18"
+        },
+        "que_te_falta": {
+          "carencias": [
+            {
+              "id": "R-AMB-01",
+              "severidad": "BLOQUEANTE_AMBITO",
+              "mensaje": "El equipo accionado es rotodinámico e incluido en el ámbito",
+              "documentos": [
+                "ficha_tecnica_equipo_accionado",
+                "certificado_instalador"
+              ]
+            }
+          ],
+          "hay_carencias": true
+        },
+        "estado_simplificado": {
+          "semaforo": "🔴",
+          "mensaje": ""
+        }
+      },
+      "avisos": []
+    },
+    "CAP-14": {
+      "capacidad": "CAP-14",
+      "rol": "T-REV",
+      "eventos": [],
+      "datos": {
+        "identificacion": {
+          "actuacion_id": "EXP001-D_fuera_ambito",
+          "codigo_identificativo_propio": "EXP001-D_fuera_ambito",
+          "ficha": "IND240",
+          "fecha_evaluacion": "2026-09-18"
+        },
+        "estados_plataforma": {
+          "actuacion_id": "D",
+          "estado_ciclo": "EN_PROCESO",
+          "estado_plataforma": null,
+          "veredicto": null,
+          "revisada_por_humano": false,
+          "firmada": false,
+          "via_entrega": null,
+          "origen_subsanacion": null,
+          "afectada_directamente": null,
+          "requerimiento_abierto": null,
+          "resultado": null,
+          "grupo_id": null,
+          "expediente_id": null,
+          "secuencia": 1,
+          "literales_desconocidos": [],
+          "rechazos": [],
+          "tareas_pendientes": [],
+          "abierta_en": "2026-09-16T11:05:00+00:00",
+          "ultimo_movimiento_en": "2026-09-16T11:05:00+00:00"
+        }
+      },
+      "avisos": []
+    }
+  },
+  "B": {
+    "CAP-03": {
+      "capacidad": "CAP-03",
+      "rol": "T-REV",
+      "eventos": [],
+      "datos": {
+        "identificacion": {
+          "actuacion_id": "EXP001-B_falta_registro",
+          "codigo_identificativo_propio": "EXP001-B_falta_registro",
+          "ficha": "IND240",
+          "fecha_evaluacion": "2026-09-18"
+        },
+        "documentos": [
+          {
+            "doc_id": "2e1ed3667b23fb370f5988f098df569696d67861763aa0ce4574d95766f3b21b",
+            "sha256": "2e1ed3667b23fb370f5988f098df569696d67861763aa0ce4574d95766f3b21b",
+            "nombre": "01_ficha_IND240_cumplimentada.pdf",
+            "bytes": 4146,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "ficha_cumplimentada",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "31a7c8901bea6290ae3f8cb001f4d2dbea88cc1d31715f5c56d000be438aae3e",
+            "sha256": "31a7c8901bea6290ae3f8cb001f4d2dbea88cc1d31715f5c56d000be438aae3e",
+            "nombre": "02_declaracion_responsable.pdf",
+            "bytes": 3668,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "declaracion_responsable",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "cdc3d48329cf7d6c40cbb1c0d53b5d2268e0af66a8e8defcbba069dd53c0d1b0",
+            "sha256": "cdc3d48329cf7d6c40cbb1c0d53b5d2268e0af66a8e8defcbba069dd53c0d1b0",
+            "nombre": "03_factura.pdf",
+            "bytes": 3598,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "factura",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "451ac214712d20a612f57295978891ac998b6f26dc166c088c2327c3c691a278",
+            "sha256": "451ac214712d20a612f57295978891ac998b6f26dc166c088c2327c3c691a278",
+            "nombre": "04_informe_fotografico.pdf",
+            "bytes": 213197,
+            "formato": "pdf",
+            "paginas": 2,
+            "tipo": "informe_fotografico",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "0150ee67c639805d0b93c158763a219dbddc2be23bb96c80b0f565b680956656",
+            "sha256": "0150ee67c639805d0b93c158763a219dbddc2be23bb96c80b0f565b680956656",
+            "nombre": "05_certificado_instalador.pdf",
+            "bytes": 3926,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "certificado_instalador",
+            "confianza_tipo": "0.92",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "a4878512f85b93ce9ff649b2f118b7302b7fceae1a8da5273eed8720f5465fd9",
+            "sha256": "a4878512f85b93ce9ff649b2f118b7302b7fceae1a8da5273eed8720f5465fd9",
+            "nombre": "07_registro_horas_previo_MTR-SYN-0001.pdf",
+            "bytes": 3379,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "registro_horas_previo",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "525e066cb491f7eda3570a967f133c24987e7ce6cfedaf419b4064f6f505a421",
+            "sha256": "525e066cb491f7eda3570a967f133c24987e7ce6cfedaf419b4064f6f505a421",
+            "nombre": "08_ficha_tecnica_motor_MTR-SYN-0001.pdf",
+            "bytes": 2990,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "ficha_tecnica_motor",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "4fd933e6404a439b37aff7056324350303a38be5b2c8773d495144bd195a1d7f",
+            "sha256": "4fd933e6404a439b37aff7056324350303a38be5b2c8773d495144bd195a1d7f",
+            "nombre": "09_ficha_tecnica_variador_VSD-SYN-0001.pdf",
+            "bytes": 2905,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "ficha_tecnica_variador",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "1c1b10044cab1ff7ac8697115684670d7555413641d83746b1e6b156f0f57bdf",
+            "sha256": "1c1b10044cab1ff7ac8697115684670d7555413641d83746b1e6b156f0f57bdf",
+            "nombre": "10_ficha_tecnica_equipo_accionado_MTR-SYN-0001.pdf",
+            "bytes": 2762,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "ficha_tecnica_equipo_accionado",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "3b1c26b4a5626d242054d71fb9fd7551548cd3946b9c768cb7d6690fe0aa35d7",
+            "sha256": "3b1c26b4a5626d242054d71fb9fd7551548cd3946b9c768cb7d6690fe0aa35d7",
+            "nombre": "11_convenio_cae.pdf",
+            "bytes": 5092,
+            "formato": "pdf",
+            "paginas": 2,
+            "tipo": "convenio_cae",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          }
+        ],
+        "evidencias": [
+          {
+            "descripcion": null,
+            "definicion": null,
+            "referencia": null,
+            "unidad": "kWh",
+            "num_serie_motor": null,
+            "variable": "convenio.ahorro_kwh",
+            "evidencias": [
+              {
+                "variable": "convenio.ahorro_kwh",
+                "valor": "305829",
+                "doc_id": "3b1c26b4a5626d242054d71fb9fd7551548cd3946b9c768cb7d6690fe0aa35d7",
+                "tipo_doc": "convenio_cae",
+                "pagina": 1,
+                "texto_literal": "Ahorro anual de energía final 305.829 kWh",
+                "metodo": "tabla",
+                "confianza": "1",
+                "extractor_version": "reglas-0.1.0",
+                "tipo_evidencia": "declarado",
+                "num_serie_motor": null,
+                "num_serie_variador": null,
+                "unidad": "kWh",
+                "interpretacion": null
+              }
+            ],
+            "valor_normalizado": "305829",
+            "tipo_evidencia": "declarado",
+            "fuente_primaria": null,
+            "interpretacion": null,
+            "valores_por_fuente": {
+              "convenio_cae": "305829"
+            },
+            "valor_consumido": "305829",
+            "conflicto": false,
+            "posibles_errores_ocr": [],
+            "valores_por_tipo_evidencia": {
+              "declarado": "305829"
+            },
+            "valores_tipados_por_tipo_evidencia": {
+              "declarado": "305829"
+            },
+            "nivel": "actuacion",
+            "tipo": "decimal",
+            "avisos": [],
+            "tratable_por_plataforma": false
+          },
+          {
+            "descripcion": null,
+            "definicion": null,
+            "referencia": null,
+            "unidad": null,
+            "num_serie_motor": null,
+            "variable": "convenio.fecha_firma",
+            "evidencias": [
+              {
+                "variable": "convenio.fecha_firma",
+                "valor": "2026-04-20",
+                "doc_id": "3b1c26b4a5626d242054d71fb9fd7551548cd3946b9c768cb7d6690fe0aa35d7",
+                "tipo_doc": "convenio_cae",
+                "pagina": 2,
+                "texto_literal": "Fecha de firma del convenio 20/04/2026",
+                "metodo": "tabla",
+                "confianza": "1",
+                "extractor_version": "reglas-0.1.0",
+                "tipo_evidencia": "demostrado",
+                "num_serie_motor": null,
+                "num_serie_variador": null,
+                "unidad": null,
+                "interpretacion": null
+              }
+            ],
+            "valor_normalizado": "2026-04-20",
+            "tipo_evidencia": "demostrado",
+            "fuente_primaria": null,
+            "interpretacion": null,
+            "valores_por_fuente": {
+              "convenio_cae": "2026-04-20"
+            },
+            "valor_consumido": "2026-04-20",
+            "conflicto": false,
+            "posibles_errores_ocr": [],
+            "valores_por_tipo_evidencia": {
+              "demostrado": "2026-04-20"
+            },
+            "valores_tipados_por_tipo_evidencia": {
+              "demostrado": "2026-04-20"
+            },
+            "nivel": "actuacion",
+            "tipo": "date",
+            "avisos": [],
+            "tratable_por_plataforma": false
+          },
+          {
+            "descripcion": null,
+            "definicion": null,
+            "referencia": null,
+            "unidad": null,
+            "num_serie_motor": null,
+            "variable": "convenio.requisitos_presentes",
+            "evidencias": [
+              {
+                "variable": "convenio.requisitos_presentes",
+                "valor": "[\"identificación de partes (NIF y razón social)\", \"título descriptivo\", \"localización (UTM y referencia catastral)\", \"ahorro anual (kWh)\", \"tipo de contraprestación\", \"vida útil de la actuación\", \"declaración de no suscribir otros convenios por la misma actuación\"]",
+                "doc_id": "3b1c26b4a5626d242054d71fb9fd7551548cd3946b9c768cb7d6690fe0aa35d7",
+                "tipo_doc": "convenio_cae",
+                "pagina": 1,
+                "texto_literal": "identificación de partes (NIF y razón social); título descriptivo; localización (UTM y referencia catastral); ahorro anual (kWh); tipo de contraprestación; vida útil de la actuación; declaración de no suscribir otros convenios por la misma actuación",
+                "metodo": "regex",
+                "confianza": "1",
+                "extractor_version": "reglas-0.1.0",
+                "tipo_evidencia": "demostrado",
+                "num_serie_motor": null,
+                "num_serie_variador": null,
+                "unidad": null,
+                "interpretacion": null
+              }
+            ],
+            "valor_normalizado": "[\"identificación de partes (NIF y razón social)\", \"título descriptivo\", \"localización (UTM y referencia catastral)\", \"ahorro anual (kWh)\", \"tipo de contraprestación\", \"vida útil de la actuación\", \"declaración de no suscribir otros convenios por la misma actuación\"]",
+            "tipo_evidencia": "demostrado",
+            "fuente_primaria": null,
+            "interpretacion": null,
+            "valores_por_fuente": {
+              "convenio_cae": "[\"identificación de partes (NIF y razón social)\", \"título descriptivo\", \"localización (UTM y referencia catastral)\", \"ahorro anual (kWh)\", \"tipo de contraprestación\", \"vida útil de la actuación\", \"declaración de no suscribir otros convenios por la misma actuación\"]"
+            },
+            "valor_consumido": [
+              "identificación de partes (NIF y razón social)",
+              "título descriptivo",
+              "localización (UTM y referencia catastral)",
+              "ahorro anual (kWh)",
+              "tipo de contraprestación",
+              "vida útil de la actuación",
+              "declaración de no suscribir otros convenios por la misma actuación"
+            ],
+            "conflicto": false,
+            "posibles_errores_ocr": [],
+            "valores_por_tipo_evidencia": {
+              "demostrado": "[\"identificación de partes (NIF y razón social)\", \"título descriptivo\", \"localización (UTM y referencia catastral)\", \"ahorro anual (kWh)\", \"tipo de contraprestación\", \"vida útil de la actuación\", \"declaración de no suscribir otros convenios por la misma actuación\"]"
+            },
+            "valores_tipados_por_tipo_evidencia": {
+              "demostrado": [
+                "identificación de partes (NIF y razón social)",
+                "título descriptivo",
+                "localización (UTM y referencia catastral)",
+                "ahorro anual (kWh)",
+                "tipo de contraprestación",
+                "vida útil de la actuación",
+                "declaración de no suscribir otros convenios por la misma actuación"
+              ]
+            },
+            "nivel": "actuacion",
+            "tipo": "list",
+            "avisos": [],
+            "tratable_por_plataforma": false
+          }
+        ],
+        "conflictos": [],
+        "calculo": {
+          "total_exacto": "305829.6",
+          "total_exacto_presentable": "305.829,6",
+          "total_cae": 305829,
+          "total_cae_presentable": "305.829",
+          "provisional": true,
+          "motivo_no_calculo": null,
+          "traza": [
+            "precondicion 'ninguna regla con severidad BLOQUEANTE fallida' es prosa (sin operadores): no se evalua en el calculo; la aplica reglas.py",
+            "unidad MTR-SYN-0001: entradas N1=1485 N2=1188 PM=110 P_prom=60 h_antes=6000 h_despues=6000",
+            "unidad MTR-SYN-0001: entradas con interpretacion: N2 (INT-03), h_despues (INT-04)",
+            "unidad MTR-SYN-0001: h = min(h_antes, h_despues) = 6000",
+            "unidad MTR-SYN-0001: perdidas_ref_kw = 5.55 (tabla:REG1781_CUADRO6, fila exacta kw_motor = 110)",
+            "unidad MTR-SYN-0001: p = perdidas_ref_kw / PM = 0.05045454545454545454545454545454545 (INT-01)",
+            "unidad MTR-SYN-0001: precondicion 'N2 < N1' = True",
+            "unidad MTR-SYN-0001: precondicion '0 < h <= 8760' = True",
+            "unidad MTR-SYN-0001: (1 - (N2 / N1) ** 3) = 0.488",
+            "unidad MTR-SYN-0001: (N2 / N1) = 0.8",
+            "unidad MTR-SYN-0001: (1 - p) = 0.9495454545454545454545454545454546",
+            "unidad MTR-SYN-0001: AEM = PM * (1 - (N2 / N1) ** 3) * (1 - p) * h = 305829.6",
+            "unidad MTR-SYN-0001: control FIS-01 'AEM <= PM * h' = True",
+            "unidad MTR-SYN-0001: control FIS-02 'P_prom <= PM' = True",
+            "total: AETOTAL = sum(AEM) = 305829.6",
+            "total: AETOTAL_cae = 305829 (truncar a kWh entero (criterio conservador); INT-06)",
+            "controles fisicos: True; precondiciones: True",
+            "interpretaciones aplicadas: INT-03, INT-04, INT-01, INT-06",
+            "calculo provisional: estimacion no acreditada (veredicto SUBSANABLE)"
+          ],
+          "variables": {
+            "N1": {
+              "descripcion": "Velocidad de giro a régimen constante antes de la actuación (carga nominal, sin variador)",
+              "definicion": null,
+              "referencia": "SRC-FICHA §3; §5.5.a",
+              "unidad": "rpm"
+            },
+            "N2": {
+              "descripcion": "Velocidad media anual con variador de velocidad",
+              "definicion": null,
+              "referencia": "SRC-FICHA §3 nota 1; §5.5.b",
+              "unidad": "rpm"
+            },
+            "PM": {
+              "descripcion": "Potencia nominal de salida del motor sin variador",
+              "definicion": null,
+              "referencia": "SRC-FICHA §3; §5.5.a",
+              "unidad": "kW"
+            },
+            "P_prom": {
+              "descripcion": "Potencia promedio del motor en el nuevo punto de funcionamiento (no entra en la fórmula; control de coherencia)",
+              "definicion": null,
+              "referencia": "SRC-FICHA §3 nota 1; §5.5.b",
+              "unidad": "kW"
+            },
+            "h": {
+              "descripcion": null,
+              "definicion": null,
+              "referencia": "SRC-FICHA §3 nota 2 (\"se considerará el menor de los valores\")",
+              "unidad": "h"
+            },
+            "h_antes": {
+              "descripcion": "Horas anuales de funcionamiento antes de la actuación",
+              "definicion": null,
+              "referencia": "SRC-FICHA §3 nota 2",
+              "unidad": "h"
+            },
+            "h_despues": {
+              "descripcion": "Horas anuales de funcionamiento después de la actuación",
+              "definicion": null,
+              "referencia": "SRC-FICHA §3 nota 2",
+              "unidad": "h"
+            },
+            "p": {
+              "descripcion": null,
+              "definicion": null,
+              "referencia": null,
+              "unidad": "fraccion"
+            },
+            "perdidas_ref_kw": {
+              "descripcion": null,
+              "definicion": null,
+              "referencia": "SRC-FICHA §3 nota 3; SRC-REG1781",
+              "unidad": "kW"
+            }
+          },
+          "por_unidad": [
+            {
+              "num_serie_motor": "MTR-SYN-0001",
+              "salida": "305829.6",
+              "salida_presentable": "305.829,6",
+              "motivo_no_calculo": null,
+              "entradas": {
+                "N1": "1485",
+                "N2": "1188",
+                "PM": "110",
+                "P_prom": "60",
+                "h_antes": "6000",
+                "h_despues": "6000"
+              },
+              "entradas_presentables": {
+                "N1": "1.485",
+                "N2": "1.188",
+                "PM": "110",
+                "P_prom": "60",
+                "h_antes": "6.000",
+                "h_despues": "6.000"
+              },
+              "derivadas": {
+                "h": "6000",
+                "perdidas_ref_kw": "5.55",
+                "p": "0.05045454545454545454545454545454545"
+              },
+              "derivadas_presentables": {
+                "h": "6.000",
+                "perdidas_ref_kw": "5,55",
+                "p": "0,05045454545454545454545454545"
+              },
+              "fuentes": {
+                "h": "derivado",
+                "perdidas_ref_kw": "tabla:REG1781_CUADRO6",
+                "p": "tabla:REG1781_CUADRO6"
+              },
+              "controles": {
+                "FIS-01": true,
+                "FIS-02": true
+              },
+              "precondiciones": {
+                "N2 < N1": true,
+                "0 < h <= 8760": true
+              },
+              "interpretaciones": [
+                "INT-03",
+                "INT-04",
+                "INT-01"
+              ],
+              "avisos": []
+            }
+          ]
+        },
+        "veredicto": {
+          "valor": "SUBSANABLE",
+          "semaforo": "🟡",
+          "mensaje": "",
+          "descargo": "Ningún estado implica CAE garantizado. La emisión requiere dictamen favorable de verificador acreditado y solicitud por sujeto obligado o delegado.",
+          "reglas_falladas": [
+            "R-DOC-01",
+            "R-EVD-04"
+          ],
+          "reglas_no_evaluables": [
+            "R-CON-03",
+            "R-EVD-01",
+            "R-EVD-02",
+            "R-EVD-03"
+          ],
+          "reglas": [
+            {
+              "id": "R-AMB-01",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_AMBITO",
+              "fase": "ambito",
+              "nivel": "unidad",
+              "descripcion": "El equipo accionado es rotodinámico e incluido en el ámbito",
+              "referencia": "EXC-03",
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-AMB-02",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_AMBITO",
+              "fase": "ambito",
+              "nivel": "actuacion",
+              "descripcion": "El motor es existente (no hay factura de motor ni de equipo nuevo)",
+              "referencia": "EXC-01, EXC-02",
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-AMB-03",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_AMBITO",
+              "fase": "ambito",
+              "nivel": "unidad",
+              "descripcion": "El régimen previo era constante y sin modulación",
+              "referencia": "SRC-FICHA §1",
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CON-01",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "PM coincide en todas las fuentes",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CON-02",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "N1 coincide en todas las fuentes",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CON-03",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "N2 declarado coincide con N2 derivado del registro (±1 rpm)",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "NO_EVALUABLE"
+              },
+              "motivo": "MTR-SYN-0001: datos ausentes: N2.derivado"
+            },
+            {
+              "id": "R-CON-04",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "Nº de serie de variador y motor coinciden entre documentos",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CON-05",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "actuacion",
+              "descripcion": "Titular (NIF) coincide entre ficha, factura, declaración y convenio",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-CON-07",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "actuacion",
+              "descripcion": "Número de motores coherente entre factura, certificado, ficha y registro",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-TMP-01",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "actuacion",
+              "descripcion": "fecha_inicio <= fecha_fin",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-CAL-01",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "N2 < N1",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CAL-02",
+              "resultado": "CUMPLE",
+              "severidad": "AVISO",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "Existe fila exacta en cuadro 6 para PM",
+              "referencia": null,
+              "interpretacion": "INT-02",
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CAL-04",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "p no procede de la ficha técnica del variador",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CON-06",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "post_calculo",
+              "nivel": "actuacion",
+              "descripcion": "El ahorro anual del convenio coincide con AETOTAL calculado",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-CAL-03",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "post_calculo",
+              "nivel": "unidad",
+              "descripcion": "Controles físicos FIS-01 y FIS-02",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-DOC-01",
+              "resultado": "FALLA",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "Están presentes todos los documentos obligatorios",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-DOC-02",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "unidad",
+              "descripcion": "El informe fotográfico contiene fotos ANTES y DESPUÉS por motor",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-DOC-03",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "La factura contiene los datos mínimos (número, fecha, NIF emisor y receptor, base, IVA, total)",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-DOC-04",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "El convenio CAE contiene todos los campos del art. 11.2",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-DOC-05",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "Ficha firmada por el representante legal",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-EVD-01",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "unidad",
+              "descripcion": "El registro de funcionamiento cubre al menos 30 días",
+              "referencia": "SRC-FICHA §3 nota 1",
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "NO_EVALUABLE"
+              },
+              "motivo": "MTR-SYN-0001: datos ausentes: registro.dias"
+            },
+            {
+              "id": "R-EVD-02",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "unidad",
+              "descripcion": "El registro es posterior a la puesta en marcha",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "NO_EVALUABLE"
+              },
+              "motivo": "MTR-SYN-0001: datos ausentes: registro.inicio"
+            },
+            {
+              "id": "R-EVD-03",
+              "resultado": "NO_EVALUABLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "unidad",
+              "descripcion": "Existe prueba de inalterabilidad del registro y la huella coincide",
+              "referencia": null,
+              "interpretacion": "INT-05",
+              "por_unidad": {
+                "MTR-SYN-0001": "NO_EVALUABLE"
+              },
+              "motivo": "MTR-SYN-0001: datos ausentes: registro.datos_canonicos, registro.hash_declarado"
+            },
+            {
+              "id": "R-EVD-04",
+              "resultado": "FALLA",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "unidad",
+              "descripcion": "N2 es un dato demostrado (derivado del registro), no solo declarado",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "FALLA"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-TMP-02",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "Convenio CAE firmado antes de la solicitud",
+              "referencia": "SRC-ORDEN815 art. 11.3",
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-TMP-03",
+              "resultado": "CUMPLE",
+              "severidad": "AVISO",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "La solicitud se presenta dentro de la validez del CAE (3 años desde fin de actuación)",
+              "referencia": "SRC-ORDEN815 art. 17.1",
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            }
+          ],
+          "interpretaciones_aplicadas": [
+            "INT-01",
+            "INT-02",
+            "INT-03",
+            "INT-04",
+            "INT-06",
+            "INT-10"
+          ],
+          "hash_reglas": "78b0f020d928dbe2a89d9e547a4bb8880e65024a64857371ec1c6462e5b9a9df"
+        },
+        "historial": [
+          {
+            "evento_id": "799818a3-c026-5b7f-ac98-af684fbf2b64",
+            "actuacion_id": "B",
+            "secuencia": 1,
+            "tipo": "DocumentoRegistrado",
+            "ocurrido_en": "2026-09-16T17:40:00+00:00",
+            "actor": {
+              "clase": "motor",
+              "id": "engine"
+            },
+            "payload": {
+              "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+            }
+          }
+        ]
+      },
+      "avisos": []
+    },
+    "CAP-04": {
+      "capacidad": "CAP-04",
+      "rol": "T-REV",
+      "eventos": [],
+      "datos": {
+        "identificacion": {
+          "actuacion_id": "EXP001-B_falta_registro",
+          "codigo_identificativo_propio": "EXP001-B_falta_registro",
+          "ficha": "IND240",
+          "fecha_evaluacion": "2026-09-18"
+        },
+        "que_te_falta": {
+          "carencias": [
+            {
+              "id": "R-DOC-01",
+              "severidad": "SUBSANABLE",
+              "mensaje": "Están presentes todos los documentos obligatorios",
+              "documentos": [
+                "registro_funcionamiento"
+              ]
+            },
+            {
+              "id": "R-EVD-04",
+              "severidad": "SUBSANABLE",
+              "mensaje": "N2 es un dato demostrado (derivado del registro), no solo declarado",
+              "documentos": [
+                "registro_funcionamiento"
+              ]
+            }
+          ],
+          "hay_carencias": true
+        },
+        "estado_simplificado": {
+          "semaforo": "🟡",
+          "mensaje": ""
+        }
+      },
+      "avisos": []
+    },
+    "CAP-14": {
+      "capacidad": "CAP-14",
+      "rol": "T-REV",
+      "eventos": [],
+      "datos": {
+        "identificacion": {
+          "actuacion_id": "EXP001-B_falta_registro",
+          "codigo_identificativo_propio": "EXP001-B_falta_registro",
+          "ficha": "IND240",
+          "fecha_evaluacion": "2026-09-18"
+        },
+        "estados_plataforma": {
+          "actuacion_id": "B",
+          "estado_ciclo": "EN_PROCESO",
+          "estado_plataforma": null,
+          "veredicto": null,
+          "revisada_por_humano": false,
+          "firmada": false,
+          "via_entrega": null,
+          "origen_subsanacion": null,
+          "afectada_directamente": null,
+          "requerimiento_abierto": null,
+          "resultado": null,
+          "grupo_id": null,
+          "expediente_id": null,
+          "secuencia": 1,
+          "literales_desconocidos": [],
+          "rechazos": [],
+          "tareas_pendientes": [],
+          "abierta_en": "2026-09-16T17:40:00+00:00",
+          "ultimo_movimiento_en": "2026-09-16T17:40:00+00:00"
+        }
+      },
+      "avisos": []
+    }
+  },
+  "G": {
+    "CAP-03": {
+      "capacidad": "CAP-03",
+      "rol": "T-REV",
+      "eventos": [],
+      "datos": {
+        "identificacion": {
+          "actuacion_id": "EXP001-G_desordenado",
+          "codigo_identificativo_propio": "EXP001-G_desordenado",
+          "ficha": "IND240",
+          "fecha_evaluacion": "2026-09-18"
+        },
+        "documentos": [
+          {
+            "doc_id": "a2111eaeeac95a328caa90a086a6191029d9873eeac6f0dd26304108b346a041",
+            "sha256": "a2111eaeeac95a328caa90a086a6191029d9873eeac6f0dd26304108b346a041",
+            "nombre": "datos.xlsx",
+            "bytes": 70731,
+            "formato": "xlsx",
+            "paginas": 0,
+            "tipo": "registro_funcionamiento",
+            "confianza_tipo": "0.9",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": [
+              "registro_vinculado_por_hash: 'datos.xlsx' se identifica por su huella fe5d9a3bd834…; el documento que la declara la llama 'registro_funcionamiento_MTR-SYN-0001.xlsx'"
+            ]
+          },
+          {
+            "doc_id": "b69515c2c10fdf74e905f1e663c05b36dca79e05addfb13ab639e29c47d2b5ab",
+            "sha256": "b69515c2c10fdf74e905f1e663c05b36dca79e05addfb13ab639e29c47d2b5ab",
+            "nombre": "doc1.pdf",
+            "bytes": 10590,
+            "formato": "pdf",
+            "paginas": 4,
+            "tipo": "combinado",
+            "confianza_tipo": "0.6",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [
+              "cee8762f65822393de9699c3e8f3e3835ca95d8adcf5484080721efd7eca14ee",
+              "496bfe68ddc5e9091bc87532e0cdf267edb7d0263d0695862f9b34b4f184a395",
+              "9480026fdb7e202917d03d665cf3738d74742479ea97fcb9cf3df3f9f562678d"
+            ],
+            "avisos": [
+              "pdf_separado: 'doc1.pdf' contiene 3 documentos (ficha_cumplimentada, declaracion_responsable, convenio_cae)"
+            ]
+          },
+          {
+            "doc_id": "cee8762f65822393de9699c3e8f3e3835ca95d8adcf5484080721efd7eca14ee",
+            "sha256": "b69515c2c10fdf74e905f1e663c05b36dca79e05addfb13ab639e29c47d2b5ab",
+            "nombre": "doc1.pdf",
+            "bytes": 10590,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "ficha_cumplimentada",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": "b69515c2c10fdf74e905f1e663c05b36dca79e05addfb13ab639e29c47d2b5ab",
+            "rango_paginas": [
+              1,
+              1
+            ],
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "496bfe68ddc5e9091bc87532e0cdf267edb7d0263d0695862f9b34b4f184a395",
+            "sha256": "b69515c2c10fdf74e905f1e663c05b36dca79e05addfb13ab639e29c47d2b5ab",
+            "nombre": "doc1.pdf",
+            "bytes": 10590,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "declaracion_responsable",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": "b69515c2c10fdf74e905f1e663c05b36dca79e05addfb13ab639e29c47d2b5ab",
+            "rango_paginas": [
+              2,
+              2
+            ],
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "9480026fdb7e202917d03d665cf3738d74742479ea97fcb9cf3df3f9f562678d",
+            "sha256": "b69515c2c10fdf74e905f1e663c05b36dca79e05addfb13ab639e29c47d2b5ab",
+            "nombre": "doc1.pdf",
+            "bytes": 10590,
+            "formato": "pdf",
+            "paginas": 2,
+            "tipo": "convenio_cae",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": "b69515c2c10fdf74e905f1e663c05b36dca79e05addfb13ab639e29c47d2b5ab",
+            "rango_paginas": [
+              3,
+              4
+            ],
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "cdc3d48329cf7d6c40cbb1c0d53b5d2268e0af66a8e8defcbba069dd53c0d1b0",
+            "sha256": "cdc3d48329cf7d6c40cbb1c0d53b5d2268e0af66a8e8defcbba069dd53c0d1b0",
+            "nombre": "doc2.pdf",
+            "bytes": 3598,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "factura",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "83125d45cf1c9f588d8d9efd956c88592702bba8fd1d352141aefe10ef7385e8",
+            "sha256": "83125d45cf1c9f588d8d9efd956c88592702bba8fd1d352141aefe10ef7385e8",
+            "nombre": "doc3.pdf",
+            "bytes": 4342,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "certificado_instalador",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "a4878512f85b93ce9ff649b2f118b7302b7fceae1a8da5273eed8720f5465fd9",
+            "sha256": "a4878512f85b93ce9ff649b2f118b7302b7fceae1a8da5273eed8720f5465fd9",
+            "nombre": "doc4.pdf",
+            "bytes": 3379,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "registro_horas_previo",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "525e066cb491f7eda3570a967f133c24987e7ce6cfedaf419b4064f6f505a421",
+            "sha256": "525e066cb491f7eda3570a967f133c24987e7ce6cfedaf419b4064f6f505a421",
+            "nombre": "doc5.pdf",
+            "bytes": 2990,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "ficha_tecnica_motor",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "1c1b10044cab1ff7ac8697115684670d7555413641d83746b1e6b156f0f57bdf",
+            "sha256": "1c1b10044cab1ff7ac8697115684670d7555413641d83746b1e6b156f0f57bdf",
+            "nombre": "doc6.pdf",
+            "bytes": 2762,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "ficha_tecnica_equipo_accionado",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "5a3bffac00bb3bc26a75a1c138749a9d22bb19950d7a524b421d1ad0e1cf723f",
+            "sha256": "5a3bffac00bb3bc26a75a1c138749a9d22bb19950d7a524b421d1ad0e1cf723f",
+            "nombre": "foto1.jpg",
+            "bytes": 38904,
+            "formato": "imagen",
+            "paginas": 1,
+            "tipo": "informe_fotografico",
+            "confianza_tipo": "0.9",
+            "subtipo": "foto_antes",
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": [
+              "foto_suelta_clasificada_por_exif: 'foto1.jpg' es foto_antes (informe_fotografico) segun su EXIF"
+            ]
+          },
+          {
+            "doc_id": "7496bc6f1940036763f197fdee80f74dd23fce0fea5c6a2327bac0c4f68138aa",
+            "sha256": "7496bc6f1940036763f197fdee80f74dd23fce0fea5c6a2327bac0c4f68138aa",
+            "nombre": "foto2.jpg",
+            "bytes": 50317,
+            "formato": "imagen",
+            "paginas": 1,
+            "tipo": "informe_fotografico",
+            "confianza_tipo": "0.9",
+            "subtipo": "foto_despues",
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": [
+              "foto_suelta_clasificada_por_exif: 'foto2.jpg' es foto_despues (informe_fotografico) segun su EXIF"
+            ]
+          },
+          {
+            "doc_id": "6aee8fbd7aae33ebb94945f58e97e91e1215c5ae40554ec968c7b7baef4eb6ee",
+            "sha256": "6aee8fbd7aae33ebb94945f58e97e91e1215c5ae40554ec968c7b7baef4eb6ee",
+            "nombre": "foto3.jpg",
+            "bytes": 77415,
+            "formato": "imagen",
+            "paginas": 1,
+            "tipo": "informe_fotografico",
+            "confianza_tipo": "0.9",
+            "subtipo": "placa",
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": [
+              "foto_suelta_clasificada_por_exif: 'foto3.jpg' es placa (informe_fotografico) segun su EXIF"
+            ]
+          },
+          {
+            "doc_id": "4024e5037f8fb3030f9008042ce47e9ac0883e72684a0662fea8156f9b8051e7",
+            "sha256": "4024e5037f8fb3030f9008042ce47e9ac0883e72684a0662fea8156f9b8051e7",
+            "nombre": "foto4.jpg",
+            "bytes": 40828,
+            "formato": "imagen",
+            "paginas": 1,
+            "tipo": null,
+            "confianza_tipo": "0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": [
+              "documento_no_clasificado: 'foto4.jpg' no corresponde a ningun tipo de la ficha"
+            ]
+          },
+          {
+            "doc_id": "461a57779eb55494908fdfe36bba583602e9afd26d4eaab19537cbb5a049fff6",
+            "sha256": "461a57779eb55494908fdfe36bba583602e9afd26d4eaab19537cbb5a049fff6",
+            "nombre": "notas.pdf",
+            "bytes": 2729,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": null,
+            "confianza_tipo": "0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": [
+              "documento_no_clasificado: 'notas.pdf' no corresponde a ningun tipo de la ficha"
+            ]
+          },
+          {
+            "doc_id": "64b9c5fbbf1c34d7e5c6badc80b237d1eb3859fd494c1bd85965abeb0e4c27c0",
+            "sha256": "64b9c5fbbf1c34d7e5c6badc80b237d1eb3859fd494c1bd85965abeb0e4c27c0",
+            "nombre": "scan.pdf",
+            "bytes": 252517,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": null,
+            "confianza_tipo": "0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": [
+              "ocr_no_disponible: 'scan.pdf' no tiene capa de texto y no hay tesseract; la pagina queda vacia",
+              "documento_no_clasificado: 'scan.pdf' no corresponde a ningun tipo de la ficha"
+            ]
+          }
+        ],
+        "evidencias": [
+          {
+            "descripcion": null,
+            "definicion": null,
+            "referencia": null,
+            "unidad": "kWh",
+            "num_serie_motor": null,
+            "variable": "convenio.ahorro_kwh",
+            "evidencias": [
+              {
+                "variable": "convenio.ahorro_kwh",
+                "valor": "305829",
+                "doc_id": "9480026fdb7e202917d03d665cf3738d74742479ea97fcb9cf3df3f9f562678d",
+                "tipo_doc": "convenio_cae",
+                "pagina": 3,
+                "texto_literal": "Ahorro anual de energía final 305.829 kWh",
+                "metodo": "tabla",
+                "confianza": "1",
+                "extractor_version": "reglas-0.1.0",
+                "tipo_evidencia": "declarado",
+                "num_serie_motor": null,
+                "num_serie_variador": null,
+                "unidad": "kWh",
+                "interpretacion": null
+              }
+            ],
+            "valor_normalizado": "305829",
+            "tipo_evidencia": "declarado",
+            "fuente_primaria": null,
+            "interpretacion": null,
+            "valores_por_fuente": {
+              "convenio_cae": "305829"
+            },
+            "valor_consumido": "305829",
+            "conflicto": false,
+            "posibles_errores_ocr": [],
+            "valores_por_tipo_evidencia": {
+              "declarado": "305829"
+            },
+            "valores_tipados_por_tipo_evidencia": {
+              "declarado": "305829"
+            },
+            "nivel": "actuacion",
+            "tipo": "decimal",
+            "avisos": [],
+            "tratable_por_plataforma": false
+          },
+          {
+            "descripcion": null,
+            "definicion": null,
+            "referencia": null,
+            "unidad": null,
+            "num_serie_motor": null,
+            "variable": "convenio.fecha_firma",
+            "evidencias": [
+              {
+                "variable": "convenio.fecha_firma",
+                "valor": "2026-04-20",
+                "doc_id": "9480026fdb7e202917d03d665cf3738d74742479ea97fcb9cf3df3f9f562678d",
+                "tipo_doc": "convenio_cae",
+                "pagina": 4,
+                "texto_literal": "Fecha de firma del convenio 20/04/2026",
+                "metodo": "tabla",
+                "confianza": "1",
+                "extractor_version": "reglas-0.1.0",
+                "tipo_evidencia": "demostrado",
+                "num_serie_motor": null,
+                "num_serie_variador": null,
+                "unidad": null,
+                "interpretacion": null
+              }
+            ],
+            "valor_normalizado": "2026-04-20",
+            "tipo_evidencia": "demostrado",
+            "fuente_primaria": null,
+            "interpretacion": null,
+            "valores_por_fuente": {
+              "convenio_cae": "2026-04-20"
+            },
+            "valor_consumido": "2026-04-20",
+            "conflicto": false,
+            "posibles_errores_ocr": [],
+            "valores_por_tipo_evidencia": {
+              "demostrado": "2026-04-20"
+            },
+            "valores_tipados_por_tipo_evidencia": {
+              "demostrado": "2026-04-20"
+            },
+            "nivel": "actuacion",
+            "tipo": "date",
+            "avisos": [],
+            "tratable_por_plataforma": false
+          },
+          {
+            "descripcion": null,
+            "definicion": null,
+            "referencia": null,
+            "unidad": null,
+            "num_serie_motor": null,
+            "variable": "convenio.requisitos_presentes",
+            "evidencias": [
+              {
+                "variable": "convenio.requisitos_presentes",
+                "valor": "[\"identificación de partes (NIF y razón social)\", \"título descriptivo\", \"localización (UTM y referencia catastral)\", \"ahorro anual (kWh)\", \"tipo de contraprestación\", \"vida útil de la actuación\", \"declaración de no suscribir otros convenios por la misma actuación\"]",
+                "doc_id": "9480026fdb7e202917d03d665cf3738d74742479ea97fcb9cf3df3f9f562678d",
+                "tipo_doc": "convenio_cae",
+                "pagina": 3,
+                "texto_literal": "identificación de partes (NIF y razón social); título descriptivo; localización (UTM y referencia catastral); ahorro anual (kWh); tipo de contraprestación; vida útil de la actuación; declaración de no suscribir otros convenios por la misma actuación",
+                "metodo": "regex",
+                "confianza": "1",
+                "extractor_version": "reglas-0.1.0",
+                "tipo_evidencia": "demostrado",
+                "num_serie_motor": null,
+                "num_serie_variador": null,
+                "unidad": null,
+                "interpretacion": null
+              }
+            ],
+            "valor_normalizado": "[\"identificación de partes (NIF y razón social)\", \"título descriptivo\", \"localización (UTM y referencia catastral)\", \"ahorro anual (kWh)\", \"tipo de contraprestación\", \"vida útil de la actuación\", \"declaración de no suscribir otros convenios por la misma actuación\"]",
+            "tipo_evidencia": "demostrado",
+            "fuente_primaria": null,
+            "interpretacion": null,
+            "valores_por_fuente": {
+              "convenio_cae": "[\"identificación de partes (NIF y razón social)\", \"título descriptivo\", \"localización (UTM y referencia catastral)\", \"ahorro anual (kWh)\", \"tipo de contraprestación\", \"vida útil de la actuación\", \"declaración de no suscribir otros convenios por la misma actuación\"]"
+            },
+            "valor_consumido": [
+              "identificación de partes (NIF y razón social)",
+              "título descriptivo",
+              "localización (UTM y referencia catastral)",
+              "ahorro anual (kWh)",
+              "tipo de contraprestación",
+              "vida útil de la actuación",
+              "declaración de no suscribir otros convenios por la misma actuación"
+            ],
+            "conflicto": false,
+            "posibles_errores_ocr": [],
+            "valores_por_tipo_evidencia": {
+              "demostrado": "[\"identificación de partes (NIF y razón social)\", \"título descriptivo\", \"localización (UTM y referencia catastral)\", \"ahorro anual (kWh)\", \"tipo de contraprestación\", \"vida útil de la actuación\", \"declaración de no suscribir otros convenios por la misma actuación\"]"
+            },
+            "valores_tipados_por_tipo_evidencia": {
+              "demostrado": [
+                "identificación de partes (NIF y razón social)",
+                "título descriptivo",
+                "localización (UTM y referencia catastral)",
+                "ahorro anual (kWh)",
+                "tipo de contraprestación",
+                "vida útil de la actuación",
+                "declaración de no suscribir otros convenios por la misma actuación"
+              ]
+            },
+            "nivel": "actuacion",
+            "tipo": "list",
+            "avisos": [],
+            "tratable_por_plataforma": false
+          }
+        ],
+        "conflictos": [],
+        "calculo": {
+          "total_exacto": "305829.6",
+          "total_exacto_presentable": "305.829,6",
+          "total_cae": 305829,
+          "total_cae_presentable": "305.829",
+          "provisional": false,
+          "motivo_no_calculo": null,
+          "traza": [
+            "precondicion 'ninguna regla con severidad BLOQUEANTE fallida' es prosa (sin operadores): no se evalua en el calculo; la aplica reglas.py",
+            "unidad MTR-SYN-0001: entradas N1=1485 N2=1188 PM=110 P_prom=60 h_antes=6000 h_despues=6570",
+            "unidad MTR-SYN-0001: entradas con interpretacion: N2 (INT-03), h_despues (INT-04)",
+            "unidad MTR-SYN-0001: h = min(h_antes, h_despues) = 6000",
+            "unidad MTR-SYN-0001: perdidas_ref_kw = 5.55 (tabla:REG1781_CUADRO6, fila exacta kw_motor = 110)",
+            "unidad MTR-SYN-0001: p = perdidas_ref_kw / PM = 0.05045454545454545454545454545454545 (INT-01)",
+            "unidad MTR-SYN-0001: precondicion 'N2 < N1' = True",
+            "unidad MTR-SYN-0001: precondicion '0 < h <= 8760' = True",
+            "unidad MTR-SYN-0001: (1 - (N2 / N1) ** 3) = 0.488",
+            "unidad MTR-SYN-0001: (N2 / N1) = 0.8",
+            "unidad MTR-SYN-0001: (1 - p) = 0.9495454545454545454545454545454546",
+            "unidad MTR-SYN-0001: AEM = PM * (1 - (N2 / N1) ** 3) * (1 - p) * h = 305829.6",
+            "unidad MTR-SYN-0001: control FIS-01 'AEM <= PM * h' = True",
+            "unidad MTR-SYN-0001: control FIS-02 'P_prom <= PM' = True",
+            "total: AETOTAL = sum(AEM) = 305829.6",
+            "total: AETOTAL_cae = 305829 (truncar a kWh entero (criterio conservador); INT-06)",
+            "controles fisicos: True; precondiciones: True",
+            "interpretaciones aplicadas: INT-03, INT-04, INT-01, INT-06"
+          ],
+          "variables": {
+            "N1": {
+              "descripcion": "Velocidad de giro a régimen constante antes de la actuación (carga nominal, sin variador)",
+              "definicion": null,
+              "referencia": "SRC-FICHA §3; §5.5.a",
+              "unidad": "rpm"
+            },
+            "N2": {
+              "descripcion": "Velocidad media anual con variador de velocidad",
+              "definicion": null,
+              "referencia": "SRC-FICHA §3 nota 1; §5.5.b",
+              "unidad": "rpm"
+            },
+            "PM": {
+              "descripcion": "Potencia nominal de salida del motor sin variador",
+              "definicion": null,
+              "referencia": "SRC-FICHA §3; §5.5.a",
+              "unidad": "kW"
+            },
+            "P_prom": {
+              "descripcion": "Potencia promedio del motor en el nuevo punto de funcionamiento (no entra en la fórmula; control de coherencia)",
+              "definicion": null,
+              "referencia": "SRC-FICHA §3 nota 1; §5.5.b",
+              "unidad": "kW"
+            },
+            "h": {
+              "descripcion": null,
+              "definicion": null,
+              "referencia": "SRC-FICHA §3 nota 2 (\"se considerará el menor de los valores\")",
+              "unidad": "h"
+            },
+            "h_antes": {
+              "descripcion": "Horas anuales de funcionamiento antes de la actuación",
+              "definicion": null,
+              "referencia": "SRC-FICHA §3 nota 2",
+              "unidad": "h"
+            },
+            "h_despues": {
+              "descripcion": "Horas anuales de funcionamiento después de la actuación",
+              "definicion": null,
+              "referencia": "SRC-FICHA §3 nota 2",
+              "unidad": "h"
+            },
+            "p": {
+              "descripcion": null,
+              "definicion": null,
+              "referencia": null,
+              "unidad": "fraccion"
+            },
+            "perdidas_ref_kw": {
+              "descripcion": null,
+              "definicion": null,
+              "referencia": "SRC-FICHA §3 nota 3; SRC-REG1781",
+              "unidad": "kW"
+            }
+          },
+          "por_unidad": [
+            {
+              "num_serie_motor": "MTR-SYN-0001",
+              "salida": "305829.6",
+              "salida_presentable": "305.829,6",
+              "motivo_no_calculo": null,
+              "entradas": {
+                "N1": "1485",
+                "N2": "1188",
+                "PM": "110",
+                "P_prom": "60",
+                "h_antes": "6000",
+                "h_despues": "6570"
+              },
+              "entradas_presentables": {
+                "N1": "1.485",
+                "N2": "1.188",
+                "PM": "110",
+                "P_prom": "60",
+                "h_antes": "6.000",
+                "h_despues": "6.570"
+              },
+              "derivadas": {
+                "h": "6000",
+                "perdidas_ref_kw": "5.55",
+                "p": "0.05045454545454545454545454545454545"
+              },
+              "derivadas_presentables": {
+                "h": "6.000",
+                "perdidas_ref_kw": "5,55",
+                "p": "0,05045454545454545454545454545"
+              },
+              "fuentes": {
+                "h": "derivado",
+                "perdidas_ref_kw": "tabla:REG1781_CUADRO6",
+                "p": "tabla:REG1781_CUADRO6"
+              },
+              "controles": {
+                "FIS-01": true,
+                "FIS-02": true
+              },
+              "precondiciones": {
+                "N2 < N1": true,
+                "0 < h <= 8760": true
+              },
+              "interpretaciones": [
+                "INT-03",
+                "INT-04",
+                "INT-01"
+              ],
+              "avisos": []
+            }
+          ]
+        },
+        "veredicto": {
+          "valor": "PREVALIDADO",
+          "semaforo": "🟢",
+          "mensaje": "",
+          "descargo": "Ningún estado implica CAE garantizado. La emisión requiere dictamen favorable de verificador acreditado y solicitud por sujeto obligado o delegado.",
+          "reglas_falladas": [],
+          "reglas_no_evaluables": [],
+          "reglas": [
+            {
+              "id": "R-AMB-01",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_AMBITO",
+              "fase": "ambito",
+              "nivel": "unidad",
+              "descripcion": "El equipo accionado es rotodinámico e incluido en el ámbito",
+              "referencia": "EXC-03",
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-AMB-02",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_AMBITO",
+              "fase": "ambito",
+              "nivel": "actuacion",
+              "descripcion": "El motor es existente (no hay factura de motor ni de equipo nuevo)",
+              "referencia": "EXC-01, EXC-02",
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-AMB-03",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_AMBITO",
+              "fase": "ambito",
+              "nivel": "unidad",
+              "descripcion": "El régimen previo era constante y sin modulación",
+              "referencia": "SRC-FICHA §1",
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CON-01",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "PM coincide en todas las fuentes",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CON-02",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "N1 coincide en todas las fuentes",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CON-03",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "N2 declarado coincide con N2 derivado del registro (±1 rpm)",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CON-04",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "Nº de serie de variador y motor coinciden entre documentos",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CON-05",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "actuacion",
+              "descripcion": "Titular (NIF) coincide entre ficha, factura, declaración y convenio",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-CON-07",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "actuacion",
+              "descripcion": "Número de motores coherente entre factura, certificado, ficha y registro",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-TMP-01",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "actuacion",
+              "descripcion": "fecha_inicio <= fecha_fin",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-CAL-01",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "N2 < N1",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CAL-02",
+              "resultado": "CUMPLE",
+              "severidad": "AVISO",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "Existe fila exacta en cuadro 6 para PM",
+              "referencia": null,
+              "interpretacion": "INT-02",
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CAL-04",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "p no procede de la ficha técnica del variador",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CON-06",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "post_calculo",
+              "nivel": "actuacion",
+              "descripcion": "El ahorro anual del convenio coincide con AETOTAL calculado",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-CAL-03",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "post_calculo",
+              "nivel": "unidad",
+              "descripcion": "Controles físicos FIS-01 y FIS-02",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-DOC-01",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "Están presentes todos los documentos obligatorios",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-DOC-02",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "unidad",
+              "descripcion": "El informe fotográfico contiene fotos ANTES y DESPUÉS por motor",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-DOC-03",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "La factura contiene los datos mínimos (número, fecha, NIF emisor y receptor, base, IVA, total)",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-DOC-04",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "El convenio CAE contiene todos los campos del art. 11.2",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-DOC-05",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "Ficha firmada por el representante legal",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-EVD-01",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "unidad",
+              "descripcion": "El registro de funcionamiento cubre al menos 30 días",
+              "referencia": "SRC-FICHA §3 nota 1",
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-EVD-02",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "unidad",
+              "descripcion": "El registro es posterior a la puesta en marcha",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-EVD-03",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "unidad",
+              "descripcion": "Existe prueba de inalterabilidad del registro y la huella coincide",
+              "referencia": null,
+              "interpretacion": "INT-05",
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-EVD-04",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "unidad",
+              "descripcion": "N2 es un dato demostrado (derivado del registro), no solo declarado",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-TMP-02",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "Convenio CAE firmado antes de la solicitud",
+              "referencia": "SRC-ORDEN815 art. 11.3",
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-TMP-03",
+              "resultado": "CUMPLE",
+              "severidad": "AVISO",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "La solicitud se presenta dentro de la validez del CAE (3 años desde fin de actuación)",
+              "referencia": "SRC-ORDEN815 art. 17.1",
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            }
+          ],
+          "interpretaciones_aplicadas": [
+            "INT-01",
+            "INT-02",
+            "INT-03",
+            "INT-04",
+            "INT-05",
+            "INT-06",
+            "INT-10"
+          ],
+          "hash_reglas": "78b0f020d928dbe2a89d9e547a4bb8880e65024a64857371ec1c6462e5b9a9df"
+        },
+        "historial": [
+          {
+            "evento_id": "f890283a-704c-57b3-a41a-b4eb3d0a749a",
+            "actuacion_id": "G",
+            "secuencia": 1,
+            "tipo": "ActuacionAbierta",
+            "ocurrido_en": "2026-09-12T08:30:00+00:00",
+            "actor": {
+              "clase": "motor",
+              "id": "engine"
+            },
+            "payload": {
+              "actuacion_id": "G"
+            }
+          },
+          {
+            "evento_id": "e2794787-016b-5b9a-94a7-56bbb1c04de5",
+            "actuacion_id": "G",
+            "secuencia": 2,
+            "tipo": "FichaAsignada",
+            "ocurrido_en": "2026-09-12T08:30:00+00:00",
+            "actor": {
+              "clase": "motor",
+              "id": "engine"
+            },
+            "payload": {
+              "codigo": "IND240"
+            }
+          },
+          {
+            "evento_id": "a6c18ec2-d880-5309-aeae-48f83873565a",
+            "actuacion_id": "G",
+            "secuencia": 3,
+            "tipo": "DocumentoRegistrado",
+            "ocurrido_en": "2026-09-12T08:30:00+00:00",
+            "actor": {
+              "clase": "motor",
+              "id": "engine"
+            },
+            "payload": {
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          },
+          {
+            "evento_id": "d9e11944-e832-5702-86db-1d2c9c300a71",
+            "actuacion_id": "G",
+            "secuencia": 4,
+            "tipo": "DatoConsolidado",
+            "ocurrido_en": "2026-09-12T08:30:00+00:00",
+            "actor": {
+              "clase": "motor",
+              "id": "engine"
+            },
+            "payload": {
+              "variable": "PM"
+            }
+          },
+          {
+            "evento_id": "370ce2be-f040-5e45-b7c4-9c094ae45fe9",
+            "actuacion_id": "G",
+            "secuencia": 5,
+            "tipo": "CalculoRealizado",
+            "ocurrido_en": "2026-09-12T08:30:00+00:00",
+            "actor": {
+              "clase": "motor",
+              "id": "engine"
+            },
+            "payload": {
+              "unidades": 1
+            }
+          },
+          {
+            "evento_id": "4395d5d0-9506-535e-b017-c66fb7759471",
+            "actuacion_id": "G",
+            "secuencia": 6,
+            "tipo": "VeredictoEmitido",
+            "ocurrido_en": "2026-09-12T08:30:00+00:00",
+            "actor": {
+              "clase": "motor",
+              "id": "engine"
+            },
+            "payload": {
+              "veredicto": "PREVALIDADO"
+            }
+          },
+          {
+            "evento_id": "e0e0e4f7-2609-5128-907c-20451c78f6f8",
+            "actuacion_id": "G",
+            "secuencia": 7,
+            "tipo": "RevisionAprobada",
+            "ocurrido_en": "2026-09-12T08:30:00+00:00",
+            "actor": {
+              "clase": "humano",
+              "id": "u-rev",
+              "rol": "T-REV"
+            },
+            "payload": {
+              "conforme": true
+            }
+          },
+          {
+            "evento_id": "ed18fdac-3cff-52b4-801c-fa90f3fd75c6",
+            "actuacion_id": "G",
+            "secuencia": 8,
+            "tipo": "PayloadConstruido",
+            "ocurrido_en": "2026-09-12T08:30:00+00:00",
+            "actor": {
+              "clase": "motor",
+              "id": "engine"
+            },
+            "payload": {
+              "hash_cabecera": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            }
+          },
+          {
+            "evento_id": "c2253030-afaf-590c-9a2f-9d853f803d0d",
+            "actuacion_id": "G",
+            "secuencia": 9,
+            "tipo": "EntregadoADelegado",
+            "ocurrido_en": "2026-09-12T08:30:00+00:00",
+            "actor": {
+              "clase": "motor",
+              "id": "engine"
+            },
+            "payload": {
+              "tenant": "T-001"
+            }
+          },
+          {
+            "evento_id": "674f2bc5-0b9a-5509-a778-b4a0540e6d6f",
+            "actuacion_id": "G",
+            "secuencia": 10,
+            "tipo": "FirmaRegistrada",
+            "ocurrido_en": "2026-09-12T08:30:00+00:00",
+            "actor": {
+              "clase": "humano",
+              "id": "u-res",
+              "rol": "T-RES"
+            },
+            "payload": {
+              "firmante": "responsable"
+            }
+          },
+          {
+            "evento_id": "12bcefd2-f709-55fb-8f63-a9e2194eeeb0",
+            "actuacion_id": "G",
+            "secuencia": 11,
+            "tipo": "TareaPendienteRecibida",
+            "ocurrido_en": "2026-09-13T08:30:00+00:00",
+            "actor": {
+              "clase": "plataforma",
+              "id": "plataforma"
+            },
+            "payload": {
+              "tarea_id": "TAR-G-1",
+              "tenant_id": "T-001",
+              "asunto": "Revisar la documentacion aportada",
+              "referencia": "REF-G-1",
+              "vence_en": null
+            }
+          }
+        ]
+      },
+      "avisos": []
+    },
+    "CAP-04": {
+      "capacidad": "CAP-04",
+      "rol": "T-REV",
+      "eventos": [],
+      "datos": {
+        "identificacion": {
+          "actuacion_id": "EXP001-G_desordenado",
+          "codigo_identificativo_propio": "EXP001-G_desordenado",
+          "ficha": "IND240",
+          "fecha_evaluacion": "2026-09-18"
+        },
+        "que_te_falta": {
+          "carencias": [],
+          "hay_carencias": false
+        },
+        "estado_simplificado": {
+          "semaforo": "🟢",
+          "mensaje": ""
+        }
+      },
+      "avisos": []
+    },
+    "CAP-14": {
+      "capacidad": "CAP-14",
+      "rol": "T-REV",
+      "eventos": [],
+      "datos": {
+        "identificacion": {
+          "actuacion_id": "EXP001-G_desordenado",
+          "codigo_identificativo_propio": "EXP001-G_desordenado",
+          "ficha": "IND240",
+          "fecha_evaluacion": "2026-09-18"
+        },
+        "estados_plataforma": {
+          "actuacion_id": "G",
+          "estado_ciclo": "EN_PLATAFORMA",
+          "estado_plataforma": null,
+          "veredicto": "PREVALIDADO",
+          "revisada_por_humano": true,
+          "firmada": true,
+          "via_entrega": "handoff",
+          "origen_subsanacion": null,
+          "afectada_directamente": null,
+          "requerimiento_abierto": null,
+          "resultado": null,
+          "grupo_id": null,
+          "expediente_id": null,
+          "secuencia": 11,
+          "literales_desconocidos": [],
+          "rechazos": [],
+          "tareas_pendientes": [
+            {
+              "tarea_id": "TAR-G-1",
+              "asunto": "Revisar la documentacion aportada",
+              "referencia": "REF-G-1",
+              "vence_en": null,
+              "recibida_en": "2026-09-13T08:30:00+00:00"
+            }
+          ],
+          "abierta_en": "2026-09-12T08:30:00+00:00",
+          "ultimo_movimiento_en": "2026-09-13T08:30:00+00:00"
+        }
+      },
+      "avisos": []
+    }
+  },
+  "A": {
+    "CAP-03": {
+      "capacidad": "CAP-03",
+      "rol": "T-REV",
+      "eventos": [],
+      "datos": {
+        "identificacion": {
+          "actuacion_id": "EXP001-A_completo",
+          "codigo_identificativo_propio": "EXP001-A_completo",
+          "ficha": "IND240",
+          "fecha_evaluacion": "2026-09-18"
+        },
+        "documentos": [
+          {
+            "doc_id": "2e1ed3667b23fb370f5988f098df569696d67861763aa0ce4574d95766f3b21b",
+            "sha256": "2e1ed3667b23fb370f5988f098df569696d67861763aa0ce4574d95766f3b21b",
+            "nombre": "01_ficha_IND240_cumplimentada.pdf",
+            "bytes": 4146,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "ficha_cumplimentada",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "31a7c8901bea6290ae3f8cb001f4d2dbea88cc1d31715f5c56d000be438aae3e",
+            "sha256": "31a7c8901bea6290ae3f8cb001f4d2dbea88cc1d31715f5c56d000be438aae3e",
+            "nombre": "02_declaracion_responsable.pdf",
+            "bytes": 3668,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "declaracion_responsable",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "cdc3d48329cf7d6c40cbb1c0d53b5d2268e0af66a8e8defcbba069dd53c0d1b0",
+            "sha256": "cdc3d48329cf7d6c40cbb1c0d53b5d2268e0af66a8e8defcbba069dd53c0d1b0",
+            "nombre": "03_factura.pdf",
+            "bytes": 3598,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "factura",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "451ac214712d20a612f57295978891ac998b6f26dc166c088c2327c3c691a278",
+            "sha256": "451ac214712d20a612f57295978891ac998b6f26dc166c088c2327c3c691a278",
+            "nombre": "04_informe_fotografico.pdf",
+            "bytes": 213197,
+            "formato": "pdf",
+            "paginas": 2,
+            "tipo": "informe_fotografico",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "ad7036954234209599571e466992da268e4addc584922d3ee476a0dc061c050d",
+            "sha256": "ad7036954234209599571e466992da268e4addc584922d3ee476a0dc061c050d",
+            "nombre": "05_certificado_instalador.pdf",
+            "bytes": 4343,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "certificado_instalador",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "09f3e4140f42afcf7985bb35112646636469578c7fc756a144bf5c0ae54cc761",
+            "sha256": "09f3e4140f42afcf7985bb35112646636469578c7fc756a144bf5c0ae54cc761",
+            "nombre": "06_registro_funcionamiento_MTR-SYN-0001.xlsx",
+            "bytes": 70734,
+            "formato": "xlsx",
+            "paginas": 0,
+            "tipo": "registro_funcionamiento",
+            "confianza_tipo": "0.9",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "a4878512f85b93ce9ff649b2f118b7302b7fceae1a8da5273eed8720f5465fd9",
+            "sha256": "a4878512f85b93ce9ff649b2f118b7302b7fceae1a8da5273eed8720f5465fd9",
+            "nombre": "07_registro_horas_previo_MTR-SYN-0001.pdf",
+            "bytes": 3379,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "registro_horas_previo",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "525e066cb491f7eda3570a967f133c24987e7ce6cfedaf419b4064f6f505a421",
+            "sha256": "525e066cb491f7eda3570a967f133c24987e7ce6cfedaf419b4064f6f505a421",
+            "nombre": "08_ficha_tecnica_motor_MTR-SYN-0001.pdf",
+            "bytes": 2990,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "ficha_tecnica_motor",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "4fd933e6404a439b37aff7056324350303a38be5b2c8773d495144bd195a1d7f",
+            "sha256": "4fd933e6404a439b37aff7056324350303a38be5b2c8773d495144bd195a1d7f",
+            "nombre": "09_ficha_tecnica_variador_VSD-SYN-0001.pdf",
+            "bytes": 2905,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "ficha_tecnica_variador",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "1c1b10044cab1ff7ac8697115684670d7555413641d83746b1e6b156f0f57bdf",
+            "sha256": "1c1b10044cab1ff7ac8697115684670d7555413641d83746b1e6b156f0f57bdf",
+            "nombre": "10_ficha_tecnica_equipo_accionado_MTR-SYN-0001.pdf",
+            "bytes": 2762,
+            "formato": "pdf",
+            "paginas": 1,
+            "tipo": "ficha_tecnica_equipo_accionado",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          },
+          {
+            "doc_id": "3b1c26b4a5626d242054d71fb9fd7551548cd3946b9c768cb7d6690fe0aa35d7",
+            "sha256": "3b1c26b4a5626d242054d71fb9fd7551548cd3946b9c768cb7d6690fe0aa35d7",
+            "nombre": "11_convenio_cae.pdf",
+            "bytes": 5092,
+            "formato": "pdf",
+            "paginas": 2,
+            "tipo": "convenio_cae",
+            "confianza_tipo": "1.0",
+            "subtipo": null,
+            "origen": null,
+            "rango_paginas": null,
+            "partes": [],
+            "avisos": []
+          }
+        ],
+        "evidencias": [
+          {
+            "descripcion": null,
+            "definicion": null,
+            "referencia": null,
+            "unidad": "kWh",
+            "num_serie_motor": null,
+            "variable": "convenio.ahorro_kwh",
+            "evidencias": [
+              {
+                "variable": "convenio.ahorro_kwh",
+                "valor": "305829",
+                "doc_id": "3b1c26b4a5626d242054d71fb9fd7551548cd3946b9c768cb7d6690fe0aa35d7",
+                "tipo_doc": "convenio_cae",
+                "pagina": 1,
+                "texto_literal": "Ahorro anual de energía final 305.829 kWh",
+                "metodo": "tabla",
+                "confianza": "1",
+                "extractor_version": "reglas-0.1.0",
+                "tipo_evidencia": "declarado",
+                "num_serie_motor": null,
+                "num_serie_variador": null,
+                "unidad": "kWh",
+                "interpretacion": null
+              }
+            ],
+            "valor_normalizado": "305829",
+            "tipo_evidencia": "declarado",
+            "fuente_primaria": null,
+            "interpretacion": null,
+            "valores_por_fuente": {
+              "convenio_cae": "305829"
+            },
+            "valor_consumido": "305829",
+            "conflicto": false,
+            "posibles_errores_ocr": [],
+            "valores_por_tipo_evidencia": {
+              "declarado": "305829"
+            },
+            "valores_tipados_por_tipo_evidencia": {
+              "declarado": "305829"
+            },
+            "nivel": "actuacion",
+            "tipo": "decimal",
+            "avisos": [],
+            "tratable_por_plataforma": false
+          },
+          {
+            "descripcion": null,
+            "definicion": null,
+            "referencia": null,
+            "unidad": null,
+            "num_serie_motor": null,
+            "variable": "convenio.fecha_firma",
+            "evidencias": [
+              {
+                "variable": "convenio.fecha_firma",
+                "valor": "2026-04-20",
+                "doc_id": "3b1c26b4a5626d242054d71fb9fd7551548cd3946b9c768cb7d6690fe0aa35d7",
+                "tipo_doc": "convenio_cae",
+                "pagina": 2,
+                "texto_literal": "Fecha de firma del convenio 20/04/2026",
+                "metodo": "tabla",
+                "confianza": "1",
+                "extractor_version": "reglas-0.1.0",
+                "tipo_evidencia": "demostrado",
+                "num_serie_motor": null,
+                "num_serie_variador": null,
+                "unidad": null,
+                "interpretacion": null
+              }
+            ],
+            "valor_normalizado": "2026-04-20",
+            "tipo_evidencia": "demostrado",
+            "fuente_primaria": null,
+            "interpretacion": null,
+            "valores_por_fuente": {
+              "convenio_cae": "2026-04-20"
+            },
+            "valor_consumido": "2026-04-20",
+            "conflicto": false,
+            "posibles_errores_ocr": [],
+            "valores_por_tipo_evidencia": {
+              "demostrado": "2026-04-20"
+            },
+            "valores_tipados_por_tipo_evidencia": {
+              "demostrado": "2026-04-20"
+            },
+            "nivel": "actuacion",
+            "tipo": "date",
+            "avisos": [],
+            "tratable_por_plataforma": false
+          },
+          {
+            "descripcion": null,
+            "definicion": null,
+            "referencia": null,
+            "unidad": null,
+            "num_serie_motor": null,
+            "variable": "convenio.requisitos_presentes",
+            "evidencias": [
+              {
+                "variable": "convenio.requisitos_presentes",
+                "valor": "[\"identificación de partes (NIF y razón social)\", \"título descriptivo\", \"localización (UTM y referencia catastral)\", \"ahorro anual (kWh)\", \"tipo de contraprestación\", \"vida útil de la actuación\", \"declaración de no suscribir otros convenios por la misma actuación\"]",
+                "doc_id": "3b1c26b4a5626d242054d71fb9fd7551548cd3946b9c768cb7d6690fe0aa35d7",
+                "tipo_doc": "convenio_cae",
+                "pagina": 1,
+                "texto_literal": "identificación de partes (NIF y razón social); título descriptivo; localización (UTM y referencia catastral); ahorro anual (kWh); tipo de contraprestación; vida útil de la actuación; declaración de no suscribir otros convenios por la misma actuación",
+                "metodo": "regex",
+                "confianza": "1",
+                "extractor_version": "reglas-0.1.0",
+                "tipo_evidencia": "demostrado",
+                "num_serie_motor": null,
+                "num_serie_variador": null,
+                "unidad": null,
+                "interpretacion": null
+              }
+            ],
+            "valor_normalizado": "[\"identificación de partes (NIF y razón social)\", \"título descriptivo\", \"localización (UTM y referencia catastral)\", \"ahorro anual (kWh)\", \"tipo de contraprestación\", \"vida útil de la actuación\", \"declaración de no suscribir otros convenios por la misma actuación\"]",
+            "tipo_evidencia": "demostrado",
+            "fuente_primaria": null,
+            "interpretacion": null,
+            "valores_por_fuente": {
+              "convenio_cae": "[\"identificación de partes (NIF y razón social)\", \"título descriptivo\", \"localización (UTM y referencia catastral)\", \"ahorro anual (kWh)\", \"tipo de contraprestación\", \"vida útil de la actuación\", \"declaración de no suscribir otros convenios por la misma actuación\"]"
+            },
+            "valor_consumido": [
+              "identificación de partes (NIF y razón social)",
+              "título descriptivo",
+              "localización (UTM y referencia catastral)",
+              "ahorro anual (kWh)",
+              "tipo de contraprestación",
+              "vida útil de la actuación",
+              "declaración de no suscribir otros convenios por la misma actuación"
+            ],
+            "conflicto": false,
+            "posibles_errores_ocr": [],
+            "valores_por_tipo_evidencia": {
+              "demostrado": "[\"identificación de partes (NIF y razón social)\", \"título descriptivo\", \"localización (UTM y referencia catastral)\", \"ahorro anual (kWh)\", \"tipo de contraprestación\", \"vida útil de la actuación\", \"declaración de no suscribir otros convenios por la misma actuación\"]"
+            },
+            "valores_tipados_por_tipo_evidencia": {
+              "demostrado": [
+                "identificación de partes (NIF y razón social)",
+                "título descriptivo",
+                "localización (UTM y referencia catastral)",
+                "ahorro anual (kWh)",
+                "tipo de contraprestación",
+                "vida útil de la actuación",
+                "declaración de no suscribir otros convenios por la misma actuación"
+              ]
+            },
+            "nivel": "actuacion",
+            "tipo": "list",
+            "avisos": [],
+            "tratable_por_plataforma": false
+          }
+        ],
+        "conflictos": [],
+        "calculo": {
+          "total_exacto": "305829.6",
+          "total_exacto_presentable": "305.829,6",
+          "total_cae": 305829,
+          "total_cae_presentable": "305.829",
+          "provisional": false,
+          "motivo_no_calculo": null,
+          "traza": [
+            "precondicion 'ninguna regla con severidad BLOQUEANTE fallida' es prosa (sin operadores): no se evalua en el calculo; la aplica reglas.py",
+            "unidad MTR-SYN-0001: entradas N1=1485 N2=1188 PM=110 P_prom=60 h_antes=6000 h_despues=6570",
+            "unidad MTR-SYN-0001: entradas con interpretacion: N2 (INT-03), h_despues (INT-04)",
+            "unidad MTR-SYN-0001: h = min(h_antes, h_despues) = 6000",
+            "unidad MTR-SYN-0001: perdidas_ref_kw = 5.55 (tabla:REG1781_CUADRO6, fila exacta kw_motor = 110)",
+            "unidad MTR-SYN-0001: p = perdidas_ref_kw / PM = 0.05045454545454545454545454545454545 (INT-01)",
+            "unidad MTR-SYN-0001: precondicion 'N2 < N1' = True",
+            "unidad MTR-SYN-0001: precondicion '0 < h <= 8760' = True",
+            "unidad MTR-SYN-0001: (1 - (N2 / N1) ** 3) = 0.488",
+            "unidad MTR-SYN-0001: (N2 / N1) = 0.8",
+            "unidad MTR-SYN-0001: (1 - p) = 0.9495454545454545454545454545454546",
+            "unidad MTR-SYN-0001: AEM = PM * (1 - (N2 / N1) ** 3) * (1 - p) * h = 305829.6",
+            "unidad MTR-SYN-0001: control FIS-01 'AEM <= PM * h' = True",
+            "unidad MTR-SYN-0001: control FIS-02 'P_prom <= PM' = True",
+            "total: AETOTAL = sum(AEM) = 305829.6",
+            "total: AETOTAL_cae = 305829 (truncar a kWh entero (criterio conservador); INT-06)",
+            "controles fisicos: True; precondiciones: True",
+            "interpretaciones aplicadas: INT-03, INT-04, INT-01, INT-06"
+          ],
+          "variables": {
+            "N1": {
+              "descripcion": "Velocidad de giro a régimen constante antes de la actuación (carga nominal, sin variador)",
+              "definicion": null,
+              "referencia": "SRC-FICHA §3; §5.5.a",
+              "unidad": "rpm"
+            },
+            "N2": {
+              "descripcion": "Velocidad media anual con variador de velocidad",
+              "definicion": null,
+              "referencia": "SRC-FICHA §3 nota 1; §5.5.b",
+              "unidad": "rpm"
+            },
+            "PM": {
+              "descripcion": "Potencia nominal de salida del motor sin variador",
+              "definicion": null,
+              "referencia": "SRC-FICHA §3; §5.5.a",
+              "unidad": "kW"
+            },
+            "P_prom": {
+              "descripcion": "Potencia promedio del motor en el nuevo punto de funcionamiento (no entra en la fórmula; control de coherencia)",
+              "definicion": null,
+              "referencia": "SRC-FICHA §3 nota 1; §5.5.b",
+              "unidad": "kW"
+            },
+            "h": {
+              "descripcion": null,
+              "definicion": null,
+              "referencia": "SRC-FICHA §3 nota 2 (\"se considerará el menor de los valores\")",
+              "unidad": "h"
+            },
+            "h_antes": {
+              "descripcion": "Horas anuales de funcionamiento antes de la actuación",
+              "definicion": null,
+              "referencia": "SRC-FICHA §3 nota 2",
+              "unidad": "h"
+            },
+            "h_despues": {
+              "descripcion": "Horas anuales de funcionamiento después de la actuación",
+              "definicion": null,
+              "referencia": "SRC-FICHA §3 nota 2",
+              "unidad": "h"
+            },
+            "p": {
+              "descripcion": null,
+              "definicion": null,
+              "referencia": null,
+              "unidad": "fraccion"
+            },
+            "perdidas_ref_kw": {
+              "descripcion": null,
+              "definicion": null,
+              "referencia": "SRC-FICHA §3 nota 3; SRC-REG1781",
+              "unidad": "kW"
+            }
+          },
+          "por_unidad": [
+            {
+              "num_serie_motor": "MTR-SYN-0001",
+              "salida": "305829.6",
+              "salida_presentable": "305.829,6",
+              "motivo_no_calculo": null,
+              "entradas": {
+                "N1": "1485",
+                "N2": "1188",
+                "PM": "110",
+                "P_prom": "60",
+                "h_antes": "6000",
+                "h_despues": "6570"
+              },
+              "entradas_presentables": {
+                "N1": "1.485",
+                "N2": "1.188",
+                "PM": "110",
+                "P_prom": "60",
+                "h_antes": "6.000",
+                "h_despues": "6.570"
+              },
+              "derivadas": {
+                "h": "6000",
+                "perdidas_ref_kw": "5.55",
+                "p": "0.05045454545454545454545454545454545"
+              },
+              "derivadas_presentables": {
+                "h": "6.000",
+                "perdidas_ref_kw": "5,55",
+                "p": "0,05045454545454545454545454545"
+              },
+              "fuentes": {
+                "h": "derivado",
+                "perdidas_ref_kw": "tabla:REG1781_CUADRO6",
+                "p": "tabla:REG1781_CUADRO6"
+              },
+              "controles": {
+                "FIS-01": true,
+                "FIS-02": true
+              },
+              "precondiciones": {
+                "N2 < N1": true,
+                "0 < h <= 8760": true
+              },
+              "interpretaciones": [
+                "INT-03",
+                "INT-04",
+                "INT-01"
+              ],
+              "avisos": []
+            }
+          ]
+        },
+        "veredicto": {
+          "valor": "PREVALIDADO",
+          "semaforo": "🟢",
+          "mensaje": "",
+          "descargo": "Ningún estado implica CAE garantizado. La emisión requiere dictamen favorable de verificador acreditado y solicitud por sujeto obligado o delegado.",
+          "reglas_falladas": [],
+          "reglas_no_evaluables": [],
+          "reglas": [
+            {
+              "id": "R-AMB-01",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_AMBITO",
+              "fase": "ambito",
+              "nivel": "unidad",
+              "descripcion": "El equipo accionado es rotodinámico e incluido en el ámbito",
+              "referencia": "EXC-03",
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-AMB-02",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_AMBITO",
+              "fase": "ambito",
+              "nivel": "actuacion",
+              "descripcion": "El motor es existente (no hay factura de motor ni de equipo nuevo)",
+              "referencia": "EXC-01, EXC-02",
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-AMB-03",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_AMBITO",
+              "fase": "ambito",
+              "nivel": "unidad",
+              "descripcion": "El régimen previo era constante y sin modulación",
+              "referencia": "SRC-FICHA §1",
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CON-01",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "PM coincide en todas las fuentes",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CON-02",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "N1 coincide en todas las fuentes",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CON-03",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "N2 declarado coincide con N2 derivado del registro (±1 rpm)",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CON-04",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "Nº de serie de variador y motor coinciden entre documentos",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CON-05",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "actuacion",
+              "descripcion": "Titular (NIF) coincide entre ficha, factura, declaración y convenio",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-CON-07",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "actuacion",
+              "descripcion": "Número de motores coherente entre factura, certificado, ficha y registro",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-TMP-01",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "actuacion",
+              "descripcion": "fecha_inicio <= fecha_fin",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-CAL-01",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "N2 < N1",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CAL-02",
+              "resultado": "CUMPLE",
+              "severidad": "AVISO",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "Existe fila exacta en cuadro 6 para PM",
+              "referencia": null,
+              "interpretacion": "INT-02",
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CAL-04",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "consistencia",
+              "nivel": "unidad",
+              "descripcion": "p no procede de la ficha técnica del variador",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-CON-06",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "post_calculo",
+              "nivel": "actuacion",
+              "descripcion": "El ahorro anual del convenio coincide con AETOTAL calculado",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-CAL-03",
+              "resultado": "CUMPLE",
+              "severidad": "BLOQUEANTE_DATOS",
+              "fase": "post_calculo",
+              "nivel": "unidad",
+              "descripcion": "Controles físicos FIS-01 y FIS-02",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-DOC-01",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "Están presentes todos los documentos obligatorios",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-DOC-02",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "unidad",
+              "descripcion": "El informe fotográfico contiene fotos ANTES y DESPUÉS por motor",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-DOC-03",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "La factura contiene los datos mínimos (número, fecha, NIF emisor y receptor, base, IVA, total)",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-DOC-04",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "El convenio CAE contiene todos los campos del art. 11.2",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-DOC-05",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "Ficha firmada por el representante legal",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-EVD-01",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "unidad",
+              "descripcion": "El registro de funcionamiento cubre al menos 30 días",
+              "referencia": "SRC-FICHA §3 nota 1",
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-EVD-02",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "unidad",
+              "descripcion": "El registro es posterior a la puesta en marcha",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-EVD-03",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "unidad",
+              "descripcion": "Existe prueba de inalterabilidad del registro y la huella coincide",
+              "referencia": null,
+              "interpretacion": "INT-05",
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-EVD-04",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "unidad",
+              "descripcion": "N2 es un dato demostrado (derivado del registro), no solo declarado",
+              "referencia": null,
+              "interpretacion": null,
+              "por_unidad": {
+                "MTR-SYN-0001": "CUMPLE"
+              },
+              "motivo": null
+            },
+            {
+              "id": "R-TMP-02",
+              "resultado": "CUMPLE",
+              "severidad": "SUBSANABLE",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "Convenio CAE firmado antes de la solicitud",
+              "referencia": "SRC-ORDEN815 art. 11.3",
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            },
+            {
+              "id": "R-TMP-03",
+              "resultado": "CUMPLE",
+              "severidad": "AVISO",
+              "fase": "resto",
+              "nivel": "actuacion",
+              "descripcion": "La solicitud se presenta dentro de la validez del CAE (3 años desde fin de actuación)",
+              "referencia": "SRC-ORDEN815 art. 17.1",
+              "interpretacion": null,
+              "por_unidad": {},
+              "motivo": null
+            }
+          ],
+          "interpretaciones_aplicadas": [
+            "INT-01",
+            "INT-02",
+            "INT-03",
+            "INT-04",
+            "INT-05",
+            "INT-06",
+            "INT-10"
+          ],
+          "hash_reglas": "78b0f020d928dbe2a89d9e547a4bb8880e65024a64857371ec1c6462e5b9a9df"
+        },
+        "historial": [
+          {
+            "evento_id": "bd315af2-681b-5d19-bce0-af43736adf9a",
+            "actuacion_id": "A",
+            "secuencia": 1,
+            "tipo": "TareaPendienteRecibida",
+            "ocurrido_en": "2026-09-14T12:00:00+00:00",
+            "actor": {
+              "clase": "plataforma",
+              "id": "plataforma"
+            },
+            "payload": {
+              "tarea_id": "TAR-A-1",
+              "tenant_id": "T-001",
+              "asunto": "Aportar documentacion adicional",
+              "referencia": "REF-A-1",
+              "vence_en": {
+                "$fecha": "2026-10-01"
+              }
+            }
+          }
+        ]
+      },
+      "avisos": []
+    },
+    "CAP-04": {
+      "capacidad": "CAP-04",
+      "rol": "T-REV",
+      "eventos": [],
+      "datos": {
+        "identificacion": {
+          "actuacion_id": "EXP001-A_completo",
+          "codigo_identificativo_propio": "EXP001-A_completo",
+          "ficha": "IND240",
+          "fecha_evaluacion": "2026-09-18"
+        },
+        "que_te_falta": {
+          "carencias": [],
+          "hay_carencias": false
+        },
+        "estado_simplificado": {
+          "semaforo": "🟢",
+          "mensaje": ""
+        }
+      },
+      "avisos": []
+    },
+    "CAP-14": {
+      "capacidad": "CAP-14",
+      "rol": "T-REV",
+      "eventos": [],
+      "datos": {
+        "identificacion": {
+          "actuacion_id": "EXP001-A_completo",
+          "codigo_identificativo_propio": "EXP001-A_completo",
+          "ficha": "IND240",
+          "fecha_evaluacion": "2026-09-18"
+        },
+        "estados_plataforma": {
+          "actuacion_id": "A",
+          "estado_ciclo": "ABIERTA",
+          "estado_plataforma": null,
+          "veredicto": null,
+          "revisada_por_humano": false,
+          "firmada": false,
+          "via_entrega": null,
+          "origen_subsanacion": null,
+          "afectada_directamente": null,
+          "requerimiento_abierto": null,
+          "resultado": null,
+          "grupo_id": null,
+          "expediente_id": null,
+          "secuencia": 1,
+          "literales_desconocidos": [],
+          "rechazos": [],
+          "tareas_pendientes": [
+            {
+              "tarea_id": "TAR-A-1",
+              "asunto": "Aportar documentacion adicional",
+              "referencia": "REF-A-1",
+              "vence_en": "2026-10-01",
+              "recibida_en": "2026-09-14T12:00:00+00:00"
+            }
+          ],
+          "abierta_en": "2026-09-14T12:00:00+00:00",
+          "ultimo_movimiento_en": "2026-09-14T12:00:00+00:00"
+        }
+      },
+      "avisos": []
+    }
+  }
+}

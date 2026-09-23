@@ -1,0 +1,140 @@
+/*
+ * Estilos del workspace del tenant. Acompanan a `@cae/compartido/estilos.css`, no lo sustituyen.
+ *
+ * Una sola regla de fondo: **la diferencia entre un dato y un hueco nunca se confia al color**. `SIN
+ * DATO` ya se distingue por su texto y por su `data-estado` en `ValorMetrica` (`R-UI-07`); aqui el color
+ * solo acompana. Quien no distingue colores tiene que poder leer la cola igual de bien.
+ */
+
+.cae-pantalla__cabecera {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1rem;
+  border: 1px solid #dfe3e8;
+  border-radius: 10px;
+}
+
+.cae-pantalla__titulo {
+  font-size: 1.125rem;
+  margin: 0;
+  flex: 1;
+}
+
+.cae-pantalla__avisos {
+  margin: 0.75rem 0 0;
+  padding-left: 1.25rem;
+  font-size: 0.875rem;
+}
+
+.cae-aviso-servidor {
+  margin-top: 0.875rem;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid #f1c4c0;
+  border-left: 5px solid #b3261e;
+  border-radius: 8px;
+}
+
+.cae-aviso-servidor__capacidad {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.cae-aviso-servidor__mensaje {
+  margin: 0.25rem 0 0;
+}
+
+.cae-cola {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.875rem;
+}
+
+.cae-cola__leyenda {
+  text-align: left;
+  font-size: 0.8125rem;
+  padding-bottom: 0.5rem;
+}
+
+.cae-cola thead th {
+  text-align: left;
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.6875rem 0.875rem;
+  border-bottom: 1px solid #dfe3e8;
+}
+
+.cae-cola tbody th,
+.cae-cola tbody td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.8125rem 0.875rem;
+  border-bottom: 1px solid #dfe3e8;
+}
+
+.cae-cola__codigo,
+.cae-cola__ficha,
+.cae-cola__fecha,
+.cae-cola__relativa,
+.cae-cola__movimiento,
+.cae-cola__ciclo,
+.cae-cola__plataforma,
+.cae-cola__estimacion,
+.cae-cola__solo-lectura,
+.cae-cola__porque {
+  display: block;
+}
+
+.cae-cola__cifra {
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.cae-cola__motivos,
+.cae-cola__carencias {
+  margin: 0;
+  padding-left: 1.125rem;
+}
+
+.cae-cola__estimacion,
+.cae-cola__solo-lectura {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  border: 1px solid #e8d3a2;
+  border-radius: 4px;
+  padding: 0.125rem 0.4375rem;
+  width: fit-content;
+}
+
+.cae-cola__porque,
+.cae-cola__relativa,
+.cae-cola__movimiento {
+  font-size: 0.75rem;
+}
+
+.cae-cola__esqueleto-fila {
+  display: block;
+  height: 12px;
+  border-radius: 6px;
+  background: #eceef1;
+  margin: 0.5625rem 0;
+}
+
+/*
+ * La etiqueta de `ValorMetrica` repite el nombre de la columna dentro de la celda. En pantalla sobra;
+ * para un lector de pantalla no, porque una celda que dice solo "SIN DATO" no dice de que. Se oculta a
+ * la vista y se mantiene en el arbol de accesibilidad.
+ */
+.cae-cola tbody .cae-valor-metrica__etiqueta {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

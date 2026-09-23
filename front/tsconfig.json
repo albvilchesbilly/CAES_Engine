@@ -1,4 +1,4 @@
 {
   "files": [],
-  "references": [{ "path": "./compartido" }]
+  "references": [{ "path": "./compartido" }, { "path": "./workspace" }]
 }

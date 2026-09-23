@@ -1,0 +1,22 @@
+{
+  "name": "@cae/workspace",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Workspace del tenant (T-RES, T-OPE, T-REV): las pantallas que consumen el contrato de api/.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./estilos.css": "./src/estilos.css"
+  },
+  "dependencies": {
+    "@cae/compartido": "0.1.0"
+  },
+  "peerDependencies": {
+    "react": ">=19"
+  },
+  "scripts": {
+    "typecheck": "tsc --build"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "estado": 403,
+  "cuerpo": {
+    "error": "permiso",
+    "motivo": "CAP-17 (Consultar la cola de revision del tenant): no concedida a ['T-OPE']; la tienen ['T-REV']"
+  }
+}

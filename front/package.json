@@ -2,14 +2,15 @@
   "name": "cae-front",
   "private": true,
   "version": "0.1.0",
-  "description": "Front del CAE Engine: cuatro superficies por capacidades (ADR-050). FR0 solo entrega compartido/.",
+  "description": "Front del CAE Engine: cuatro superficies por capacidades (ADR-050). FR0 entrego compartido/; FR1, el workspace del tenant.",
   "type": "module",
   "engines": {
     "node": ">=22",
     "npm": ">=10"
   },
   "workspaces": [
-    "compartido"
+    "compartido",
+    "workspace"
   ],
   "scripts": {
     "test": "vitest run",

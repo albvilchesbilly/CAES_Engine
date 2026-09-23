@@ -2,8 +2,13 @@
 
 Interfaz del CAE Engine (`ADR-050`). En **FR0 solo existía `compartido/`**: el sistema de diseño mínimo,
 es decir, los tres rótulos que impiden que la interfaz mienta (`ADR-011` §5, contrato C16). **FR1 le añade
-el cliente de `api/`** (`compartido/api/`, contrato C18 de `ADR-012` §3). Las cuatro superficies
-(`workspace/`, `externo/`, `consola/`) llegan con las pantallas.
+el cliente de `api/`** (`compartido/api/`, contrato C18 de `ADR-012` §3) y la primera superficie,
+**`workspace/`**, con la cola de revisión de `T-REV` (`FR1.c`). `externo/` y `consola/` llegan con sus
+pantallas.
+
+**Las pantallas no se abren en un navegador, y es una decisión** (`ADR-014` §4): no existe capa HTTP en el
+repositorio, así que `FR1` entrega pantallas verificadas contra el contrato con un transporte de pruebas.
+`GAP-HTTP-01` es un entregable propio.
 
 React con TypeScript (C1, aprobado por Billy el 19/09/2026). Node 22 y npm 10.
 
@@ -12,7 +17,7 @@ React con TypeScript (C1, aprobado por Billy el 19/09/2026). Node 22 y npm 10.
 ```bash
 cd front
 npm install          # instala el workspace completo; no se commitea node_modules/
-npm test             # vitest: los tests de compartido/
+npm test             # vitest: los tests de compartido/ y de workspace/
 npm run test:watch   # los mismos, en observación
 npm run typecheck    # tsc --build sobre src/ y tests/
 ```
@@ -102,7 +107,13 @@ front/
     src/                index · textos · valores · los tres rótulos · estilos.css
     api/                cliente de `api/` · transporte · contrato.generado.ts (no se edita)
     tests/              casos adversariales, los tres rótulos y el cliente
+  workspace/            T-RES, T-OPE, T-REV — la cola de revisión (FR1.c) y el andamiaje que comparten
+    src/                marco de pantalla, lecturas, fallos, fechas, textos · cola/
+    tests/              un test por criterio CA-COLA-*, con datos generados desde `api/`
 ```
+
+Cada superficie es un paquete de los workspaces de npm y se consume como código fuente, igual que
+`compartido/`. `front/workspace/README.md` explica cómo entra una pantalla nueva sin rehacer las que hay.
 
 Todos los textos de interfaz viven en `compartido/src/textos.ts`, en español y con sus tildes. Están
 centralizados para que un test pueda recorrerlos y comprobar que no aparece ninguna fórmula prohibida
