@@ -198,7 +198,37 @@ cerrado.
 - `GAP-REV-04` (interpretación propuesta de un requerimiento): bloque nuevo, campo nuevo en `Vista` y una
   capacidad que lo proyecte. En `FR1` el control de confirmar se deja **inactivo**: antes eso que confirmar
   a ciegas algo que no se ha podido leer.
-- `GAP-HTTP-01`: §4.
+- `GAP-HTTP-01` (ahora `FR-HTTP`): §4.
+
+### 6 bis. Cómo quedó FR1 al cerrarlo (23/09/2026)
+
+**Los tres bloques hechos.** Puerta final: **2.588 tests de Python + 208 de front**, 7/7 casos, caso A en
+305.829,6 kWh/año, `ruff` y `tsc` limpios, y los cuatro avisos de carga declarados. «Hecho» significa lo
+que dice §4: las pantallas cumplen sus criterios contra el contrato, **no se abren en un navegador**.
+
+**De los 13 huecos de partida**: `GAP-REV-01` (recálculo) y `GAP-REV-03` (subir documento, en su parte de
+contrato) cerrados en `FR1.b`; `GAP-REV-02`, `05`, `06`, `09`, `GAP-COLA-02` y `GAP-COLA-04`/`GAP-REV-08`
+cerrados en `FR1.a`. Siguen abiertos `GAP-COLA-03`/`GAP-REV-07` (`origen_datos`) y `GAP-REV-04`.
+
+**Cinco huecos nuevos**, que no existían al escribir este ADR y salieron al construir las pantallas. Los dos
+primeros se cerraron a la vez que se encontraban, porque bloqueaban la segunda pantalla y el contrato va
+antes; los tres últimos están declarados y **no rellenados**, con sus controles inactivos diciendo por qué:
+
+| Id | Qué | Estado |
+|---|---|---|
+| `GAP-COLA-05`/`GAP-REV-10` | La **unidad del ahorro** no se servía. Estaba en la ficha **sin ningún consumidor**: `engine/` nunca la había leído | **Cerrado**. Escribirla en el front habría sido una etiqueta por ficha cableada en la interfaz |
+| `GAP-COLA-06`/`GAP-REV-11` | El **nombre del perfil** vivía en la matriz y no viajaba en la respuesta | **Cerrado** con `Respuesta.rol_nombre`. Componerlo en el front habría sido una tabla perfil→nombre donde `ADR-012` §3 la prohíbe |
+| `GAP-REV-12` | `api/` **no dice qué acciones caben**. Deducirlo del veredicto obligaría al front a interpretarlo | Abierto. La pantalla se apoya en lo que el servidor declara abierto |
+| `GAP-REV-13` | `CAP-08`, `CAP-09` y `CAP-16` exigen **un texto que nadie redacta** (la subsanación es de A5, que no existe) | Abierto. Los tres controles, inactivos |
+| `GAP-REV-14` | `leerDocumento` **se come `Respuesta.avisos`**: el aviso del PDF combinado se pierde | Abierto |
+
+**Y un defecto de la spec que no era un hueco**, el hallazgo de más valor del entregable: `R-UI-05` no se
+puede apoyar en `estado_ciclo == "EN_PLATAFORMA"`. Al anotar un requerimiento, la máquina de estados mueve
+el ciclo a `PENDIENTE_SUBSANACION`, de modo que la condición literal de la spec —`EN_PLATAFORMA` **y**
+requerimiento abierto— **no puede darse nunca**, y el candado de solo lectura se habría abierto entero justo
+cuando llega un requerimiento: el momento en que más importa controlar qué se toca. Verificado contra
+`engine/estados.py`. La pantalla se apoya en `firmada`, la misma marca con la que el núcleo rechaza una
+corrección posterior a la firma (C26), así que las dos defensas miran ahora al mismo sitio.
 
 ---
 
@@ -209,6 +239,9 @@ cerrado.
 | **`origen_datos`: de dónde sale** | `R-UI-08` obliga a declarar en todo panel si los datos son sintéticos o reales, y hoy el sistema no tiene forma de saberlo. Propuesta: campo obligatorio en la configuración del tenant, y si no está, `SIN DECLARAR` — nunca un valor por defecto, porque tanto asumir `REAL` como asumir `SINTETICO` es mentir en la mitad de los casos |
 | **`GAP-HTTP-01`: capa HTTP y sesión autenticada** | Entregable propio. Arrastra framework, sesiones y despliegue, y bloquea que cualquier pantalla se use de verdad |
 | **`GAP-REV-04`: interpretación propuesta** | Intermedio entre proyección y ADR. Decide si entra en `FR2` o antes |
+| **`GAP-REV-13`: el texto de subsanación, descarte y discrepancia** | Sin él, `CAP-08`, `CAP-09` y `CAP-16` no se pueden ejercer desde ninguna pantalla. Es el más urgente de los tres nuevos |
+| **`GAP-REV-12`: si `api/` declara qué acciones caben** | Hoy la interfaz se apoya en lo que el servidor deja abierto; lo limpio sería que lo dijera por capacidad |
+| **`GAP-REV-14`: si los avisos del documento viajan** | O se arregla el cliente, o se declara que no viajan |
 | **Latencia de `CAP-05`** | Aceptada para una actuación (§3). Si aparece el reproceso en lote, hay que revisar esta decisión |
 
 ---

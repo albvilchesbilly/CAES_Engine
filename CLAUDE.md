@@ -181,6 +181,12 @@ lectura hasta tener clientes · C6 idiomas y accesibilidad.
 **El contrato antes que las pantallas no es negociable** (Billy, 19/09/2026): `api/` primero, y el front solo
 consume el contrato. Un front que calcula, evalúa una regla o decide una transición es un defecto (`R-UI-11`).
 
+De `FR1` (hecho el 23/09/2026, `ADR-014`): **`FR-HTTP`** —no hay capa HTTP ni sesión autenticada, así que
+ninguna pantalla se abre contra datos reales— · `GAP-REV-13`, el texto de subsanación, descarte y
+discrepancia que nadie redacta y deja tres capacidades sin poder ejercerse · `GAP-REV-12` (si `api/` declara
+qué acciones caben) · `GAP-REV-14` (si los avisos del documento viajan) · `origen_datos` · `GAP-REV-04` · el
+caso A, que no aparece en la cola porque no tiene ningún motivo, siendo el de la demo.
+
 De perfiles y dashboards (`ADR-005`, `ADR-006` §"Pendiente", `ADR-007`): A1 a A7 (instalador, cliente,
 reasignación, vistas, doble función, firma manual con API activa; **A8 aprobada el 19/09/2026**: las capacidades
 se modelan ya, con `actor.rol` obligatorio en actor humano) · umbrales
