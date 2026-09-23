@@ -27,8 +27,13 @@ Tres hallazgos que no estaban en la planificación:
 
 2. **No existe capa HTTP en todo el repositorio**, y el sobre que `front/compartido/api/transporte.ts`
    describe asume una *sesión autenticada* que tampoco existe. Esto no es un hueco de `T-REV`: afecta a las
-   trece pantallas por igual y estaba escondido dentro de la fila de un hueco concreto. Pasa a ser
-   `GAP-HTTP-01`, transversal, en `docs/HUECOS.md`.
+   trece pantallas por igual y estaba escondido dentro de la fila de un hueco concreto. Pasa a ser un
+   **entregable propio**, `FR-HTTP`, en la tabla de `docs/06` §3 ter.
+
+   *Corregido el 23/09/2026: la primera redacción lo mandaba a `docs/HUECOS.md`, y ese era el sitio
+   equivocado. `HUECOS.md` enumera lo que **la plataforma oficial** no ha documentado y que esperamos de
+   fuera (`API-xx`, regla de oro 10); esto es deuda **nuestra**, que depende solo de nosotros. Mezclarlas
+   haría que una lista que sirve para reclamar a un tercero empezara a contener nuestros propios pendientes.*
 
 3. **`GAP-COLA-03`/`GAP-REV-07` (`origen_datos`) parecía barato y no lo es.** El campo es trivial; lo que no
    existe en ninguna parte del sistema es **de dónde sale el valor**: no hay noción de tenant sintético ni
