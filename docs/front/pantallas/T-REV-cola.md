@@ -48,6 +48,11 @@ Las tres son **lecturas**: no generan eventos y no necesitan que se resuelva un 
 | `CAP-03` Consultar la actuación completa | lectura | sí | `actuacion_completa` | Veredicto, conflictos, ahorro y antigüedad de cada fila |
 | `CAP-04` "Qué te falta" e informe de su destinatario | lectura | sí | `que_te_falta` | Carencias con su severidad: el motivo "corrección pendiente" |
 | `CAP-14` Estados y tareas de la plataforma | lectura | sí | `estados_y_tareas` | Estado de ciclo (escalado), estado de plataforma y requerimiento abierto |
+| `CAP-17` Cola de revisión del tenant | lectura | sí | `cola_de_revision` | **La lista y su orden**: qué actuaciones esperan, por qué y desde cuándo |
+
+`CAP-17` es una capacidad **nueva** (`ADR-014` §2, contrato C22, aprobada por Billy el 23/09/2026) y no un
+modo lista de `CAP-03`: `CAP-03` autoriza ver *una* actuación, y enumerar la cartera del tenant es otro
+alcance que tiene que verse en la matriz de `ADR-006`.
 
 Ninguna otra capacidad se invoca desde aquí. En particular **no** se invocan `CAP-05`, `CAP-08`, `CAP-09`,
 `CAP-10` ni `CAP-16`: son comandos y viven en `T-REV-revision`.
@@ -67,7 +72,13 @@ Bloques tal y como los construye `api/proyeccion.py` (`CONSTRUCTORES`) para el �
 | `CAP-03` | `calculo` | `total_exacto`, `total_cae`, `provisional`, `motivo_no_calculo` |
 | `CAP-03` | `historial` | `ocurrido_en` del primer y del último evento (antigüedad); `tipo` `TareaPendienteRecibida` |
 | `CAP-04` | `que_te_falta` | `hay_carencias` y, por carencia, `id`, `severidad`, `mensaje` |
-| `CAP-14` | `estados_plataforma` | `estado_ciclo`, `estado_plataforma`, `requerimiento_abierto`, `literales_desconocidos`, `secuencia` |
+| `CAP-14` | `estados_plataforma` | `estado_ciclo`, `estado_plataforma`, `requerimiento_abierto`, `literales_desconocidos`, `secuencia`; `tareas_pendientes`, `abierta_en` y `ultimo_movimiento_en` |
+| `CAP-17` | `cola` | Por fila: `identificacion`, `veredicto`, `motivos` (con su `prioridad` y su `detalle`), `antiguedad` y `estado`. Las filas llegan **en el orden en que se pintan** |
+
+El bloque `cola` **no trae ningún valor de variable ni ninguna cifra de ahorro**, y es deliberado
+(`ADR-014` §2): arrastrar la cita de un dato (`R-UI-09`) a una lista que se lee de un vistazo es lo que
+esta pantalla evita. El ahorro de cada fila sigue saliendo de `calculo` (`CAP-03`), que además lo sirve
+ya legible en español (`total_exacto_presentable`).
 
 Bloques que la cola **recibe y no usa**: `documentos` y `evidencias` (de `CAP-03`) y `estado_simplificado`
 (de `CAP-04`). No se pintan. No se filtran en el cliente porque el filtrado es de serialización y lo hace
@@ -92,10 +103,10 @@ botón de fila.
 | Ficha | `identificacion.ficha` | — |
 | Semáforo y veredicto | `veredicto.semaforo` + `veredicto.valor` | `R-UI-02`: es un rótulo, no un selector |
 | Motivo o motivos | Ver §6 | Cada fila declara **al menos uno**; una fila sin motivo no está en la cola |
-| Antigüedad | `historial[0].ocurrido_en` (apertura) y `historial[-1].ocurrido_en` (último movimiento) | Fecha absoluta siempre; "hace N días" como texto secundario. Sin historial → `SIN DATO` (`R-UI-07`), nunca "0 días" |
+| Antigüedad | `cola[].antiguedad.abierta_en` y `.ultimo_movimiento_en` (también en `estados_plataforma`) | Fecha absoluta siempre; "hace N días" como texto secundario. Sin historial → `SIN DATO` (`R-UI-07`), nunca "0 días" |
 | Estado de ciclo | `estados_plataforma.estado_ciclo` | Nuestro estado, rotulado como tal |
 | Estado de plataforma | `estados_plataforma.estado_plataforma` | Solo se refleja. Si es nulo, `SIN DATO` |
-| Ahorro prevalidado | `calculo.total_exacto` | `R-UI-06`: envuelto en `RotuloPrevalidado tipo="AHORRO_PREVALIDADO"`. Si es `null`, `SIN DATO` con el `motivo_no_calculo` como explicación (`R-UI-07`) |
+| Ahorro prevalidado | `calculo.total_exacto_presentable` (y `calculo.total_exacto` como valor exacto) | `R-UI-06`: envuelto en `RotuloPrevalidado tipo="AHORRO_PREVALIDADO"`. Si es `null`, `SIN DATO` con el `motivo_no_calculo` como explicación (`R-UI-07`). **La cifra se pinta tal cual llega**: no se pasa por `Number` |
 | Marca de estimación | `calculo.provisional` | Si es `true`, la cifra sale marcada "estimación no acreditada" |
 | Acción | Un único enlace a `T-REV-revision` con `actuacion_id` | La fila entera es el objetivo; no hay menú contextual |
 
@@ -115,10 +126,16 @@ botón de fila.
 | **Corrección pendiente** | `que_te_falta.hay_carencias` es `true`; el rótulo lo da la severidad más alta (`BLOQUEANTE_AMBITO` > `BLOQUEANTE_DATOS` > `SUBSANABLE` > `AVISO`) | 3 |
 | **Tarea de la plataforma** | Hay eventos `TareaPendienteRecibida` en `historial` sin cierre posterior | 4 |
 
-**La prioridad la aplica el servidor, no la pantalla.** La columna de orden de esta tabla es lo que el
-contrato de la lectura de cola tiene que implementar (§8, `GAP-COLA-01`), y está aquí para que sea
-verificable, no para que la calcule el front. Mientras esa lectura no exista, la cola pinta las filas en el
-orden en que las recibe y **lo dice** (§7, estado *degradado*).
+**La prioridad la aplica el servidor, no la pantalla.** Desde `FR1.a` la aplica de verdad: `CAP-17`
+devuelve las filas ordenadas por el motivo de más prioridad de cada una y, a igualdad de motivo, por la que
+lleva más tiempo abierta (el identificador desempata, para que dos iguales no bailen entre peticiones). La
+pantalla pinta el orden que recibe y **no ordena** (`R-UI-11`). Cada fila declara sus motivos con su
+`prioridad` y su `detalle`, así que el orden es verificable leyendo la respuesta.
+
+El quinto motivo tiene un matiz que no se esconde: **no existe ningún evento de cierre de tarea** en el
+catálogo (`engine/eventos/catalogo.py`), así que "sin cierre posterior" no se puede comprobar hoy y se
+sirven todas las `TareaPendienteRecibida` del log. Inventar un `TareaCerrada` sería inventar un hecho que
+la plataforma no nos ha dado (`TODO(API-10)`).
 
 ---
 
@@ -132,7 +149,7 @@ orden en que las recibe y **lo dice** (§7, estado *degradado*).
 | **Fila parcial** | Una de las tres lecturas de esa actuación falla | La fila se pinta con lo que hay y las celdas de la lectura caída son `SIN DATO` con el motivo. Una lectura caída **no tumba la cola entera** |
 | **Sin permiso** | `ErrorPermiso` | Se muestra el mensaje del servidor tal cual, con la capacidad y el motivo. **No se oculta el error en silencio** (`ADR-012` §3, regla 2): un control que desaparece sin explicación es un control que nadie arregla |
 | **Error de la API** | `ErrorApi` (repositorio ausente, actuación sin procesar, matriz que no carga) | Mensaje literal del servidor + acción "reintentar". No se sustituye por "no hay datos" |
-| **Degradado** | Mientras `GAP-COLA-01` esté abierto | Banner fijo: "Cola en modo degradado: la lista y el orden de prioridad todavía no los sirve la API." Las filas se ven igual |
+| **Degradado** | *Cerrado en `FR1.a`*: `CAP-17` sirve la lista y el orden. El banner solo queda para el día que una lectura de lista vuelva a faltar | — |
 
 En todos los estados, la cabecera muestra la marca de origen de datos (`MarcaOrigen`) y el rol
 ("actuando como Revisor técnico", de `Respuesta.rol`).
@@ -146,10 +163,10 @@ que pide un bloque inexistente es una spec que se incumple el primer día.
 
 | Id | Qué falta | Qué haría falta exactamente | Mientras tanto |
 |---|---|---|---|
-| `GAP-COLA-01` | **No hay ninguna lectura de lista.** `CAP-03`, `CAP-04` y `CAP-14` exigen `actuacion_id` (`Peticion.actuacion_id` levanta `ErrorApi` si falta). El repositorio sí sabe (`Repositorio.actuaciones_de(tenant_id)`), pero ninguna lectura lo expone a `T-REV` | Un bloque nuevo (`cola`) en `api/proyeccion.CONSTRUCTORES`, admitido por el ámbito `tenant` en `engine/capacidades.yaml` y declarado en una capacidad que la matriz conceda a `T-REV`. Devuelve **filas ya ordenadas** por el criterio de §6, cada una con identificación, veredicto, motivos, antigüedad y estado. Dónde cuelga (modo lista de `CAP-03` frente a capacidad nueva en `ADR-006`) **es decisión de Billy**: las dos tocan la matriz de permisos | La lista de `actuacion_id` llega como **configuración de despliegue del workspace**, en un solo sitio, nunca dentro de un componente; la cola compone cada fila con tres lecturas por actuación y muestra el banner de degradado |
-| `GAP-COLA-02` | El bloque `estados_plataforma` (`proyectar(log).a_dict()`) **no trae las tareas pendientes** ni ninguna marca de tiempo, aunque el log tiene los eventos `TareaPendienteRecibida` que escribe el simulador (`salida/simulador/plataforma.py`) | Añadir a ese bloque `tareas_pendientes` (id, asunto, referencia, `vence_en`, instante) leídas de `log.por_tipo("TareaPendienteRecibida")`, y `abierta_en` / `ultimo_movimiento_en`. Es proyección, no cálculo | La cola saca tareas y antigüedad de `historial` (`CAP-03`), que es más caro y trae payloads que la cola no necesita |
+| ~~`GAP-COLA-01`~~ | **Cerrado en `FR1.a`** (23/09/2026) | `CAP-17` (contrato C22 de `ADR-014` §2): capacidad de lectura nueva, ámbito `tenant`, concedida a `T-REV`, con el bloque `cola` en `api/proyeccion.CONSTRUCTORES`. Devuelve las filas **ya ordenadas** por el criterio de §6 | — |
+| ~~`GAP-COLA-02`~~ | **Cerrado en `FR1.a`** (23/09/2026) | `estados_plataforma` trae `tareas_pendientes` (de `log.por_tipo("TareaPendienteRecibida")`, con `tarea_id`, `asunto`, `referencia`, `vence_en` y `recibida_en`) y las marcas `abierta_en` / `ultimo_movimiento_en`. Es proyección: `engine/estados.py` no se tocó | Sigue sin existir un evento de cierre de tarea: ver §6 |
 | `GAP-COLA-03` | **Ningún bloque declara el origen de los datos** (sintético o real), y `R-UI-08` obliga a declararlo en todo panel | Un campo `origen_datos` (`"SINTETICO"` / `"REAL"`) en el bloque `identificacion`, decidido por el servidor a partir del tenant o del despliegue | `MarcaOrigen` se pinta sin `origen` reconocido y sale `ORIGEN DE DATOS SIN DECLARAR`, que es el comportamiento honesto que ya tiene el componente |
-| `GAP-COLA-04` | `calculo.total_exacto` llega en forma canónica (`"305829.6"`), no en la forma que lee una persona en español (`305.829,6`) | Que `api/` sirva también el texto presentable, como hace `MetricaPresentable` en `front/compartido` | La cola pinta la cadena tal cual llega. **Prohibido** convertirla a `Number` para reformatearla: el ahorro no pasa por coma flotante (`CLAUDE.md` §2) |
+| ~~`GAP-COLA-04`~~ | **Cerrado en `FR1.a`** (23/09/2026) | `calculo` sirve `total_exacto_presentable` y `total_cae_presentable` **junto** a los exactos, y cada unidad sus `entradas_presentables`, `derivadas_presentables` y `salida_presentable`. El formato lo hace `engine.informe.texto_es` sobre el `Decimal` | La cola pinta la cadena tal cual llega. **Sigue prohibido** convertirla a `Number`: el ahorro no pasa por coma flotante (`CLAUDE.md` §2) |
 
 ---
 
@@ -189,7 +206,8 @@ Cada uno se convierte en un test de `front/workspace/` salvo donde se indique ot
 | `CA-COLA-08` | Con `ErrorPermiso`, el mensaje del servidor aparece literal en pantalla (capacidad y motivo). El test falla si el error se traga o se sustituye por "no hay datos" |
 | `CA-COLA-09` | Con la lectura devolviendo cero filas, se ve el estado *vacío* con su texto, distinto del estado de error y del de carga |
 | `CA-COLA-10` | El catálogo de textos de la pantalla pasa la misma lista de fórmulas prohibidas que `front/compartido/tests/textos.test.ts` (nada dice "CAE garantizado", nada "garantiza", `A8` no se llama "verificador", ningún kWh prevalidado se presenta como CAE emitido). El descargo que sirve el servidor no es texto de producto y no entra en el catálogo: ver `T-REV-revision.md` §11 bis |
-| `CA-COLA-11` | Los identificadores de actuación no aparecen en ningún componente: el test busca `EXP001-` en `front/workspace/**` (excluidos los tests y el fichero de configuración) y no encuentra nada (`GAP-COLA-01`, modo degradado) |
+| `CA-COLA-11` | Los identificadores de actuación no aparecen en ningún componente: el test busca `EXP001-` en `front/workspace/**` (excluidos los tests) y no encuentra nada. La lista la da `CAP-17`, y la pantalla navega con los `actuacion_id` que esa lectura le dio (`R-UI-12`) |
+| `CA-COLA-14` | **El orden es del servidor**: un transporte de pruebas que devuelve las filas en otro orden las pinta en ese otro orden. La mitad de servidor está en `tests/test_api_cola.py`, que comprueba que la respuesta no depende del orden del repositorio |
 | `CA-COLA-12` | Una actuación en `EN_PLATAFORMA` sin `requerimiento_abierto` aparece marcada "solo lectura" en la cola (`R-UI-05` anticipado) |
 | `CA-COLA-13` | La cabecera muestra el rol que devuelve `Respuesta.rol` y la marca de origen de datos. Sin `origen_datos` (`GAP-COLA-03`), se lee `ORIGEN DE DATOS SIN DECLARAR` |
 

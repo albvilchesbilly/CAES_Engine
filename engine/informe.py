@@ -63,9 +63,24 @@ def texto_decimal(valor: Decimal) -> str:
     return format(valor.normalize(), "f")
 
 
+def texto_es(valor: Decimal | int) -> str:
+    """La misma cifra en la forma que lee una persona en español: 305829.6 → '305.829,6'.
+
+    Va **junto** a la forma canonica, nunca en su lugar: quien compara o vuelve a operar usa
+    `texto_decimal`, y esto es para leer. El formato se hace sobre el texto canonico del `Decimal`
+    (agrupar digitos, cambiar el punto por una coma), asi que **el ahorro no pasa por coma flotante**
+    en ningun punto (`CLAUDE.md` §2). `miles` es el caso entero de esta misma funcion.
+    """
+    canonico = texto_decimal(Decimal(valor))
+    signo, sin_signo = ("-", canonico[1:]) if canonico.startswith("-") else ("", canonico)
+    entera, _, decimales = sin_signo.partition(".")
+    agrupada = f"{int(entera or 0):,}".replace(",", ".")
+    return f"{signo}{agrupada},{decimales}" if decimales else f"{signo}{agrupada}"
+
+
 def miles(entero: int) -> str:
     """Entero con separador de miles español (305829 → '305.829')."""
-    return f"{entero:,}".replace(",", ".")
+    return texto_es(entero)
 
 
 def _valor(valor: object) -> str:
@@ -649,4 +664,5 @@ __all__ = [
     "motivo_sin_calculo",
     "semaforo_de",
     "texto_decimal",
+    "texto_es",
 ]

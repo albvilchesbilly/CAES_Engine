@@ -51,6 +51,7 @@ MATRIZ_ADR: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
     "CAP-14": (("T-RES", "T-OPE", "T-REV"), ()),
     "CAP-15": (("T-REV",), ()),
     "CAP-16": (("T-REV",), ()),
+    "CAP-17": (("T-REV",), ()),
     "CAP-20": (("T-RES",), ()),
     "CAP-21": (("T-RES",), ()),
     "CAP-22": (("T-RES",), ()),

@@ -20,9 +20,11 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from decimal import Decimal
+from datetime import UTC, date, datetime
+from decimal import Decimal, InvalidOperation
 
 from api.permisos import ErrorApi
+from engine.calculo import a_dict as calculo_a_dict
 from engine.estados import proyectar
 from engine.informe import (
     datos_consolidados,
@@ -32,7 +34,50 @@ from engine.informe import (
     motivo_sin_calculo,
     semaforo_de,
     texto_decimal,
+    texto_es,
 )
+from engine.seguimiento import TIPO_TAREA
+from engine.spec_registry import SEVERIDADES
+
+#: El estado de ciclo que significa "aqui tiene que mirar una persona" (`T-REV-cola` §6, motivo escalado).
+#: Es vocabulario de `engine.estados`, no una decision de `api/`: un test comprueba que sigue existiendo.
+ESTADO_ESCALADO = "EN_REVISION_HUMANA"
+
+#: Los cinco motivos por los que una actuacion esta en la cola, y su prioridad (`T-REV-cola` §6).
+#: **La prioridad la aplica el servidor**: la pantalla no ordena (`R-UI-11`).
+MOTIVO_CONFLICTO = "conflicto"
+MOTIVO_ESCALADO = "escalado"
+MOTIVO_REQUERIMIENTO = "requerimiento_abierto"
+MOTIVO_CORRECCION = "correccion_pendiente"
+MOTIVO_TAREA = "tarea_plataforma"
+PRIORIDAD_MOTIVO: Mapping[str, int] = {
+    MOTIVO_CONFLICTO: 1,
+    MOTIVO_ESCALADO: 2,
+    MOTIVO_REQUERIMIENTO: 2,
+    MOTIVO_CORRECCION: 3,
+    MOTIVO_TAREA: 4,
+}
+
+#: Lo que la spec declara de una variable y que la pantalla necesita para **nombrarla** (`GAP-REV-05`).
+#: Sale de `spec.variables[...]`, que es configuracion: no hay ningun diccionario de etiquetas por ficha
+#: en ninguna parte, porque seria un `if ficha == ...` disfrazado (regla de oro 4).
+CAMPOS_VARIABLE = ("descripcion", "definicion", "referencia", "unidad")
+
+#: Antes de cualquier evento: el lugar de las actuaciones sin historial al ordenar la cola (van al final).
+_SIN_FECHA = datetime.min.replace(tzinfo=UTC)
+
+
+@dataclass(frozen=True)
+class Caso:
+    """Una actuacion del tenant con lo que una lectura de lista necesita de ella: la procesada y su log.
+
+    `actuacion` es `None` cuando el repositorio la conoce y el motor todavia no la ha procesado: la cola
+    la sigue enumerando con lo que el log si dice, en vez de esconderla.
+    """
+
+    actuacion_id: str
+    actuacion: object | None = None
+    log: object | None = None
 
 
 @dataclass(frozen=True)
@@ -42,6 +87,8 @@ class Vista:
     actuacion: object | None = None
     log: object | None = None
     logs: tuple[object, ...] = ()
+    #: Varias actuaciones del tenant, para las lecturas de lista (`ADR-014` §2, C22).
+    casos: tuple[Caso, ...] = ()
     #: Tipos de evento a los que se limitan los bloques que resumen o auditan. Vacio = todos.
     tipos: tuple[str, ...] = ()
     avisos: tuple[str, ...] = ()
@@ -65,8 +112,45 @@ class Vista:
 
 
 def _texto(valor: object) -> object:
-    """Un `Decimal` sale como cadena canonica; el resto, tal cual. Nunca se convierte a coma flotante."""
-    return texto_decimal(valor) if isinstance(valor, Decimal) else valor
+    """Un `Decimal` sale como cadena canonica y una fecha en ISO; el resto, tal cual. Nunca como `float`."""
+    if isinstance(valor, Decimal):
+        return texto_decimal(valor)
+    if isinstance(valor, datetime):
+        return valor.isoformat()
+    if isinstance(valor, date):
+        return valor.isoformat()
+    if isinstance(valor, Mapping):
+        return {str(clave): _texto(v) for clave, v in valor.items()}
+    if isinstance(valor, (list, tuple)):
+        return [_texto(v) for v in valor]
+    return valor
+
+
+def _presentable(canonico: object) -> str | None:
+    """La misma cifra en español, **junto a la exacta y nunca en su lugar** (`GAP-COLA-04`/`GAP-REV-08`).
+
+    Entra la forma canonica que ya sirve el bloque (una cadena) y sale la que lee una persona. El paso
+    intermedio es `Decimal`, nunca `float`: el ahorro no pasa por coma flotante (`CLAUDE.md` §2).
+    """
+    if not isinstance(canonico, str):
+        return None
+    try:
+        return texto_es(Decimal(canonico))
+    except InvalidOperation:
+        return None
+
+
+def _declaracion(actuacion: object, variable: str) -> dict[str, object]:
+    """Lo que la spec dice de una variable: su nombre legible, su definicion, su referencia y su unidad.
+
+    `GAP-REV-05`. Se lee de `spec.variables[...]` —configuracion— igual que hace `engine/correcciones.py`.
+    Una variable que la spec no declara sale con todo a `None`: no se inventa un nombre.
+    """
+    variables = getattr(getattr(actuacion, "spec", None), "variables", None)
+    declarada = variables.get(variable) if isinstance(variables, Mapping) else None
+    if not isinstance(declarada, Mapping):
+        return dict.fromkeys(CAMPOS_VARIABLE)
+    return {campo: declarada.get(campo) for campo in CAMPOS_VARIABLE}
 
 
 # ---------------------------------------------------------------------------
@@ -74,14 +158,23 @@ def _texto(valor: object) -> object:
 # ---------------------------------------------------------------------------
 
 
-def _identificacion(vista: Vista) -> Mapping[str, object]:
-    actuacion = vista.exige_actuacion("identificacion")
+def _identidad(actuacion: object | None, actuacion_id: str | None = None) -> Mapping[str, object]:
+    """La identificacion de una actuacion, tambien cuando el motor no la ha procesado todavia.
+
+    En una lista manda el identificador con el que la pidio el repositorio, que es con el que la pantalla
+    va a poder volver a pedirla: navegar con los identificadores que dio la lectura, y no componerlos, es
+    `R-UI-12`. Con una sola actuacion no hay tal identificador y se usa el que trae la procesada.
+    """
     return {
-        "actuacion_id": getattr(actuacion, "id", None),
+        "actuacion_id": actuacion_id or getattr(actuacion, "id", None),
         "codigo_identificativo_propio": getattr(actuacion, "codigo_identificativo_propio", None),
         "ficha": getattr(getattr(actuacion, "spec", None), "codigo", None),
         "fecha_evaluacion": str(getattr(actuacion, "fecha_evaluacion", "")) or None,
     }
+
+
+def _identificacion(vista: Vista) -> Mapping[str, object]:
+    return _identidad(vista.exige_actuacion("identificacion"))
 
 
 def _estado_simplificado(vista: Vista) -> Mapping[str, object]:
@@ -108,7 +201,10 @@ def _documentos(vista: Vista) -> Sequence[Mapping[str, object]]:
 def _evidencias(vista: Vista) -> Sequence[Mapping[str, object]]:
     """Las tres capas de cada dato, con su cita (`R-UI-09`): documento, pagina y texto literal."""
     actuacion = vista.exige_actuacion("evidencias")
-    return [{"num_serie_motor": serie, **dato.a_dict()} for serie, dato in datos_consolidados(actuacion)]
+    return [
+        {**_declaracion(actuacion, dato.variable), "num_serie_motor": serie, **dato.a_dict()}
+        for serie, dato in datos_consolidados(actuacion)
+    ]
 
 
 def _conflictos(vista: Vista) -> Sequence[Mapping[str, object]]:
@@ -125,33 +221,64 @@ def _conflictos(vista: Vista) -> Sequence[Mapping[str, object]]:
     ]
 
 
+def _unidad(unidad: Mapping[str, object]) -> Mapping[str, object]:
+    """Una unidad del calculo, ya serializada por el nucleo, con su traza de controles (`GAP-REV-09`).
+
+    `controles` y `precondiciones` traen `true`, `false` o `"NO_EVALUABLE"`: ese ultimo es el centinela de
+    `engine.expresiones`, no un booleano, y se serializa como lo hace el informe del nucleo.
+    """
+    entradas = dict(unidad.get("entradas") or {})
+    derivadas = dict(unidad.get("derivadas") or {})
+    salida = unidad.get("salida")
+    return {
+        "num_serie_motor": unidad.get("num_serie_motor"),
+        "salida": salida,
+        "salida_presentable": _presentable(salida),
+        "motivo_no_calculo": unidad.get("motivo_no_calculo"),
+        "entradas": entradas,
+        "entradas_presentables": {k: _presentable(v) for k, v in entradas.items()},
+        "derivadas": derivadas,
+        "derivadas_presentables": {k: _presentable(v) for k, v in derivadas.items()},
+        "fuentes": dict(unidad.get("fuentes") or {}),
+        "controles": dict(unidad.get("controles") or {}),
+        "precondiciones": dict(unidad.get("precondiciones") or {}),
+        "interpretaciones": list(unidad.get("interpretaciones") or []),
+        "avisos": list(unidad.get("avisos") or []),
+    }
+
+
+def _variables_del_calculo(
+    actuacion: object, unidades: Sequence[Mapping[str, object]]
+) -> Mapping[str, object]:
+    """Como se llama cada entrada y cada derivada del calculo, segun la spec (`GAP-REV-05`).
+
+    Va al lado de `por_unidad` y no dentro de `entradas` para no cambiar la forma de lo que ya se sirve:
+    la pantalla busca aqui el nombre legible de `PM` en vez de llevar una tabla de etiquetas por ficha.
+    """
+    nombres: set[str] = set()
+    for unidad in unidades:
+        nombres |= set(unidad.get("entradas") or {})
+        nombres |= set(unidad.get("derivadas") or {})
+    return {nombre: _declaracion(actuacion, nombre) for nombre in sorted(nombres)}
+
+
 def _calculo(vista: Vista) -> Mapping[str, object]:
     actuacion = vista.exige_actuacion("calculo")
     calculo = getattr(actuacion, "calculo", None)
-    if calculo is None or calculo.total is None:
-        return {
-            "total_exacto": None,
-            "total_cae": None,
-            "provisional": False if calculo is None else bool(calculo.provisional),
-            "motivo_no_calculo": motivo_sin_calculo(actuacion),
-            "por_unidad": [],
-        }
+    serializado = calculo_a_dict(calculo) if calculo is not None else {}
+    unidades = list(serializado.get("por_unidad") or [])
+    hay_total = calculo is not None and calculo.total is not None
+    cae = calculo.total_cae if hay_total else None
     return {
-        "total_exacto": texto_decimal(calculo.total),
-        "total_cae": calculo.total_cae,
-        "provisional": bool(calculo.provisional),
-        "motivo_no_calculo": None,
-        "por_unidad": [
-            {
-                "num_serie_motor": unidad.num_serie_motor,
-                "salida": None if unidad.salida is None else texto_decimal(unidad.salida),
-                "motivo_no_calculo": unidad.motivo_no_calculo,
-                "entradas": {k: _texto(v) for k, v in unidad.entradas.items()},
-                "derivadas": {k: _texto(v) for k, v in unidad.derivadas.items()},
-                "fuentes": dict(unidad.fuentes),
-            }
-            for unidad in calculo.por_unidad
-        ],
+        "total_exacto": texto_decimal(calculo.total) if hay_total else None,
+        "total_exacto_presentable": texto_es(calculo.total) if hay_total else None,
+        "total_cae": cae,
+        "total_cae_presentable": None if cae is None else texto_es(cae),
+        "provisional": False if calculo is None else bool(calculo.provisional),
+        "motivo_no_calculo": None if hay_total else motivo_sin_calculo(actuacion),
+        "traza": list(serializado.get("traza") or []),
+        "variables": _variables_del_calculo(actuacion, unidades),
+        "por_unidad": [_unidad(unidad) for unidad in unidades],
     }
 
 
@@ -165,6 +292,10 @@ def _veredicto(vista: Vista) -> Mapping[str, object]:
         "descargo": descargo_de(actuacion),
         "reglas_falladas": list(getattr(evaluacion, "falladas", []) or []),
         "reglas_no_evaluables": list(getattr(evaluacion, "no_evaluables", []) or []),
+        # `GAP-REV-02`: las 24 comprobaciones con lo que cada una dice de si misma (severidad, fase,
+        # nivel, descripcion, referencia, interpretacion, motivo y el detalle por unidad). Los
+        # identificadores de arriba se quedan porque son el indice; esto es lo que se lee.
+        "reglas": [r.a_dict() for r in getattr(evaluacion, "resultados", []) or []],
         "interpretaciones_aplicadas": list(getattr(evaluacion, "interpretaciones_aplicadas", []) or []),
         "hash_reglas": getattr(evaluacion, "hash_reglas", None),
     }
@@ -189,10 +320,173 @@ def _historial(vista: Vista) -> Sequence[Mapping[str, object]]:
     return [_fila_evento(evento, con_payload=True) for evento in log]
 
 
+def _tarea(evento: object) -> Mapping[str, object]:
+    """Una tarea pendiente del tenant tal y como la anoto la plataforma. Se refleja, no se interpreta."""
+    datos = dict(evento.datos)
+    return {
+        "tarea_id": datos.get("tarea_id"),
+        "asunto": datos.get("asunto"),
+        "referencia": datos.get("referencia"),
+        "vence_en": _texto(datos.get("vence_en")),
+        "recibida_en": evento.ocurrido_en.isoformat(),
+    }
+
+
+def _estado_del_log(log: object) -> dict[str, object]:
+    """La proyeccion del ciclo, mas las tareas y las dos marcas de tiempo del log (`GAP-COLA-02`).
+
+    Es **proyeccion, no calculo**: `engine.estados` sigue decidiendo las transiciones y aqui solo se leen
+    eventos que ya estan sellados. `abierta_en` y `ultimo_movimiento_en` son el primero y el ultimo del
+    log por secuencia; sin eventos son `None`, que es lo que la pantalla pinta como `SIN DATO`, nunca 0.
+    """
+    datos = dict(proyectar(log).a_dict())
+    eventos = sorted(log, key=lambda evento: evento.secuencia)
+    datos["tareas_pendientes"] = [_tarea(evento) for evento in log.por_tipo(TIPO_TAREA)]
+    datos["abierta_en"] = eventos[0].ocurrido_en.isoformat() if eventos else None
+    datos["ultimo_movimiento_en"] = eventos[-1].ocurrido_en.isoformat() if eventos else None
+    return datos
+
+
 def _estados_plataforma(vista: Vista) -> Mapping[str, object]:
     """Lo que el log dice del ciclo y del estado de plataforma. `api/` no decide ninguna transicion."""
-    log = vista.exige_log("estados_plataforma")
-    return proyectar(log).a_dict()
+    return _estado_del_log(vista.exige_log("estados_plataforma"))
+
+
+# ---------------------------------------------------------------------------
+# La cola de revision (`ADR-014` §2, C22)
+# ---------------------------------------------------------------------------
+
+
+def _motivo(identificador: str, **detalle: object) -> dict[str, object]:
+    return {
+        "motivo": identificador,
+        "prioridad": PRIORIDAD_MOTIVO[identificador],
+        "detalle": dict(detalle),
+    }
+
+
+def _severidad_mayor(carencias: Sequence[Mapping[str, object]]) -> str | None:
+    """La severidad mas alta de las carencias, en el orden que declara la spec. No se ordena a mano."""
+    orden = {severidad: posicion for posicion, severidad in enumerate(SEVERIDADES)}
+    presentes = [str(c.get("severidad")) for c in carencias if str(c.get("severidad")) in orden]
+    return min(presentes, key=lambda severidad: orden[severidad]) if presentes else None
+
+
+def _motivos(actuacion: object | None, estado: Mapping[str, object]) -> list[Mapping[str, object]]:
+    """Por que esta esta actuacion en la cola. Los cinco de `T-REV-cola` §6, ni uno mas.
+
+    Una fila sin ningun motivo **no entra en la cola**: la cola reparte trabajo, y una actuacion sin nada
+    que hacer no es trabajo. Nada de esto se calcula: se lee del veredicto, de las carencias y del log.
+    """
+    motivos: list[Mapping[str, object]] = []
+    conflictos = [] if actuacion is None else datos_en_conflicto(actuacion)
+    if conflictos:
+        motivos.append(
+            _motivo(
+                MOTIVO_CONFLICTO,
+                # El nombre de la variable en conflicto **no es un valor**: los dos valores enfrentados y
+                # sus citas viven una pulsacion mas alla, en la vista de revision (`R-UI-09`).
+                variables=[
+                    {"variable": dato.variable, "num_serie_motor": dato.num_serie_motor}
+                    for dato in conflictos
+                ],
+            )
+        )
+    literales = list(estado.get("literales_desconocidos") or ())
+    if estado.get("estado_ciclo") == ESTADO_ESCALADO or literales:
+        motivos.append(
+            _motivo(
+                MOTIVO_ESCALADO,
+                estado_ciclo=estado.get("estado_ciclo"),
+                literales_desconocidos=literales,
+            )
+        )
+    if estado.get("requerimiento_abierto") is not None:
+        motivos.append(
+            _motivo(
+                MOTIVO_REQUERIMIENTO,
+                requerimiento_abierto=estado.get("requerimiento_abierto"),
+                afectada_directamente=estado.get("afectada_directamente"),
+                origen_subsanacion=estado.get("origen_subsanacion"),
+            )
+        )
+    evaluacion = getattr(actuacion, "evaluacion", None)
+    carencias = list(getattr(evaluacion, "carencias", []) or [])
+    if carencias:
+        motivos.append(
+            _motivo(
+                MOTIVO_CORRECCION,
+                severidad=_severidad_mayor(carencias),
+                carencias=[str(c.get("id")) for c in carencias],
+            )
+        )
+    tareas = list(estado.get("tareas_pendientes") or ())
+    if tareas:
+        motivos.append(_motivo(MOTIVO_TAREA, tareas=[tarea.get("tarea_id") for tarea in tareas]))
+    return sorted(motivos, key=lambda motivo: motivo["prioridad"])
+
+
+def _veredicto_en_cola(actuacion: object | None) -> Mapping[str, object]:
+    """El veredicto como rotulo (`R-UI-02`), sin las reglas: la cola no explica, reparte."""
+    if actuacion is None:
+        return {"valor": None, "semaforo": None, "mensaje": None}
+    return {
+        "valor": getattr(actuacion, "veredicto", None),
+        "semaforo": semaforo_de(actuacion),
+        "mensaje": mensaje_de(actuacion),
+    }
+
+
+def _fila_cola(caso: Caso) -> tuple[tuple[object, ...], Mapping[str, object]] | None:
+    """Una fila de la cola con su clave de orden, o `None` si esa actuacion no tiene nada que esperar."""
+    estado = _estado_del_log(caso.log) if caso.log is not None else {}
+    motivos = _motivos(caso.actuacion, estado)
+    if not motivos:
+        return None
+    eventos = sorted(caso.log, key=lambda evento: evento.secuencia) if caso.log is not None else []
+    abierta = eventos[0].ocurrido_en if eventos else None
+    fila = {
+        "identificacion": _identidad(caso.actuacion, caso.actuacion_id),
+        "veredicto": _veredicto_en_cola(caso.actuacion),
+        "motivos": motivos,
+        "antiguedad": {
+            "abierta_en": estado.get("abierta_en"),
+            "ultimo_movimiento_en": estado.get("ultimo_movimiento_en"),
+        },
+        "estado": {
+            clave: estado.get(clave)
+            for clave in (
+                "estado_ciclo",
+                "estado_plataforma",
+                "requerimiento_abierto",
+                "afectada_directamente",
+                "literales_desconocidos",
+                "secuencia",
+            )
+        },
+    }
+    clave = (
+        min(int(motivo["prioridad"]) for motivo in motivos),
+        abierta is None,
+        abierta or _SIN_FECHA,
+        str(caso.actuacion_id),
+    )
+    return clave, fila
+
+
+def _cola(vista: Vista) -> Sequence[Mapping[str, object]]:
+    """Las actuaciones del tenant que esperan revision, **ya ordenadas** (`T-REV-cola` §6).
+
+    Primero el motivo de mas prioridad de cada fila, despues la que lleva mas tiempo abierta, y el
+    identificador para que dos iguales no bailen entre peticiones. El orden lo pone el servidor porque la
+    pantalla no ordena (`R-UI-11`), y porque un orden que cada cliente calcula no se puede verificar.
+
+    Cada fila lleva identificacion, veredicto, motivos, antiguedad y estado. **Nada mas**: ni un valor de
+    variable, ni su cita, ni el ahorro. Arrastrar la cita (`R-UI-09`) a una lista que se lee de un vistazo
+    es justo lo que la spec de la pantalla evita a proposito.
+    """
+    filas = [preparada for caso in vista.casos if (preparada := _fila_cola(caso)) is not None]
+    return [fila for _, fila in sorted(filas, key=lambda preparada: preparada[0])]
 
 
 def _actividad_usuarios(vista: Vista) -> Sequence[Mapping[str, object]]:
@@ -230,6 +524,7 @@ CONSTRUCTORES: Mapping[str, Callable[[Vista], object]] = {
     "veredicto": _veredicto,
     "historial": _historial,
     "estados_plataforma": _estados_plataforma,
+    "cola": _cola,
     "actividad_usuarios": _actividad_usuarios,
     "metadatos_auditoria": _metadatos_auditoria,
     "agregados": _agregados,
@@ -252,4 +547,4 @@ def proyectar_vista(declarados: Sequence[str], admitidos: frozenset[str], vista:
     return datos
 
 
-__all__ = ["CONSTRUCTORES", "Vista", "bloques_a_construir", "proyectar_vista"]
+__all__ = ["CONSTRUCTORES", "Caso", "Vista", "bloques_a_construir", "proyectar_vista"]

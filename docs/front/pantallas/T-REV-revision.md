@@ -4,7 +4,7 @@
 |---|---|
 | Superficie | Workspace del tenant (`ADR-050`) |
 | Perfil | `T-REV` (Revisor técnico) |
-| Id de pantalla en la matriz | `cola_revision` (ver `GAP-REV-06`: la matriz no declara todavía una pantalla propia para la vista de revisión) |
+| Id de pantalla en la matriz | `vista_revision` (declarado en `engine/capacidades.yaml`, `superficies.workspace.pantallas`, con `perfil: T-REV`; `GAP-REV-06` cerrado en `FR1.a`) |
 | Se llega desde | `T-REV-cola`, con un `actuacion_id` |
 | Entregable | `FR1` (absorbe `S4.4`) |
 | Contrato | `ADR-012` §4 (C19) y §1–§2 (C17) · `ADR-050` §"Pantallas críticas" |
@@ -115,15 +115,15 @@ pantalla se le llama "verificador".
 | Lectura | Bloque | Campos que usa la pantalla |
 |---|---|---|
 | `CAP-03` | `identificacion` | `actuacion_id`, `codigo_identificativo_propio`, `ficha`, `fecha_evaluacion` |
-| `CAP-03` | `veredicto` | `valor`, `semaforo`, `mensaje`, `descargo`, `reglas_falladas`, `reglas_no_evaluables`, `interpretaciones_aplicadas`, `hash_reglas` |
+| `CAP-03` | `veredicto` | `valor`, `semaforo`, `mensaje`, `descargo`, `reglas_falladas`, `reglas_no_evaluables`, `interpretaciones_aplicadas`, `hash_reglas`, y `reglas[]` con `id`, `resultado`, `severidad`, `fase`, `nivel`, `descripcion`, `referencia`, `interpretacion`, `motivo` y `por_unidad` |
 | `CAP-03` | `conflictos` | `variable`, `num_serie_motor`, `valor_consumido` (siempre `null`), `evidencias[]` completas |
-| `CAP-03` | `calculo` | `total_exacto`, `total_cae`, `provisional`, `motivo_no_calculo`, `por_unidad[]` (`entradas`, `derivadas`, `fuentes`, `salida`, `motivo_no_calculo`) |
-| `CAP-03` | `evidencias` | Por dato: `variable`, `num_serie_motor`, `valor_consumido`, `valor_normalizado`, `tipo_evidencia`, `fuente_primaria`, `interpretacion`, `valores_por_fuente`, `conflicto`, `posibles_errores_ocr`, `unidad`, `avisos`; y por evidencia: `doc_id`, `tipo_doc`, `pagina`, `texto_literal`, `metodo`, `confianza`, `extractor_version`, `tipo_evidencia` |
+| `CAP-03` | `calculo` | `total_exacto`, `total_cae`, sus dos `*_presentable`, `provisional`, `motivo_no_calculo`, `traza[]`, `variables{}` (la descripción de cada entrada y derivada, de la spec) y `por_unidad[]` (`entradas`, `derivadas`, sus `*_presentables`, `fuentes`, `salida`, `salida_presentable`, `controles`, `precondiciones`, `interpretaciones`, `avisos`, `motivo_no_calculo`) |
+| `CAP-03` | `evidencias` | Por dato: `variable`, su `descripcion`, `definicion` y `referencia` de la spec, `num_serie_motor`, `valor_consumido`, `valor_normalizado`, `tipo_evidencia`, `fuente_primaria`, `interpretacion`, `valores_por_fuente`, `conflicto`, `posibles_errores_ocr`, `unidad`, `avisos`; y por evidencia: `doc_id`, `tipo_doc`, `pagina`, `texto_literal`, `metodo`, `confianza`, `extractor_version`, `tipo_evidencia` |
 | `CAP-03` | `documentos` | `doc_id`, `sha256`, `nombre`, `tipo`, `paginas`, `formato`, `origen`, `rango_paginas`, `avisos` |
 | `CAP-03` | `historial` | `tipo`, `ocurrido_en`, `actor`, `payload` (observaciones de A8, requerimientos, discrepancias, correcciones anteriores) |
 | `CAP-03` (C17) | `datos.documento` | `doc_id`, `tipo`, `medio`, `bytes`, `paginas`, `origen`, `rango_paginas`, `contenido_base64` |
 | `CAP-04` | `que_te_falta` | `hay_carencias`, y por carencia `id`, `severidad`, `mensaje`, `documentos` |
-| `CAP-14` | `estados_plataforma` | `estado_ciclo`, `estado_plataforma`, `veredicto`, `revisada_por_humano`, `requerimiento_abierto`, `afectada_directamente`, `literales_desconocidos`, `rechazos` |
+| `CAP-14` | `estados_plataforma` | `estado_ciclo`, `estado_plataforma`, `veredicto`, `revisada_por_humano`, `requerimiento_abierto`, `afectada_directamente`, `literales_desconocidos`, `rechazos`, `tareas_pendientes`, `abierta_en`, `ultimo_movimiento_en` |
 
 Las tres capas de cada dato (`CLAUDE.md` §2, regla 3) se ven **las tres**: la evidencia documental
 (`texto_literal` con su documento y su página), la interpretación (`valor_normalizado`, `tipo_evidencia`,
@@ -160,6 +160,14 @@ Es lo primero del panel derecho, con borde rojo, y contiene exactamente esto:
   página) y **"Usar este valor"**.
 - La tarjeta dice además **qué arrastra** el dato: "`PM` entra en el cálculo y en la búsqueda de la fila del
   cuadro 6". No se calcula nada para decirlo: se lee de `calculo.por_unidad[].entradas` y `fuentes`.
+
+  > **Hallazgo de `FR1.a` (23/09/2026), sin resolver y sin rellenar.** En el caso C eso **no se puede
+  > leer**: con un conflicto bloqueante el motor se salta la fase de cálculo entera y `actuacion.calculo`
+  > es `None`, así que `calculo.por_unidad` llega vacío y `traza` también. No es un hueco de proyección
+  > —`api/` sirve todo lo que hay— y no estaba en los 13 de `ADR-014`: o la frase se apoya en otra fuente
+  > (las `fuentes` de la spec para esa variable), o el motor tendría que dejar constancia de las entradas
+  > que iba a consumir antes de detenerse, y eso es `engine/` y su ADR. **No se inventa el campo**: hasta
+  > que se decida, la tarjeta no puede decir qué arrastra el dato en un caso bloqueado.
 
 ### El presupuesto de tiempo
 
@@ -293,14 +301,14 @@ cabecera enlaza al registro de firma de `T-RES` solo como información de en qu�
 | Id | Qué falta | Qué haría falta exactamente | Mientras tanto |
 |---|---|---|---|
 | `GAP-REV-01` | **El recálculo tras corregir.** `CAP-05` escribe `DatoCorregidoPorHumano` en el log y nada vuelve a evaluar: `engine.motor.procesar_actuacion(carpeta)` no lee el log ni recibe correcciones. El lazo "se corrige el dato y el motor recalcula" (`R-UI-02`, `ADR-012` §4) **no se cierra hoy** | Que `procesar_actuacion` acepte las correcciones humanas del log y las trate como una fuente más (con su capa de interpretación y su trazabilidad), y que el repositorio sepa reprocesar una actuación bajo demanda. Es cambio de `engine/` y de `docs/03`: le corresponde un ADR, no un parche del front | La pantalla muestra "corrección registrada · pendiente de recálculo" y **no** presenta el veredicto anterior como actualizado (`CA-REV-09`) |
-| `GAP-REV-02` | **La descripción de las reglas que fallan.** `veredicto.reglas_falladas` y `reglas_no_evaluables` son solo identificadores; `ResultadoRegla` tiene `descripcion`, `severidad`, `fase`, `motivo` y `referencia`, pero ningún bloque los proyecta | Un bloque `reglas` (o ampliar `veredicto`) con, por regla: `id`, `resultado`, `severidad`, `fase`, `descripcion`, `motivo`, `referencia`, `interpretacion`, `por_unidad` | Las que **fallan** se describen con `que_te_falta` (`CAP-04`), que sí trae `severidad`, `mensaje` y `documentos`. Las `NO_EVALUABLE` se listan por identificador con la explicación general de `calculo.motivo_no_calculo` |
+| ~~`GAP-REV-02`~~ | **Cerrado en `FR1.a`** (23/09/2026) | `veredicto.reglas[]` trae **todas** las reglas evaluadas —también las que cumplen, para el contador de `CA-REV-19`— con `id`, `resultado`, `severidad`, `fase`, `nivel`, `descripcion`, `referencia`, `interpretacion`, `motivo` y `por_unidad`. Se amplió `veredicto` en vez de abrir un bloque nuevo: los identificadores siguen siendo el índice | — |
 | `GAP-REV-03` | **No se puede subir un documento desde el navegador.** `registrar_documento` exige `ruta` y el repositorio lee ese fichero del disco del servidor. Un navegador no tiene rutas del servidor, y aceptar una del cliente sería leer ficheros arbitrarios | Que `CAP-02` admita los **bytes** (o una subida en dos pasos), y que la huella la siga calculando el núcleo sobre los bytes recibidos, nunca el cliente | El control de subida está inactivo y lo dice. Las carencias se resuelven pidiendo subsanación (`CAP-09`) |
 | `GAP-REV-04` | **La interpretación propuesta de un requerimiento no se sirve.** `CAP-15` la necesita; vive en `Repositorio.requerimiento(...)` y ninguna lectura la proyecta | Un bloque `requerimientos` con el requerimiento, su interpretación propuesta (texto, reglas afectadas, confianza) y quién la propuso | El bloque de requerimiento muestra lo que hay en `historial` (`RequerimientoRecibido`) y el botón de confirmar se envía "a ciegas": en `FR1` **se deja inactivo** antes que confirmar algo que no se ha podido leer |
-| `GAP-REV-05` | **Las variables no traen nombre legible.** La spec declara `descripcion` y `unidad` para `PM`, `N1`, `N2`, `h_antes`, `h_despues`, `P_prom`; la proyección sirve `unidad` pero no `descripcion` | Añadir `descripcion` (y `definicion`/`referencia` si existen) al bloque `evidencias` y a las entradas de `calculo.por_unidad` | La pantalla muestra el identificador (`PM`) y su unidad. **Prohibido** un diccionario de etiquetas por ficha en el front: sería un `if ficha == …` disfrazado (regla de oro 4) |
-| `GAP-REV-06` | **La matriz no declara una pantalla para la vista de revisión.** `engine/capacidades.yaml` solo tiene `cola_revision` para `T-REV`, y `Contexto.superficie` es lo que desempata el rol de `CAP-02` y `CAP-09` | Declarar `vista_revision` con `perfil: T-REV` en `superficies.workspace.pantallas` | La vista de revisión envía `superficie: "cola_revision"`. Funciona, pero el contexto miente sobre desde dónde se actúa |
+| ~~`GAP-REV-05`~~ | **Cerrado en `FR1.a`** (23/09/2026) | Cada dato de `evidencias` trae `descripcion`, `definicion` y `referencia` leídas de `spec.variables[...]`, y `calculo.variables{}` hace lo mismo para cada entrada y cada derivada del cálculo (va al lado de `por_unidad` para no cambiar la forma de `entradas`). Sigue **prohibido** un diccionario de etiquetas por ficha, en el front y en `api/`: hay un test que lo comprueba | — |
+| ~~`GAP-REV-06`~~ | **Cerrado en `FR1.a`** (23/09/2026) | `vista_revision` está declarada con `perfil: T-REV` en `superficies.workspace.pantallas`, y desempata igual que `cola_revision` (caso añadido en `tests/test_api_rol_inferido.py`). El contexto ya dice desde dónde se actúa | — |
 | `GAP-REV-07` | **Origen de los datos** (sintético o real) no lo declara ningún bloque, y `R-UI-08` lo exige en todo panel | `origen_datos` en el bloque `identificacion` | `MarcaOrigen` muestra `ORIGEN DE DATOS SIN DECLARAR` |
-| `GAP-REV-08` | **Las cifras llegan en forma canónica** (`"305829.6"`), no presentable en español | Que `api/` sirva también el texto presentable | Se pinta la cadena tal cual. Prohibido pasar por `Number` (`CLAUDE.md` §2) |
-| `GAP-REV-09` | **La traza y los controles por unidad no se proyectan.** `ResultadoCalculo.traza` y `ResultadoUnidad.controles` / `precondiciones` / `interpretaciones` existen en `engine/` y no salen en el bloque `calculo` | Añadirlos a `calculo` (traza como lista de cadenas, tal cual la escribe el motor) | "Ver la fórmula" muestra solo `entradas`, `derivadas` y `fuentes`. Los valores intermedios **no se calculan en el front** para rellenar el hueco (`R-UI-11`) |
+| ~~`GAP-REV-08`~~ | **Cerrado en `FR1.a`** (23/09/2026) | `calculo` sirve `total_exacto_presentable` y `total_cae_presentable`, y cada unidad `entradas_presentables`, `derivadas_presentables` y `salida_presentable`, **junto** a los valores exactos y nunca en su lugar. El formato lo hace `engine.informe.texto_es` sobre el `Decimal` | Se pinta la cadena tal cual. **Sigue prohibido** pasar por `Number` (`CLAUDE.md` §2) |
+| ~~`GAP-REV-09`~~ | **Cerrado en `FR1.a`** (23/09/2026) | `calculo.traza` es la lista de cadenas tal cual la escribe el motor, y cada unidad trae `controles`, `precondiciones`, `interpretaciones` y `avisos`. `NO_EVALUABLE` viaja como la cadena `"NO_EVALUABLE"`, igual que en el informe del núcleo: es un centinela, no un booleano | Los valores intermedios **siguen sin calcularse en el front** (`R-UI-11`) |
 
 Ninguna de estas carencias se resuelve inventando el campo en el front. Lo que no llega, no se pinta, y se
 dice por qué.

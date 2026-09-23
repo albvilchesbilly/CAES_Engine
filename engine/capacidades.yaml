@@ -57,6 +57,7 @@ ambitos:
       - historial
       - estados_plataforma
       - actividad_usuarios
+      - cola
 
   - id: externo
     nombre: Solo sus actuaciones, en lenguaje no tecnico
@@ -105,6 +106,9 @@ superficies:
         perfil: T-OPE
       - id: cola_revision
         nombre: Cola de revision
+        perfil: T-REV
+      - id: vista_revision
+        nombre: Vista de revision
         perfil: T-REV
       - id: pendiente_de_mi
         nombre: Pendiente de mi
@@ -325,6 +329,17 @@ capacidades:
     concede: [T-REV]
     exige_justificacion: true       # decidir contra la plataforma se motiva o no se decide
     manejador: resolver_discrepancia
+
+  - id: CAP-17
+    nombre: Consultar la cola de revision del tenant
+    grupo: actuaciones
+    tipo: lectura
+    # Capacidad **nueva** de ADR-014 §2 (C22), aprobada por Billy el 23/09/2026. No es un modo lista de
+    # CAP-03: esa autoriza *una* actuacion, y enumerar la cartera del tenant es otro alcance. Un cambio de
+    # permisos no entra disfrazado de parametro opcional; se ve en la tabla de ADR-006 o no existe.
+    concede: [T-REV]
+    bloques: [cola]
+    manejador: cola_de_revision
 
   # -- Actos del sujeto ------------------------------------------------------------------------
 

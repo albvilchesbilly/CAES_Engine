@@ -12,12 +12,22 @@ import json
 import subprocess
 import sys
 from datetime import date
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
 from engine.cli import CODIGO_ERROR, CODIGO_OK, CODIGO_VEREDICTO_NEGATIVO, main, ruta_de_salida
-from engine.informe import ROTULO_PROVISIONAL, a_json, a_markdown, descargo_de, motivo_sin_calculo
+from engine.informe import (
+    ROTULO_PROVISIONAL,
+    a_json,
+    a_markdown,
+    descargo_de,
+    miles,
+    motivo_sin_calculo,
+    texto_decimal,
+    texto_es,
+)
 from tests.test_motor import CASOS, FECHA, RAIZ, ground_truth, procesado
 
 CASO_A = "EXP001-A_completo"
@@ -452,3 +462,40 @@ def test_sin_ocr_el_caso_g_da_el_mismo_informe_de_ahorro_que_con_datos_nativos(t
     assert codigo == CODIGO_OK
     assert "PREVALIDADO" in texto
     assert ground_truth(CASO_G)["aetotal_esperado"]["exacto"] in texto
+
+
+# ---------------------------------------------------------------------------
+# La cifra presentable (`GAP-COLA-04` / `GAP-REV-08`)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("valor", "esperado"),
+    [
+        (Decimal("305829.6000000000000000000000000000"), "305.829,6"),
+        (Decimal("305829"), "305.829"),
+        (Decimal("1000"), "1.000"),
+        (Decimal("999"), "999"),
+        (Decimal("0"), "0"),
+        (Decimal("0.5"), "0,5"),
+        (Decimal("5.0455"), "5,0455"),
+        (Decimal("-1234.5"), "-1.234,5"),
+        (Decimal("1234567.89"), "1.234.567,89"),
+        (305829, "305.829"),
+    ],
+)
+def test_texto_es_escribe_la_cifra_como_la_lee_una_persona(valor, esperado):
+    assert texto_es(valor) == esperado
+
+
+def test_texto_es_no_pasa_por_coma_flotante_y_no_pierde_un_digito():
+    """`CLAUDE.md` §2: el ahorro no se formatea convirtiendolo a `float`, ni siquiera "solo para verlo"."""
+    exacto = Decimal("12345.67890123456789012345")
+    assert texto_es(exacto) == "12.345,67890123456789012345"
+    assert texto_es(exacto).replace(".", "").replace(",", ".") == texto_decimal(exacto)
+
+
+def test_miles_es_el_caso_entero_de_texto_es():
+    """Una sola implementacion del agrupamiento: dos darian dos formatos el dia que una cambie."""
+    for entero in (0, 7, 999, 1000, 305829, 1234567):
+        assert miles(entero) == texto_es(Decimal(entero))

@@ -110,7 +110,14 @@ def test_las_unicas_capacidades_compartidas_del_workspace_son_las_dos_de_adr_050
 
 @pytest.mark.parametrize("identificador", COMPARTIDAS)
 @pytest.mark.parametrize(
-    ("pantalla", "esperado"), [("cola_revision", "T-REV"), ("bandeja_actuaciones", "T-OPE")]
+    ("pantalla", "esperado"),
+    [
+        ("cola_revision", "T-REV"),
+        # `GAP-REV-06`: la vista de revision ya es una pantalla propia y desempata igual que la cola. Antes
+        # tenia que decir que venia de `cola_revision`, y el contexto mentia sobre desde donde se actuaba.
+        ("vista_revision", "T-REV"),
+        ("bandeja_actuaciones", "T-OPE"),
+    ],
 )
 def test_la_pantalla_desempata_la_capacidad_compartida(
     identificador: str, pantalla: str, esperado: str

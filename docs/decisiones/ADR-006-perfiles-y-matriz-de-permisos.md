@@ -75,6 +75,7 @@ No documentado: si un usuario de Modificación puede ser un tercero o una cuenta
 | CAP-14 | Consultar estados y tareas de la plataforma oficial (P9) | Lectura |
 | CAP-15 | Confirmar la interpretación de A9 de un requerimiento | `RequerimientoInterpretado{confirmado}` |
 | CAP-16 | Decidir ante una discrepancia con el cálculo de la plataforma | `DiscrepanciaResuelta` (nuevo) |
+| CAP-17 | Consultar la cola de revisión del tenant: varias actuaciones, ya ordenadas | Lectura |
 
 **Actos del sujeto**
 
@@ -158,6 +159,7 @@ No documentado: si un usuario de Modificación puede ser un tercero o una cuenta
 | CAP-14 Estados y tareas de la plataforma | ✅ | ✅ | ✅ | — | — | — | — | — |
 | CAP-15 Confirmar interpretación de A9 | — | — | ✅ | — | — | — | — | — |
 | CAP-16 Decidir ante discrepancia | — | — | ✅ | — | — | — | — | — |
+| CAP-17 Cola de revisión del tenant | — | — | ✅ | — | — | — | — | — |
 | CAP-20 Elegir o validar verificador | ✅ | — | — | — | — | — | — | — |
 | CAP-21 Aprobar composición del expediente | ✅ | — | — | — | — | — | — | — |
 | CAP-22 Registrar firma | ✅ | — | — | — | — | — | — | — |
