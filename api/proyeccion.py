@@ -37,7 +37,7 @@ from engine.informe import (
     texto_es,
 )
 from engine.seguimiento import TIPO_TAREA
-from engine.spec_registry import SEVERIDADES
+from engine.spec_registry import CALCULO_POR_UNIDAD, CALCULO_TOTAL, SEVERIDADES
 
 #: El estado de ciclo que significa "aqui tiene que mirar una persona" (`T-REV-cola` §6, motivo escalado).
 #: Es vocabulario de `engine.estados`, no una decision de `api/`: un test comprueba que sigue existiendo.
@@ -153,6 +153,27 @@ def _declaracion(actuacion: object, variable: str) -> dict[str, object]:
     return {campo: declarada.get(campo) for campo in CAMPOS_VARIABLE}
 
 
+def _unidad_declarada(actuacion: object, bloque: str) -> str | None:
+    """En que unidad expresa la spec una salida del calculo: `spec.calculo.<bloque>.unidad`.
+
+    Mismo criterio que `_declaracion`, y por la misma razon (`GAP-REV-05`, regla de oro 4): la unidad es
+    configuracion de la ficha. Que la escribiera la pantalla seria una etiqueta por ficha cableada en la
+    interfaz —un `if ficha == ...` disfrazado— y la segunda ficha, con otra unidad, la desmentiria.
+
+    Es un rotulo, no una cifra: no participa en ninguna aritmetica y no convierte nada. El ahorro sigue
+    viajando en `total_exacto`/`salida` tal y como lo dejo el nucleo, sin pasar por coma flotante.
+
+    Una spec que no declare la unidad de ese bloque sale a `None`, que es lo que la pantalla pinta como
+    `SIN DATO`: no se inventa una unidad ni se hereda la de otra ficha.
+    """
+    calculo = getattr(getattr(actuacion, "spec", None), "calculo", None)
+    declarado = calculo.get(bloque) if isinstance(calculo, Mapping) else None
+    if not isinstance(declarado, Mapping):
+        return None
+    unidad = declarado.get("unidad")
+    return None if unidad is None else str(unidad)
+
+
 # ---------------------------------------------------------------------------
 # Los bloques
 # ---------------------------------------------------------------------------
@@ -221,11 +242,14 @@ def _conflictos(vista: Vista) -> Sequence[Mapping[str, object]]:
     ]
 
 
-def _unidad(unidad: Mapping[str, object]) -> Mapping[str, object]:
+def _unidad(unidad: Mapping[str, object], *, unidad_salida: str | None) -> Mapping[str, object]:
     """Una unidad del calculo, ya serializada por el nucleo, con su traza de controles (`GAP-REV-09`).
 
     `controles` y `precondiciones` traen `true`, `false` o `"NO_EVALUABLE"`: ese ultimo es el centinela de
     `engine.expresiones`, no un booleano, y se serializa como lo hace el informe del nucleo.
+
+    `unidad_salida` es la unidad en que la spec expresa el ahorro por unidad (`calculo.motor.unidad`), y
+    rotula por igual `salida` y `salida_presentable`: la cifra exacta y la misma cifra en español.
     """
     entradas = dict(unidad.get("entradas") or {})
     derivadas = dict(unidad.get("derivadas") or {})
@@ -234,6 +258,7 @@ def _unidad(unidad: Mapping[str, object]) -> Mapping[str, object]:
         "num_serie_motor": unidad.get("num_serie_motor"),
         "salida": salida,
         "salida_presentable": _presentable(salida),
+        "salida_unidad": unidad_salida,
         "motivo_no_calculo": unidad.get("motivo_no_calculo"),
         "entradas": entradas,
         "entradas_presentables": {k: _presentable(v) for k, v in entradas.items()},
@@ -269,16 +294,21 @@ def _calculo(vista: Vista) -> Mapping[str, object]:
     unidades = list(serializado.get("por_unidad") or [])
     hay_total = calculo is not None and calculo.total is not None
     cae = calculo.total_cae if hay_total else None
+    unidad_salida = _unidad_declarada(actuacion, CALCULO_POR_UNIDAD)
     return {
         "total_exacto": texto_decimal(calculo.total) if hay_total else None,
         "total_exacto_presentable": texto_es(calculo.total) if hay_total else None,
         "total_cae": cae,
         "total_cae_presentable": None if cae is None else texto_es(cae),
+        # La unidad de las cuatro cifras de arriba, leida de `spec.calculo.total.unidad`. Rotula igual la
+        # forma canonica y la presentable, porque son la misma magnitud. El valor truncado a entero
+        # (`total_cae`) tambien: la spec no declara para el una unidad distinta y no se le inventa una.
+        "total_unidad": _unidad_declarada(actuacion, CALCULO_TOTAL),
         "provisional": False if calculo is None else bool(calculo.provisional),
         "motivo_no_calculo": None if hay_total else motivo_sin_calculo(actuacion),
         "traza": list(serializado.get("traza") or []),
         "variables": _variables_del_calculo(actuacion, unidades),
-        "por_unidad": [_unidad(unidad) for unidad in unidades],
+        "por_unidad": [_unidad(unidad, unidad_salida=unidad_salida) for unidad in unidades],
     }
 
 

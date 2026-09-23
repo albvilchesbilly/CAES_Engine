@@ -39,7 +39,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import PurePosixPath
 
-from api.contrato import Peticion, Respuesta, preparar
+from api.contrato import Peticion, Respuesta, nombre_de, preparar
 from api.permisos import Capacidad, ErrorApi, ErrorPermiso, Matriz, ambito_de
 from api.servicios import Servicios
 from engine.capacidades import TIPO_LECTURA
@@ -275,6 +275,7 @@ def leer_documento(
     return Respuesta(
         capacidad=capacidad.id,
         rol=rol,
+        rol_nombre=nombre_de(activa, rol),
         eventos=(),
         datos={CLAVE_DOCUMENTO: documento},
         avisos=avisos,

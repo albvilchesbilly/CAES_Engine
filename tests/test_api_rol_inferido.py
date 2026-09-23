@@ -6,12 +6,19 @@ desempata la pantalla del contexto; si sigue sin resolverse, **es un error y no 
 Importa porque el rol se persiste (`actor.rol`, A8): un rol elegido a dedo entre dos posibles parece
 trazabilidad y no lo es. En un delegado pequeño, que acumula los tres perfiles de tenant, esto pasa todos
 los dias.
+
+La seccion 4 cubre `GAP-COLA-06` / `GAP-REV-11`: la respuesta lleva ademas el **nombre** del rol, y lo
+lleva porque la pantalla escribe "actuando como Revisor tecnico". Ese nombre sale de la matriz y de
+ningun otro sitio; una tabla perfil -> nombre en el front seria una segunda copia de quien es quien
+(`ADR-012` §3, regla 1).
 """
 
 from __future__ import annotations
 
+import ast
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 
@@ -23,6 +30,8 @@ from api.repositorio import RepositorioMemoria
 from api.servicios import Servicios
 from engine.eventos.log import Actor
 
+RAIZ = Path(__file__).resolve().parents[1]
+MATRIZ = RAIZ / "engine" / "capacidades.yaml"
 TENANT = "T-001"
 INSTANTE = datetime(2026, 9, 19, 12, 0, tzinfo=UTC)
 
@@ -229,3 +238,106 @@ def test_el_log_rechaza_que_una_persona_selle_lo_que_produce_el_motor(servicios:
             actor=Actor("humano", "billy", rol="T-REV"),
             ocurrido_en=INSTANTE,
         )
+
+
+# ---------------------------------------------------------------------------
+# 4. GAP-COLA-06 / GAP-REV-11: el nombre del rol, leido de la matriz y de ningun otro sitio
+# ---------------------------------------------------------------------------
+
+
+def _cadenas_de_codigo(fuente: Path) -> list[str]:
+    """Las cadenas que un modulo escribe en su **codigo**, sin contar sus docstrings.
+
+    La diferencia importa: un docstring cita un nombre de perfil para explicarse, y eso es documentacion.
+    Una cadena con ese nombre en el codigo ya seria la tabla perfil -> nombre que la matriz tiene.
+    """
+    arbol = ast.parse(fuente.read_text(encoding="utf-8"))
+    documentacion = {
+        id(nodo.body[0].value)
+        for nodo in ast.walk(arbol)
+        if isinstance(nodo, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef))
+        and nodo.body
+        and isinstance(nodo.body[0], ast.Expr)
+        and isinstance(nodo.body[0].value, ast.Constant)
+        and isinstance(nodo.body[0].value.value, str)
+    }
+    return [
+        nodo.value
+        for nodo in ast.walk(arbol)
+        if isinstance(nodo, ast.Constant) and isinstance(nodo.value, str) and id(nodo) not in documentacion
+    ]
+
+
+def test_la_respuesta_de_un_comando_trae_el_nombre_del_rol_que_declara_la_matriz(
+    servicios: Servicios,
+) -> None:
+    respuesta = ejecutar(
+        Peticion(
+            "CAP-09",
+            delegado_pequeno(),
+            Contexto("cola_revision", TENANT, "A-1"),
+            {"texto": "falta la factura"},
+        ),
+        servicios=servicios,
+    )
+    assert respuesta.rol == "T-REV"
+    assert respuesta.rol_nombre == matriz().perfil("T-REV").nombre == "Revisor tecnico"
+
+
+def test_una_lectura_tambien_trae_el_nombre_y_es_el_del_rol_que_ejerce(servicios: Servicios) -> None:
+    """`R-UI-12` no cambia: el nombre acompaña al rol de la peticion, no al catalogo entero de perfiles."""
+    servicios.repositorio.anadir("A-2", TENANT, actuacion=ActuacionMinima("A-2"))
+    respuesta = leer(
+        Peticion("CAP-14", delegado_pequeno(), Contexto("pendiente_de_mi", TENANT, "A-2")),
+        servicios=servicios,
+    )
+    assert respuesta.rol == "T-RES"
+    assert respuesta.rol_nombre == matriz().perfil("T-RES").nombre
+
+
+def test_el_nombre_sigue_a_la_matriz_y_no_a_una_constante_de_api(
+    servicios: Servicios, tmp_path: Path
+) -> None:
+    """La prueba de que se lee: se renombra el perfil en el YAML y la respuesta lo dice con el nombre nuevo.
+
+    Si alguien cablea el nombre en `api/`, o lo compone del codigo del perfil, esto se pone rojo.
+    """
+    original = MATRIZ.read_text(encoding="utf-8")
+    assert original.count("nombre: Revisor tecnico") == 1
+    copia = tmp_path / MATRIZ.name
+    copia.write_text(original.replace("nombre: Revisor tecnico", "nombre: Revisora jefa"), encoding="utf-8")
+    respuesta = leer(
+        Peticion(
+            "CAP-14",
+            Principal("billy", ("T-REV",), TENANT),
+            Contexto("vista_revision", TENANT, "A-1"),
+        ),
+        servicios=servicios,
+        matriz_actual=matriz(copia),
+    )
+    assert respuesta.rol == "T-REV"
+    assert respuesta.rol_nombre == "Revisora jefa"
+
+
+def test_ninguna_tabla_perfil_nombre_vive_en_api() -> None:
+    """`ADR-012` §3 regla 1: quien es quien lo dice la matriz. En `api/` no hay ni un nombre de perfil."""
+    nombres = [perfil.nombre for perfil in matriz().perfiles.values()]
+    assert "Revisor tecnico" in nombres
+    for fuente in sorted((RAIZ / "api").rglob("*.py")):
+        for cadena in _cadenas_de_codigo(fuente):
+            for nombre in nombres:
+                assert nombre not in cadena, f"{fuente.name}: {cadena!r}"
+
+
+def test_toda_respuesta_de_api_nombra_el_rol_leyendo_la_matriz() -> None:
+    """Las tres salidas del contrato —comando, lectura y documento— pasan por la misma fuente."""
+    construcciones = 0
+    for fuente in sorted((RAIZ / "api").rglob("*.py")):
+        texto = fuente.read_text(encoding="utf-8")
+        cuantas = texto.count("Respuesta(")
+        construcciones += cuantas
+        assert texto.count("rol_nombre=nombre_de(") == cuantas, fuente.name
+    assert construcciones == 3, (
+        f"`api/` construye {construcciones} respuestas y este test conocia 3. La nueva tiene que leer el "
+        "nombre del rol de la matriz como las demas; mira que no sea una cuarta copia"
+    )

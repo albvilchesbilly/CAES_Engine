@@ -19,8 +19,9 @@ El orden de la puerta, que es el mismo para comandos y lecturas, y no se altera:
 **El rol ejercido se calcula aqui y se persiste.** Con A8 aprobada, `engine.eventos.log` exige `actor.rol`
 en todo evento humano, y el `autorizador` de `engine.capacidades` comprueba contra la misma matriz que ese
 perfil puede producir ese evento. Es la misma regla por los dos lados: la puerta no se rodea escribiendo el
-evento a mano. El rol viaja ademas en `Respuesta.rol`, para que el front muestre "actuando como…" sin
-volver a deducirlo.
+evento a mano. El rol viaja ademas en la respuesta —`rol` el codigo y `rol_nombre` el nombre que declara
+la matriz—, para que el front muestre "actuando como Revisor tecnico" sin volver a deducirlo y sin llevar
+una tabla perfil -> nombre propia (`ADR-012` §3, regla 1).
 """
 
 from __future__ import annotations
@@ -39,6 +40,7 @@ from api.permisos import (
     capacidad_de,
     exigir,
     matriz,
+    nombre_de,
 )
 from api.servicios import Servicios, servicios_de
 from engine.eventos.log import Actor
@@ -78,10 +80,17 @@ class Peticion:
 
 @dataclass(frozen=True)
 class Respuesta:
-    """Lo que sale: que paso, con que rol, que eventos se escribieron y que datos se proyectaron."""
+    """Lo que sale: que paso, con que rol, que eventos se escribieron y que datos se proyectaron.
+
+    El rol viaja en sus dos formas y las dos salen del mismo sitio: `rol` es el codigo con el que se
+    ejercio la capacidad —el que se persiste en `actor.rol`— y `rol_nombre` el nombre que de el declara
+    `engine/capacidades.yaml`. Van juntos porque la pantalla escribe "actuando como Revisor tecnico" y
+    componerlo alli exigiria una tabla perfil -> nombre en la interfaz (`ADR-012` §3, regla 1).
+    """
 
     capacidad: str
     rol: str
+    rol_nombre: str
     eventos: tuple[str, ...]
     datos: Mapping[str, object]
     avisos: tuple[str, ...] = ()
@@ -101,8 +110,8 @@ def actor_de(principal: Principal, rol: str) -> Actor:
 
     `rol` es el perfil con el que se esta actuando, ya resuelto por `rol_para`, y **se persiste**: con A8
     aprobada, `engine.eventos.log` exige `actor.rol` en todo evento humano y se niega a sellar uno que ese
-    perfil no pueda producir. El mismo valor viaja en `Respuesta.rol` para que el front pueda mostrar
-    "actuando como…" sin volver a deducirlo.
+    perfil no pueda producir. El mismo valor viaja en `Respuesta.rol`, con su nombre legible al lado en
+    `Respuesta.rol_nombre`, para que el front pueda mostrar "actuando como…" sin volver a deducirlo.
     """
     return Actor(clase=CLASE_ACTOR, id=principal.usuario_id, rol=rol)
 
@@ -220,5 +229,6 @@ __all__ = [
     "actor_de",
     "comprobar_alcance",
     "manejador_de",
+    "nombre_de",
     "preparar",
 ]

@@ -22,7 +22,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 
 from api.comandos import actos, actuaciones
-from api.contrato import Peticion, Respuesta, Salida, manejador_de, preparar
+from api.contrato import Peticion, Respuesta, Salida, manejador_de, nombre_de, preparar
 from api.permisos import Capacidad, ErrorApi, Matriz
 from api.servicios import Servicios
 from engine.capacidades import TIPO_COMANDO
@@ -49,7 +49,7 @@ def ejecutar(
     matriz_actual: Matriz | None = None,
 ) -> Respuesta:
     """Ejecuta un comando: valida, delega en `engine/` y devuelve lo que paso. No calcula nada."""
-    _, capacidad, rol, recursos = preparar(
+    activa, capacidad, rol, recursos = preparar(
         peticion, TIPO_COMANDO, servicios=servicios, matriz_actual=matriz_actual
     )
     manejador = manejador_de(MANEJADORES, capacidad)
@@ -59,6 +59,7 @@ def ejecutar(
     return Respuesta(
         capacidad=capacidad.id,
         rol=rol,
+        rol_nombre=nombre_de(activa, rol),
         eventos=_comprobar_eventos_escritos(capacidad, salida),
         datos=dict(salida.datos),
         avisos=tuple(salida.avisos),

@@ -122,6 +122,19 @@ def ambito_de(matriz_actual: Matriz, rol: str) -> Ambito:
     return matriz_actual.ambitos[_perfil(matriz_actual, rol).ambito]
 
 
+def nombre_de(matriz_actual: Matriz, rol: str) -> str:
+    """El nombre legible del rol ejercido (`T-REV` -> `Revisor tecnico`), **leido de la matriz**.
+
+    La matriz es la unica fuente de quien es quien, la misma que decide los permisos. Componer el nombre
+    en el front exigiria una tabla perfil -> nombre en la interfaz, que es una segunda copia de esa fuente
+    y envejece sola: justo lo que `ADR-012` §3 regla 1 evita.
+
+    Un rol que la matriz no declara es `ErrorApi`, exactamente igual que un rol que no se resuelve
+    (`rol_para`): no se devuelve un nombre por defecto ni se repite el codigo haciendolo pasar por nombre.
+    """
+    return _perfil(matriz_actual, rol).nombre
+
+
 def _comprobar_perfiles(matriz_actual: Matriz, principal: Principal) -> tuple[str, ...]:
     desconocidos = [p for p in principal.perfiles if p not in matriz_actual.perfiles]
     if desconocidos:
@@ -247,5 +260,6 @@ __all__ = [
     "concede",
     "exigir",
     "matriz",
+    "nombre_de",
     "rol_para",
 ]

@@ -69,7 +69,7 @@ Bloques tal y como los construye `api/proyeccion.py` (`CONSTRUCTORES`) para el �
 | `CAP-03` | `identificacion` | `actuacion_id`, `codigo_identificativo_propio`, `ficha`, `fecha_evaluacion` |
 | `CAP-03` | `veredicto` | `valor`, `semaforo`, `mensaje`, `descargo` |
 | `CAP-03` | `conflictos` | `variable`, `num_serie_motor` (solo el recuento y el nombre de la variable) |
-| `CAP-03` | `calculo` | `total_exacto`, `total_cae`, `provisional`, `motivo_no_calculo` |
+| `CAP-03` | `calculo` | `total_exacto`, `total_cae`, `total_unidad`, `provisional`, `motivo_no_calculo` |
 | `CAP-03` | `historial` | `ocurrido_en` del primer y del último evento (antigüedad); `tipo` `TareaPendienteRecibida` |
 | `CAP-04` | `que_te_falta` | `hay_carencias` y, por carencia, `id`, `severidad`, `mensaje` |
 | `CAP-14` | `estados_plataforma` | `estado_ciclo`, `estado_plataforma`, `requerimiento_abierto`, `literales_desconocidos`, `secuencia`; `tareas_pendientes`, `abierta_en` y `ultimo_movimiento_en` |
@@ -78,7 +78,7 @@ Bloques tal y como los construye `api/proyeccion.py` (`CONSTRUCTORES`) para el �
 El bloque `cola` **no trae ningún valor de variable ni ninguna cifra de ahorro**, y es deliberado
 (`ADR-014` §2): arrastrar la cita de un dato (`R-UI-09`) a una lista que se lee de un vistazo es lo que
 esta pantalla evita. El ahorro de cada fila sigue saliendo de `calculo` (`CAP-03`), que además lo sirve
-ya legible en español (`total_exacto_presentable`).
+ya legible en español (`total_exacto_presentable`) y con la unidad que declara la ficha (`total_unidad`).
 
 Bloques que la cola **recibe y no usa**: `documentos` y `evidencias` (de `CAP-03`) y `estado_simplificado`
 (de `CAP-04`). No se pintan. No se filtran en el cliente porque el filtrado es de serialización y lo hace
@@ -106,7 +106,7 @@ botón de fila.
 | Antigüedad | `cola[].antiguedad.abierta_en` y `.ultimo_movimiento_en` (también en `estados_plataforma`) | Fecha absoluta siempre; "hace N días" como texto secundario. Sin historial → `SIN DATO` (`R-UI-07`), nunca "0 días" |
 | Estado de ciclo | `estados_plataforma.estado_ciclo` | Nuestro estado, rotulado como tal |
 | Estado de plataforma | `estados_plataforma.estado_plataforma` | Solo se refleja. Si es nulo, `SIN DATO` |
-| Ahorro prevalidado | `calculo.total_exacto_presentable` (y `calculo.total_exacto` como valor exacto) | `R-UI-06`: envuelto en `RotuloPrevalidado tipo="AHORRO_PREVALIDADO"`. Si es `null`, `SIN DATO` con el `motivo_no_calculo` como explicación (`R-UI-07`). **La cifra se pinta tal cual llega**: no se pasa por `Number` |
+| Ahorro prevalidado | `calculo.total_exacto_presentable` (y `calculo.total_exacto` como valor exacto), rotulado con `calculo.total_unidad` (pendiente de pintar, ver §7) | `R-UI-06`: envuelto en `RotuloPrevalidado tipo="AHORRO_PREVALIDADO"`. Si es `null`, `SIN DATO` con el `motivo_no_calculo` como explicación (`R-UI-07`). **La cifra se pinta tal cual llega**: no se pasa por `Number` |
 | Marca de estimación | `calculo.provisional` | Si es `true`, la cifra sale marcada "estimación no acreditada" |
 | Acción | Un único enlace a `T-REV-revision` con `actuacion_id` | La fila entera es el objetivo; no hay menú contextual |
 
@@ -152,7 +152,16 @@ la plataforma no nos ha dado (`TODO(API-10)`).
 | **Degradado** | *Cerrado en `FR1.a`*: `CAP-17` sirve la lista y el orden. El banner solo queda para el día que una lectura de lista vuelva a faltar | — |
 
 En todos los estados, la cabecera muestra la marca de origen de datos (`MarcaOrigen`) y el rol
-("actuando como Revisor técnico", de `Respuesta.rol`).
+("actuando como Revisor técnico"). El texto sale de `Respuesta.rol_nombre`, que es el nombre que declara
+la matriz; `Respuesta.rol` trae el código (`T-REV`) y es el que se persiste en `actor.rol`. La pantalla
+**no compone** el nombre a partir del código: eso sería una tabla perfil → nombre en la interfaz
+(`ADR-012` §3, regla 1).
+
+> **Pendiente en `front/`** (23/09/2026), dos cosas que el contrato ya sirve y la pantalla de hoy todavía
+> no pinta. La cabecera (`Pantalla.tsx`) pinta `Respuesta.rol`, que es el código, y no `rol_nombre`
+> (`GAP-COLA-06`); y la celda de ahorro pinta la cifra sin unidad, teniendo `calculo.total_unidad`
+> (`GAP-COLA-05`). Los dos cambios —y el de `CA-COLA-13`— van con el resto de `FR1.c`. No se hacen aquí
+> porque el contrato va antes que las pantallas (`ADR-050`) y este trabajo era el contrato.
 
 ---
 
@@ -167,6 +176,8 @@ que pide un bloque inexistente es una spec que se incumple el primer día.
 | ~~`GAP-COLA-02`~~ | **Cerrado en `FR1.a`** (23/09/2026) | `estados_plataforma` trae `tareas_pendientes` (de `log.por_tipo("TareaPendienteRecibida")`, con `tarea_id`, `asunto`, `referencia`, `vence_en` y `recibida_en`) y las marcas `abierta_en` / `ultimo_movimiento_en`. Es proyección: `engine/estados.py` no se tocó | Sigue sin existir un evento de cierre de tarea: ver §6 |
 | `GAP-COLA-03` | **Ningún bloque declara el origen de los datos** (sintético o real), y `R-UI-08` obliga a declararlo en todo panel | Un campo `origen_datos` (`"SINTETICO"` / `"REAL"`) en el bloque `identificacion`, decidido por el servidor a partir del tenant o del despliegue | `MarcaOrigen` se pinta sin `origen` reconocido y sale `ORIGEN DE DATOS SIN DECLARAR`, que es el comportamiento honesto que ya tiene el componente |
 | ~~`GAP-COLA-04`~~ | **Cerrado en `FR1.a`** (23/09/2026) | `calculo` sirve `total_exacto_presentable` y `total_cae_presentable` **junto** a los exactos, y cada unidad sus `entradas_presentables`, `derivadas_presentables` y `salida_presentable`. El formato lo hace `engine.informe.texto_es` sobre el `Decimal` | La cola pinta la cadena tal cual llega. **Sigue prohibido** convertirla a `Number`: el ahorro no pasa por coma flotante (`CLAUDE.md` §2) |
+| ~~`GAP-COLA-05`~~ / ~~`GAP-REV-10`~~ | **Cerrado** (23/09/2026, destapado por `FR1.c`) | `calculo` sirve `total_unidad`, leído de `spec.calculo.total.unidad`, y cada unidad `salida_unidad`, de `spec.calculo.motor.unidad`. Es un rótulo: no convierte nada y la cifra sigue siendo la del núcleo | La pantalla rotula con lo que llega. **Prohibido** escribir la unidad en la interfaz: sería una etiqueta por ficha cableada, y la segunda ficha la desmentiría (regla de oro 4) |
+| ~~`GAP-COLA-06`~~ / ~~`GAP-REV-11`~~ | **Cerrado** (23/09/2026, destapado por `FR1.c`) | `Respuesta` lleva `rol_nombre` junto a `rol`, leído de los perfiles de `engine/capacidades.yaml`. Un rol que la matriz no declara es `ErrorApi`, igual que un rol que no se resuelve: no hay nombre por defecto | La cabecera pinta `rol_nombre` tal cual. **Prohibido** componerlo del código del perfil o llevar una tabla perfil → nombre (`ADR-012` §3, regla 1) |
 
 ---
 

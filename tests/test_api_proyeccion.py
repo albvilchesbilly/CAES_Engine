@@ -1,7 +1,8 @@
 """Lo que `api/` dejaba de servir teniendolo delante (`ADR-014` §6, bloque `FR1.a`).
 
-Cinco huecos de las dos specs de pantalla, y ninguno necesitaba inventar nada: el material ya estaba en
-`engine/` y la proyeccion no lo sacaba.
+Seis huecos de las dos specs de pantalla —los cinco de `FR1.a` y el que destapo `FR1.c` al pintar la
+cola—, y ninguno necesitaba inventar nada: el material ya estaba en `engine/` y la proyeccion no lo
+sacaba.
 
 - `GAP-REV-02`: las reglas con su descripcion, su severidad y su fase, no solo el identificador.
 - `GAP-REV-05`: el nombre legible de cada variable, leido de la spec. **Nunca** una tabla de etiquetas por
@@ -10,6 +11,9 @@ Cinco huecos de las dos specs de pantalla, y ninguno necesitaba inventar nada: e
   hace el nucleo (es un centinela, no un booleano).
 - `GAP-COLA-02`: las tareas pendientes de la plataforma y las dos marcas de tiempo del log.
 - `GAP-COLA-04` / `GAP-REV-08`: la cifra en español **junto** a la exacta, nunca en su lugar.
+- `GAP-COLA-05` / `GAP-REV-10`: la unidad en la que la ficha expresa el ahorro, leida de la spec. Sin
+  ella la pantalla tendria que escribir la unidad a mano, que es una etiqueta por ficha cableada en la
+  interfaz y la desmentiria la segunda ficha (regla de oro 4, la misma razon que `GAP-REV-05`).
 
 Todo lo de aqui es proyeccion: ningun bloque calcula, evalua una regla ni decide una transicion.
 """
@@ -48,6 +52,10 @@ TENANT = "T-001"
 #: El ahorro del caso A, que es el criterio de aceptacion del repositorio entero (`CLAUDE.md` §5).
 EXACTO_A = "305829.6"
 PRESENTABLE_A = "305.829,6"
+
+#: La unidad en la que IND240 expresa el ahorro. Esta aqui, en el test, y **no** en `api/`: es el valor
+#: esperado de esta ficha, no una constante del motor de proyeccion.
+UNIDAD_A = "kWh/año"
 
 
 @cache
@@ -269,6 +277,93 @@ def test_sin_calculo_no_hay_cifra_ni_presentable_ni_exacta_sino_el_motivo(servic
     assert calculo["total_cae"] is None
     assert calculo["total_cae_presentable"] is None
     assert "PM" in calculo["motivo_no_calculo"]
+
+
+# ---------------------------------------------------------------------------
+# GAP-COLA-05 / GAP-REV-10: la unidad del ahorro, leida de la spec
+# ---------------------------------------------------------------------------
+
+
+def _resultado_minimo() -> ResultadoCalculo:
+    """Un calculo cualquiera con una unidad y un total. Lo que se mira aqui es el rotulo, no la cifra."""
+    unidad = ResultadoUnidad(
+        num_serie_motor="M1",
+        entradas={},
+        derivadas={},
+        salida=Decimal("100"),
+        controles={},
+        precondiciones={},
+        interpretaciones=[],
+        avisos=[],
+        motivo_no_calculo=None,
+        fuentes={},
+    )
+    return ResultadoCalculo(
+        por_unidad=[unidad],
+        total=Decimal("100"),
+        total_cae=100,
+        traza=[],
+        provisional=False,
+        motivo_no_calculo=None,
+        interpretaciones=[],
+        avisos=[],
+        controles_ok=True,
+        precondiciones_ok=True,
+    )
+
+
+@dataclass(frozen=True)
+class SpecInventada:
+    """Otra ficha: de ella la proyeccion solo necesita lo que declara de su calculo."""
+
+    calculo: object
+
+
+def test_el_ahorro_llega_con_la_unidad_que_declara_la_spec(servicios: Servicios) -> None:
+    """`305.829,6` a secas no se puede pintar: la cifra y su unidad salen las dos del servidor."""
+    calculo = _completa(servicios, "A")["calculo"]
+    declarado = _procesada(CASO_A).spec.calculo
+    assert calculo["total_unidad"] == declarado["total"]["unidad"] == UNIDAD_A
+    assert calculo["por_unidad"]
+    for unidad in calculo["por_unidad"]:
+        assert unidad["salida_unidad"] == declarado["motor"]["unidad"]
+
+
+def test_la_unidad_sigue_a_la_spec_y_no_a_una_constante_de_api() -> None:
+    """La segunda ficha traera otra unidad. Si `api/` la llevara escrita, el front mentiria (regla 4)."""
+    spec = SpecInventada(calculo={"motor": {"unidad": "MWh/quincena"}, "total": {"unidad": "GWh/decada"}})
+    proyectada = CONSTRUCTORES["calculo"](
+        Vista(actuacion=ActuacionConCalculo(calculo=_resultado_minimo(), spec=spec))
+    )
+    assert proyectada["total_unidad"] == "GWh/decada"
+    assert proyectada["por_unidad"][0]["salida_unidad"] == "MWh/quincena"
+
+
+def test_una_spec_que_no_declara_la_unidad_no_recibe_una_inventada() -> None:
+    """`R-UI-07`: lo que la ficha no dice se sirve como nulo, y la pantalla pinta `SIN DATO`."""
+    proyectada = CONSTRUCTORES["calculo"](Vista(actuacion=ActuacionConCalculo(calculo=_resultado_minimo())))
+    assert proyectada["total_unidad"] is None
+    assert proyectada["por_unidad"][0]["salida_unidad"] is None
+
+
+def test_ninguna_unidad_de_ficha_esta_escrita_en_api() -> None:
+    """Hermano del test de las etiquetas: ni el nombre de una variable ni su unidad viven en `api/`."""
+    declarado = _procesada(CASO_A).spec.calculo
+    unidades = {str(declarado["motor"]["unidad"]), str(declarado["total"]["unidad"]), "kWh"}
+    for fuente in sorted((RAIZ / "api").rglob("*.py")):
+        texto = fuente.read_text(encoding="utf-8")
+        for unidad in unidades:
+            assert unidad not in texto, f"{fuente.name}: la unidad {unidad!r} sale de la spec"
+
+
+def test_la_unidad_no_convierte_nada_ni_toca_la_cifra(servicios: Servicios) -> None:
+    """Es un rotulo: el ahorro sigue siendo el del nucleo y no pasa por coma flotante en ningun punto."""
+    calculo = _completa(servicios, "A")["calculo"]
+    assert calculo["total_exacto"] == EXACTO_A
+    assert calculo["total_exacto_presentable"] == PRESENTABLE_A
+    assert isinstance(calculo["total_unidad"], str)
+    assert not isinstance(calculo["total_cae"], float)
+    json.dumps(calculo)
 
 
 # ---------------------------------------------------------------------------

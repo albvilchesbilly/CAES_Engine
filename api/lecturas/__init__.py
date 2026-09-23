@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
-from api.contrato import Peticion, Respuesta, manejador_de, preparar
+from api.contrato import Peticion, Respuesta, manejador_de, nombre_de, preparar
 from api.lecturas import actuaciones, paneles
 from api.lecturas.documentos import Documento, ErrorIntegridad, leer_documento
 from api.permisos import ErrorApi, Matriz, ambito_de
@@ -47,7 +47,14 @@ def leer(
     if not isinstance(vista, Vista):  # pragma: no cover - contrato interno de los manejadores
         raise ErrorApi(f"{capacidad.id}: el manejador ha devuelto {type(vista).__name__} y no una Vista")
     datos = proyectar_vista(capacidad.bloques, ambito_de(activa, rol).bloques, vista)
-    return Respuesta(capacidad=capacidad.id, rol=rol, eventos=(), datos=datos, avisos=vista.avisos)
+    return Respuesta(
+        capacidad=capacidad.id,
+        rol=rol,
+        rol_nombre=nombre_de(activa, rol),
+        eventos=(),
+        datos=datos,
+        avisos=vista.avisos,
+    )
 
 
 def capacidades_atendidas(matriz_actual: Matriz) -> Sequence[str]:
