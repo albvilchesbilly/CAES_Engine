@@ -382,9 +382,9 @@ El contrato se construye **antes** que las pantallas (`FR0`). Dos reglas que no 
 front/
   compartido/     EXISTE (FR0) los tres rótulos obligatorios (R-UI-06 a R-UI-08) y el cliente de api/;
                   React + TypeScript, sin dependencias de producción. 98 tests
-  workspace/      PARCIAL (FR1.c) T-RES, T-OPE, T-REV — escritorio, cuenta del tenant. Hoy `T-REV-cola`
-                  y el andamiaje que comparten las pantallas (marco, hook de lectura, catálogo de textos,
-                  lectores defensivos del JSON). 54 tests
+  workspace/      PARCIAL (FR1.c) T-RES, T-OPE, T-REV — escritorio, cuenta del tenant. Las dos pantallas
+                  de `T-REV` (`cola/` y `revision/`) y el andamiaje que comparten (marco, hook de lectura,
+                  catálogo de textos, lectores defensivos del JSON). 110 tests
   externo/        EXT-INS, EXT-CLI — móvil primero, sin navegación
   consola/        ADM-MOD, ADM-OPS — cuenta interna, segundo factor, cambio de rol explícito
 ```

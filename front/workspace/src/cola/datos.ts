@@ -67,6 +67,15 @@ export interface EstadosCola {
 export interface CalculoCola {
   readonly presentable: string | null;
   readonly exacto: string | null;
+  /**
+   * La unidad que declara la ficha (`calculo.total_unidad`, de `spec.calculo.total.unidad`).
+   *
+   * Llega del servidor y se pinta tal cual (`GAP-COLA-05`, cerrado el 23/09/2026). Escribir "kWh/año"
+   * en la interfaz seria una etiqueta por ficha cableada donde no debe estar, y la segunda ficha —con
+   * otra unidad— la desmentiria (regla de oro 4). Una ficha que no la declare sale a `null`: se pinta
+   * la cifra sin unidad, que es lo que se sabe, y no se inventa una.
+   */
+  readonly unidad: string | null;
   readonly provisional: boolean | null;
   readonly motivoNoCalculo: string | null;
 }
@@ -90,8 +99,8 @@ export interface DetalleFila {
 }
 
 export interface Cola {
-  /** `Respuesta.rol`: el rol resuelto **por el servidor**; la pantalla solo lo muestra. */
-  readonly rol: string;
+  /** `Respuesta.rol_nombre`: el nombre del rol, resuelto y nombrado **por el servidor**. */
+  readonly rolNombre: string | null;
   readonly origen: OrigenDatos;
   readonly filas: readonly FilaCola[];
   readonly detalles: Readonly<Record<string, DetalleFila>>;
@@ -145,6 +154,7 @@ function calculoDe(respuesta: Respuesta): CalculoCola {
   return {
     presentable: texto(calculo?.["total_exacto_presentable"]),
     exacto: texto(calculo?.["total_exacto"]),
+    unidad: texto(calculo?.["total_unidad"]),
     provisional: booleano(calculo?.["provisional"]),
     motivoNoCalculo: texto(calculo?.["motivo_no_calculo"]),
   };
@@ -213,7 +223,7 @@ export async function cargarCola(cliente: Cliente, tenantId: string): Promise<Co
   );
 
   return {
-    rol: respuesta.rol,
+    rolNombre: respuesta.rol_nombre,
     // `GAP-COLA-03`: hoy ningun bloque lo declara y sale `ORIGEN DE DATOS SIN DECLARAR`.
     origen: origenDeclarado(...crudas.map((fila) => campo(fila, "identificacion"))),
     filas,

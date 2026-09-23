@@ -20,6 +20,7 @@ import * as propios from "../src/textos";
 import {
   AHORA,
   celda,
+  COLA,
   DENEGACION,
   DETALLE,
   fila,
@@ -343,12 +344,30 @@ describe("CA-COLA-12 · `R-UI-05` anticipado", () => {
 // ---------------------------------------------------------------------------
 
 describe("CA-COLA-13 · rol y marca de origen", () => {
-  it("muestra el rol que devuelve `Respuesta.rol`, sin deducirlo", async () => {
+  it("muestra el nombre que devuelve `Respuesta.rol_nombre`, sin deducirlo ni componerlo", async () => {
+    // Hasta el 23/09/2026 la cabecera pintaba el **codigo** del perfil ("actuando como T-REV") porque el
+    // cliente ignoraba `rol_nombre`. Ahora `api/` lo sirve, leido de `engine/capacidades.yaml`, que es la
+    // misma fuente que decide los permisos: se pinta tal cual llega (`GAP-COLA-06`, `ADR-012` §3 regla 1).
+    const nombre = COLA.rol_nombre;
     const { container } = await pintarCola();
     const cabecera = container.querySelector(".cae-pantalla__cabecera");
 
+    expect(nombre).toBeTruthy();
     expect(cabecera?.textContent).toContain(propios.ACTUANDO_COMO);
-    expect(cabecera?.textContent).toContain("T-REV");
+    expect(cabecera?.textContent).toContain(nombre);
+    // Y no el codigo: componer el nombre a partir de el exigiria una tabla perfil -> nombre en el front.
+    expect(cabecera?.textContent).not.toContain(COLA.rol);
+  });
+
+  it("una respuesta sin `rol_nombre` no pinta el código del perfil en su lugar", async () => {
+    const sinNombre = () => ({ estado: 200, cuerpo: { ...COLA, rol_nombre: undefined } });
+    const { container } = await pintarCola({
+      respuesta: (capacidad) => (capacidad === "CAP-17" ? sinNombre() : null),
+    });
+    const cabecera = container.querySelector(".cae-pantalla__cabecera");
+
+    expect(cabecera?.textContent).not.toContain(propios.ACTUANDO_COMO);
+    expect(cabecera?.textContent).not.toContain(COLA.rol);
   });
 
   it("sin `origen_datos` (`GAP-COLA-03`) se lee ORIGEN DE DATOS SIN DECLARAR", async () => {

@@ -31,10 +31,25 @@ export interface Contexto {
   readonly actuacion_id?: string | null;
 }
 
-/** La respuesta del contrato, igual que en `api/contrato.py`. */
+/**
+ * La respuesta del contrato, igual que en `api/contrato.py`.
+ *
+ * `rol` es el **codigo** del perfil con el que se ejercio la capacidad (el que se persiste en
+ * `actor.rol`) y `rol_nombre` el nombre que de el declara `engine/capacidades.yaml`, que es la misma
+ * fuente que decide los permisos. Los dos viajan porque la cabecera escribe "actuando como Revisor
+ * tecnico" y componerlo en la pantalla exigiria una tabla perfil -> nombre en la interfaz, que es una
+ * segunda copia de esa fuente y envejece sola (`ADR-012` §3, regla 1; `GAP-REV-11`/`GAP-COLA-06`).
+ *
+ * Es `string | null` y no `string` por una razon concreta: `api/` lo sirve siempre, pero **no hay capa
+ * HTTP** (`ADR-014` §4, `GAP-HTTP-01`), asi que lo que hoy llega al cliente lo pone un transporte de
+ * pruebas. Un sobre sin el campo no se completa con el codigo del perfil —eso es exactamente lo que la
+ * regla prohibe— ni se rellena con una cadena vacia que se pintaria como un nombre: se declara ausente y
+ * la pantalla no pinta nada en su lugar.
+ */
 export interface Respuesta {
   readonly capacidad: string;
   readonly rol: string;
+  readonly rol_nombre: string | null;
   readonly eventos: readonly string[];
   readonly datos: Datos;
   readonly avisos: readonly string[];
@@ -191,6 +206,8 @@ function interpretar(capacidad: string, estado: number, cuerpo: unknown): Respue
   return {
     capacidad: sobre["capacidad"],
     rol: sobre["rol"],
+    // Ausente = ausente (ver `Respuesta`): ni se compone del codigo del perfil ni se da por vacio.
+    rol_nombre: textoONulo(sobre["rol_nombre"]),
     eventos: sobre["eventos"],
     avisos: sobre["avisos"],
     // Tal cual llego, sin copiar ni ordenar: `R-UI-11`. Lo que el servidor decidio, decidido esta.

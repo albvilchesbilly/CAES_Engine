@@ -147,7 +147,7 @@ export function ColaRevision({
   return (
     <Pantalla
       titulo={TITULO_COLA}
-      rol={cola === null ? null : cola.rol}
+      rolNombre={cola === null ? null : cola.rolNombre}
       origen={cola === null ? origenDeclarado() : cola.origen}
       avisos={cola === null ? undefined : cola.avisos}
     >

@@ -31,11 +31,13 @@ MITECO → `spec/*.yaml` activa → `docs/00` → `docs/02` → `docs/03`/`docs/
 
 | Pantalla | Perfil | Spec | Mockup | Entregable | Estado |
 |---|---|---|---|---|---|
-| Cola de revisión | `T-REV` | [`pantallas/T-REV-cola.md`](pantallas/T-REV-cola.md) | [`mockups/T-REV-cola.html`](mockups/T-REV-cola.html) | `FR1` (absorbe `S4.4`) | `NUEVO` |
-| Vista de revisión | `T-REV` | [`pantallas/T-REV-revision.md`](pantallas/T-REV-revision.md) | [`mockups/T-REV-revision.html`](mockups/T-REV-revision.html) | `FR1` | `NUEVO` |
+| Cola de revisión | `T-REV` | [`pantallas/T-REV-cola.md`](pantallas/T-REV-cola.md) | [`mockups/T-REV-cola.html`](mockups/T-REV-cola.html) | `FR1` (absorbe `S4.4`) | `EXISTE` (`front/workspace/src/cola/`) |
+| Vista de revisión | `T-REV` | [`pantallas/T-REV-revision.md`](pantallas/T-REV-revision.md) | [`mockups/T-REV-revision.html`](mockups/T-REV-revision.html) | `FR1` | `EXISTE` (`front/workspace/src/revision/`) |
 
 Marcas: `NUEVO` (diseño aprobado, sin implementar) · `PARCIAL` · `EXISTE` (implementada en `front/`). Se
-actualizan **en la misma sesión** en que cambia el código (`CLAUDE.md` §3).
+actualizan **en la misma sesión** en que cambia el código (`CLAUDE.md` §3). `EXISTE` significa lo que dice
+`ADR-014` §4: la pantalla cumple sus criterios de aceptación contra el contrato con un transporte de
+pruebas, **no** que se abra en un navegador contra datos reales (eso es `FR-HTTP`).
 
 ## Cómo se añade una pantalla nueva
 
@@ -54,7 +56,9 @@ actualizan **en la misma sesión** en que cambia el código (`CLAUDE.md` §3).
 5. **Comprobar las doce reglas `R-UI`** de `ADR-050` una por una y dejar en la spec las que aplican, con
    cómo se cumplen. Las cuatro que siempre acaban en criterios de aceptación de una pantalla de trabajo:
    `R-UI-02` (ningún control fija un veredicto), `R-UI-04` (corregir exige justificación), `R-UI-05` (solo
-   lectura tras `EN_PLATAFORMA` salvo requerimiento abierto) y `R-UI-09` (todo dato extraído con su cita).
+   lectura una vez firmada y entregada, salvo requerimiento abierto — **no** basta con mirar
+   `estado_ciclo == "EN_PLATAFORMA"`: al llegar un requerimiento el ciclo deja de serlo, y el candado se
+   abriría justo cuando debe cerrarse; lo descubrió `FR1.c`) y `R-UI-09` (todo dato extraído con su cita).
 6. **Dibujar el mockup** en `mockups/<perfil>-<pantalla>.html`, HTML y CSS a secas, sin dependencias, con
    datos del banco de pruebas y **nunca inventados**. El propio fichero dice, en su primera línea visible,
    que no es código base y que manda la spec.

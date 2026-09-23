@@ -6,9 +6,11 @@
  * clientes, no conoce ninguna URL y no habla con `engine/` — la dependencia va hacia dentro y se para en
  * `api/`.
  *
- * `FR1.c` entrega `T-REV-cola`. La vista de revision (`T-REV-revision`) entra como otra carpeta al lado
- * de `cola/` y reutiliza el mismo andamiaje: `Pantalla`, `AvisoServidor`, `useLectura`, los lectores de
- * `json.ts`, `fallos.ts`, `fechas.ts` y el catalogo de `textos.ts`.
+ * `FR1.c` entrega las dos pantallas de `T-REV`: la cola (`cola/`) y la vista de revision (`revision/`).
+ * Las dos comparten el mismo andamiaje —`Pantalla`, `AvisoServidor`, `useLectura`, los lectores de
+ * `json.ts`, `fallos.ts`, `fechas.ts` y el catalogo de `textos.ts`— y no comparten ni un fichero de
+ * pantalla: anadir la segunda no ha exigido tocar la primera mas que para lo que `api/` empezo a servir
+ * (el nombre del rol y la unidad del ahorro).
  */
 
 export { AvisoServidor, type PropsAvisoServidor } from "./AvisoServidor";
@@ -40,3 +42,50 @@ export {
   type Resultado,
 } from "./cola/datos";
 export { ROTULOS, rotuloDe } from "./cola/motivos";
+
+export { VistaRevision, type PropsVistaRevision } from "./revision/VistaRevision";
+export { Acciones, type PropsAcciones } from "./revision/Acciones";
+export { Ahorro, type PropsAhorro } from "./revision/Ahorro";
+export { Citas, TablaCitas, esCorreccionHumana, type PropsCitas } from "./revision/Citas";
+export { Correccion, type DatosCorreccion, type PropsCorreccion } from "./revision/Correccion";
+export { Datos as DatosConsolidados, type PropsDatos } from "./revision/Datos";
+export { Impedimentos, type PropsImpedimentos } from "./revision/Impedimentos";
+export { PanelDocumento, type PropsPanelDocumento } from "./revision/PanelDocumento";
+export {
+  CAPACIDADES_DE_REQUERIMIENTO,
+  CAPACIDAD_APROBAR,
+  CAPACIDAD_CORREGIR,
+  CAPACIDAD_DESACUERDO,
+  CAPACIDAD_DESCARTE,
+  CAPACIDAD_DISCREPANCIA,
+  CAPACIDAD_INTERPRETACION,
+  CAPACIDAD_OBSERVACION,
+  CAPACIDAD_SUBIR,
+  CAPACIDAD_SUBSANACION,
+  CLAVE_RECALCULADA,
+  METODO_CORRECCION_HUMANA,
+  PANTALLA as PANTALLA_REVISION,
+  SEVERIDAD_FUERA_DE_AMBITO,
+  cargarRevision,
+  carenciasDeclaradas,
+  datoDeVariable,
+  escribiblePor,
+  escrituraPermitida,
+  fueraDeAmbito,
+  quedaAlgoAbierto,
+  type Calculo,
+  type Carencia as CarenciaRevision,
+  type Cita,
+  type Conflicto,
+  type Dato,
+  type Documento,
+  type Escritura,
+  type Estados,
+  type Evento,
+  type Identificacion,
+  type Magnitud,
+  type Regla,
+  type Revision,
+  type UnidadCalculo,
+  type Veredicto,
+} from "./revision/datos";

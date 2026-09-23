@@ -9,7 +9,7 @@
 | Entregable | `FR1` (absorbe `S4.4`) |
 | Contrato | `ADR-012` §4 (C19) y §1–§2 (C17) · `ADR-050` §"Pantallas críticas" |
 | Mockup | `docs/front/mockups/T-REV-revision.html` — **si el mockup y esta spec discrepan, manda la spec** |
-| Estado | `NUEVO` (diseño aprobado, sin implementar) |
+| Estado | `EXISTE` (`FR1.c`, 23/09/2026): `front/workspace/src/revision/`, verificada con `front/workspace/tests/revision.test.tsx` contra un transporte de pruebas cuyos datos los genera `api/` (`ADR-014` §4: **no se abre en un navegador**) |
 
 ---
 
@@ -85,8 +85,8 @@ lo que no se pudo evaluar y lo que está en conflicto, sí.
 
 ## 4. Capacidades que ejerce
 
-Las 12 de `T-REV` (`ADR-006`), menos `CAP-02`, que hoy no es ejercitable desde un navegador
-(`GAP-REV-03`). `engine/capacidades.yaml` es la fuente: si una capacidad no está concedida allí, la
+Las 12 de `T-REV` (`ADR-006`), menos `CAP-02`, que hoy no es ejercitable desde un navegador porque no hay
+capa HTTP (`GAP-HTTP-01`; el comando sí admite los bytes, `ADR-014` §1). `engine/capacidades.yaml` es la fuente: si una capacidad no está concedida allí, la
 pantalla no la pide.
 
 | Capacidad | Tipo | Evento que produce | Manejador | Dónde vive en la pantalla |
@@ -103,7 +103,7 @@ pantalla no la pide.
 | `CAP-10` Aprobar el paso a `LISTA_PARA_ENVIO` | comando | `RevisionAprobada` | `aprobar_revision` | Acción principal de la cabecera |
 | `CAP-15` Confirmar la interpretación de A9 | comando | `RequerimientoInterpretado` + `RequerimientoRecibido` | `confirmar_interpretacion` | Bloque de requerimiento abierto (`GAP-REV-04`) |
 | `CAP-16` Decidir ante una discrepancia con la plataforma | comando | `DiscrepanciaResuelta` | `resolver_discrepancia` | Bloque de discrepancia |
-| `CAP-02` Subir documentación | comando | `DocumentoRegistrado` | `registrar_documento` | **Inactivo** en `FR1` (`GAP-REV-03`) |
+| `CAP-02` Subir documentación | comando | `DocumentoRegistrado` | `registrar_documento` | **Inactivo** en `FR1`: el comando admite los bytes desde el 20/09/2026 y lo que falta es el canal del navegador (`GAP-HTTP-01`) |
 
 `A8` es prerrevisión: sus salidas son **observaciones**, nunca un veredicto, y en ningún texto de esta
 pantalla se le llama "verificador".
@@ -219,9 +219,13 @@ Al confirmarse la corrección, la pantalla:
    si ya reflejaran la corrección**.
 3. Vuelve a pedir `CAP-03`, `CAP-04` y `CAP-14`.
 
-Hoy ese recálculo **no ocurre** (`GAP-REV-01`): `procesar_actuacion` no lee las correcciones del log. La
-pantalla lo dice con esas palabras en vez de fingir que el número ya está actualizado. Una pantalla que
-enseña un veredicto viejo como si fuera nuevo es peor que una que no enseña nada.
+**Corregido el 23/09/2026 (`ADR-014` §3, `GAP-REV-01` cerrado).** Ese recálculo **ya ocurre**: `CAP-05`
+sella la corrección y **recalcula en el acto**, y `Salida.datos["recalculada"]` dice si le dio tiempo. La
+pantalla lee ese booleano y hace dos cosas distintas con él: si es `true`, vuelve a pedir las tres lecturas
+y enseña el veredicto nuevo (en el caso C, `PREVALIDADO` con 305.829,6 kWh/año); si es `false`, marca el
+veredicto **y** el ahorro como "pendiente de recálculo" y muestra el aviso del servidor. Lo que no hace en
+ningún caso es presentar como actualizado un veredicto que no lo está: una pantalla que enseña un veredicto
+viejo como si fuera nuevo es peor que una que no enseña nada.
 
 ---
 
@@ -294,15 +298,24 @@ cabecera enlaza al registro de firma de `T-RES` solo como información de en qu�
 | **Conflicto** | `conflictos` no vacío | La tarjeta de §6 arriba del todo; el bloque de ahorro en `SIN DATO` |
 | **Sin cálculo** | `calculo.total_exacto == null` | Bloque de ahorro con el `motivo_no_calculo` literal |
 | **Provisional** | `calculo.provisional == true` | Cifra con "estimación no acreditada" |
-| **Solo lectura** (`R-UI-05`) | `estado_ciclo == "EN_PLATAFORMA"` **y** `requerimiento_abierto == null` | Candado en la cabecera con el motivo; **todos** los controles de escritura inactivos. La lectura, entera |
-| **Requerimiento abierto** | `requerimiento_abierto` no es nulo | El candado se levanta para el flujo de requerimiento; el resto sigue bloqueado, y la cabecera dice cuál es el requerimiento |
+| **Solo lectura** (`R-UI-05`) | `firmada == true` **o** `estado_ciclo == "EN_PLATAFORMA"`, **y** `requerimiento_abierto == null` | Candado en la cabecera con el motivo; **todos** los controles de escritura inactivos. La lectura, entera |
+| **Requerimiento abierto** | `requerimiento_abierto` no es nulo | El candado se levanta para el flujo de requerimiento (`CAP-15`, `CAP-09`); el resto sigue bloqueado, y la cabecera dice cuál es el requerimiento |
 | **Contagiada** | `afectada_directamente == false` con requerimiento | Aviso: "afectada por un requerimiento de su expediente, no por un defecto propio" |
-| **Corrección registrada, pendiente de recálculo** | Tras `CAP-05`/`CAP-06` | §6, punto 3 (`GAP-REV-01`) |
+| **Corrección registrada, pendiente de recálculo** | Tras `CAP-05`/`CAP-06` con `recalculada == false` | §6, punto 3. Con `recalculada == true` no se marca nada: el veredicto que se lee **es** el de después |
 | **Corrección rechazada tras la firma** | `estados_plataforma.rechazos` no vacío | Se muestran los rechazos: no se pierden ni se silencian |
 | **Documento alterado** | `ErrorIntegridad` al servir el documento | Aviso destacado: los bytes no casan con la huella de ingesta; **no se enseña nada en su lugar**. El panel derecho sigue funcionando |
 | **Sin permiso** | `ErrorPermiso` | Mensaje literal del servidor (capacidad y motivo). No se oculta |
 | **Error de la API** | `ErrorApi` | Mensaje literal + reintentar. Nunca "no hay datos" |
 | **Actuación sin procesar** | La actuación no está en el repositorio | El mensaje del servidor tal cual: "no está procesada todavía; no hay nada que leer" |
+
+> **Corregido el 23/09/2026, durante `FR1.c`.** La condición de "solo lectura" decía
+> `estado_ciclo == "EN_PLATAFORMA"`, y con eso el candado **se abría entero justo cuando llegaba un
+> requerimiento**: al anotarlo, `engine.estados` mueve el ciclo a `PENDIENTE_SUBSANACION`, así que
+> `EN_PLATAFORMA` y `requerimiento_abierto` no pueden darse a la vez (comprobado al generar los datos de
+> prueba con `engine.requerimientos.reabrir`). La pantalla se apoya en `firmada`, que es la marca con la
+> que el propio núcleo rechaza una corrección posterior a la firma (`docs/02` §5.4,
+> `CorreccionRechazadaPostFirma`), y sigue mirando el estado de ciclo para la actuación que está en la
+> plataforma sin haberse firmado aquí.
 
 ---
 
@@ -310,9 +323,9 @@ cabecera enlaza al registro de firma de `T-RES` solo como información de en qu�
 
 | Id | Qué falta | Qué haría falta exactamente | Mientras tanto |
 |---|---|---|---|
-| `GAP-REV-01` | **El recálculo tras corregir.** `CAP-05` escribe `DatoCorregidoPorHumano` en el log y nada vuelve a evaluar: `engine.motor.procesar_actuacion(carpeta)` no lee el log ni recibe correcciones. El lazo "se corrige el dato y el motor recalcula" (`R-UI-02`, `ADR-012` §4) **no se cierra hoy** | Que `procesar_actuacion` acepte las correcciones humanas del log y las trate como una fuente más (con su capa de interpretación y su trazabilidad), y que el repositorio sepa reprocesar una actuación bajo demanda. Es cambio de `engine/` y de `docs/03`: le corresponde un ADR, no un parche del front | La pantalla muestra "corrección registrada · pendiente de recálculo" y **no** presenta el veredicto anterior como actualizado (`CA-REV-09`) |
+| ~~`GAP-REV-01`~~ | **Cerrado en `FR1.b`** (23/09/2026) | `CAP-05` corrige **y recalcula en el acto** (`ADR-014` §3), y `Salida.datos["recalculada"]` dice si se hizo. Lo que decía esta fila —que `procesar_actuacion` no lee las correcciones del log y que el lazo no se cierra— dejó de ser cierto ese día | La pantalla lee ese booleano y marca "pendiente de recálculo" **solo** cuando el servidor dice que no recalculó (`CA-REV-09`, verificado en los dos sentidos) |
 | ~~`GAP-REV-02`~~ | **Cerrado en `FR1.a`** (23/09/2026) | `veredicto.reglas[]` trae **todas** las reglas evaluadas —también las que cumplen, para el contador de `CA-REV-19`— con `id`, `resultado`, `severidad`, `fase`, `nivel`, `descripcion`, `referencia`, `interpretacion`, `motivo` y `por_unidad`. Se amplió `veredicto` en vez de abrir un bloque nuevo: los identificadores siguen siendo el índice | — |
-| `GAP-REV-03` | **No se puede subir un documento desde el navegador.** `registrar_documento` exige `ruta` y el repositorio lee ese fichero del disco del servidor. Un navegador no tiene rutas del servidor, y aceptar una del cliente sería leer ficheros arbitrarios | Que `CAP-02` admita los **bytes** (o una subida en dos pasos), y que la huella la siga calculando el núcleo sobre los bytes recibidos, nunca el cliente | El control de subida está inactivo y lo dice. Las carencias se resuelven pidiendo subsanación (`CAP-09`) |
+| ~~`GAP-REV-03`~~ | **Cerrado del lado del servidor** el 20/09/2026, sin que nadie lo supiera hasta la auditoría de `ADR-014` §1 | `CAP-02` rechaza `ruta`/`nombre_fichero`/`path`, exige `contenido` en bytes y la huella la calcula el núcleo. Lo que decía esta fila —que exige `ruta`— era falso desde entonces. Lo que falta no es el canal del servidor sino el del navegador: `GAP-HTTP-01`, transversal a las trece pantallas | El control de subida está inactivo **y dice que lo que falta es la capa HTTP**, no el comando. Las carencias se resuelven pidiendo subsanación (`CAP-09`) |
 | `GAP-REV-04` | **La interpretación propuesta de un requerimiento no se sirve.** `CAP-15` la necesita; vive en `Repositorio.requerimiento(...)` y ninguna lectura la proyecta | Un bloque `requerimientos` con el requerimiento, su interpretación propuesta (texto, reglas afectadas, confianza) y quién la propuso | El bloque de requerimiento muestra lo que hay en `historial` (`RequerimientoRecibido`) y el botón de confirmar se envía "a ciegas": en `FR1` **se deja inactivo** antes que confirmar algo que no se ha podido leer |
 | ~~`GAP-REV-05`~~ | **Cerrado en `FR1.a`** (23/09/2026) | Cada dato de `evidencias` trae `descripcion`, `definicion` y `referencia` leídas de `spec.variables[...]`, y `calculo.variables{}` hace lo mismo para cada entrada y cada derivada del cálculo (va al lado de `por_unidad` para no cambiar la forma de `entradas`). Sigue **prohibido** un diccionario de etiquetas por ficha, en el front y en `api/`: hay un test que lo comprueba | — |
 | ~~`GAP-REV-06`~~ | **Cerrado en `FR1.a`** (23/09/2026) | `vista_revision` está declarada con `perfil: T-REV` en `superficies.workspace.pantallas`, y desempata igual que `cola_revision` (caso añadido en `tests/test_api_rol_inferido.py`). El contexto ya dice desde dónde se actúa | — |
@@ -321,6 +334,14 @@ cabecera enlaza al registro de firma de `T-RES` solo como información de en qu�
 | ~~`GAP-REV-09`~~ | **Cerrado en `FR1.a`** (23/09/2026) | `calculo.traza` es la lista de cadenas tal cual la escribe el motor, y cada unidad trae `controles`, `precondiciones`, `interpretaciones` y `avisos`. `NO_EVALUABLE` viaja como la cadena `"NO_EVALUABLE"`, igual que en el informe del núcleo: es un centinela, no un booleano | Los valores intermedios **siguen sin calcularse en el front** (`R-UI-11`) |
 | ~~`GAP-REV-10`~~ / ~~`GAP-COLA-05`~~ | **Cerrado** (23/09/2026, destapado por `FR1.c`) | `calculo` sirve `total_unidad` (de `spec.calculo.total.unidad`) y cada unidad `salida_unidad` (de `spec.calculo.motor.unidad`). Rotula por igual la forma exacta y la presentable: es la misma magnitud, y el valor truncado a entero también. Una ficha que no declare la unidad sale a `null`, no a una inventada | La pantalla rotula con lo que llega. **Prohibido** escribir la unidad en la interfaz: es una etiqueta por ficha cableada, y la segunda ficha la desmentiría (regla de oro 4) |
 | ~~`GAP-REV-11`~~ / ~~`GAP-COLA-06`~~ | **Cerrado** (23/09/2026, destapado por `FR1.c`) | `Respuesta` lleva `rol_nombre` junto a `rol`, leído de los perfiles de `engine/capacidades.yaml`, que es la misma fuente que decide los permisos. Un rol que la matriz no declara es `ErrorApi`, igual que un rol que no se resuelve | La cabecera pinta `rol_nombre` tal cual. **Prohibido** componerlo del código del perfil o llevar una tabla perfil → nombre (`ADR-012` §3, regla 1) |
+
+### Huecos nuevos, destapados al construir la pantalla (`FR1.c`, 23/09/2026)
+
+| Id | Qué falta | Qué hace la pantalla mientras tanto |
+|---|---|---|
+| `GAP-REV-12` | **`api/` no dice qué acciones caben sobre una actuación.** La spec §8 condiciona "Aprobar" al veredicto y el descarte a `NO_ELEGIBLE`, y eso obligaría al front a **interpretar el veredicto**, que es justo lo que `R-UI-02` y `R-UI-11` prohíben (y lo que `CA-REV-01` comprueba recorriendo el árbol: en `front/workspace/` no aparece escrito ni uno de los cuatro veredictos) | "Aprobar" se activa por lo que **el servidor declara abierto**: sin conflictos y sin carencias (`que_te_falta.hay_carencias`), que sobre los cinco casos sintéticos da exactamente el mismo resultado que mirar el veredicto. El descarte se enseña cuando hay una carencia de severidad `BLOQUEANTE_AMBITO`. Lo natural sería que `api/` sirviera, por capacidad, si cabe y qué lo impide |
+| `GAP-REV-13` | **Tres comandos exigen un texto que nadie sirve**: `CAP-09` espera la subsanación **redactada por A5** (que no existe), y `CAP-08` y `CAP-16` un motivo escrito por la persona | Los tres controles salen **inactivos diciendo por qué**. Enviarlos vacíos es un comando que el servidor rechaza, y escribir ese texto en el front sería ponerle palabras a quien no las ha dicho |
+| `GAP-REV-14` | **El cliente de `front/compartido/` pierde `Respuesta.avisos` al leer un documento.** `leer_documento` sirve el aviso del PDF combinado (`ADR-012` §2) y `crearCliente(...).leerDocumento` construye el `DocumentoServido` y se deja los avisos por el camino | El panel dice que es una parte y da su rango de páginas con `origen` y `rango_paginas`, que sí llegan, y **no** se inventa el texto del aviso. Arreglarlo es tocar `front/compartido/api/cliente.ts`, que en `FR1.c` estaba fuera de alcance salvo para `rol_nombre` |
 
 Ninguna de estas carencias se resuelve inventando el campo en el front. Lo que no llega, no se pinta, y se
 dice por qué.
@@ -396,6 +417,18 @@ Reglas, para que la excepción no se convierta en una puerta:
 | `CA-REV-18` | **Errores**: `ErrorPermiso` y `ErrorApi` se muestran literales; el test falla si alguno se traga o se traduce a "no hay datos" |
 | `CA-REV-19` | **Ruido**: con el caso A, las reglas que cumplen no ocupan el nivel visible (van plegadas tras un contador) y los datos que no entran en el cálculo tampoco |
 | `CA-REV-20` | **El caso A recorre la pantalla entera** desde el simulador, sin datos inventados (`ADR-012` §5) |
+
+### Lo que no se pudo comprobar tal y como está escrito (`FR1.c`, 23/09/2026)
+
+Los veinte criterios tienen su test en `front/workspace/tests/revision.test.tsx`. Tres se comprueban
+**contra lo que el servidor sirve de verdad** y no contra la cifra que dice esta spec, porque la cifra
+era de otro momento. Se anota aquí en vez de "aprobar" el criterio por parecido:
+
+| Criterio | Lo que dice | Lo que hay | Qué comprueba el test |
+|---|---|---|---|
+| `CA-REV-06` | "las **cuatro** evidencias" de `PM` | **Tres**. La cuarta es la placa leída por OCR (`04_informe_fotografico.pdf`, confianza 0,75) y los datos de prueba se generan **sin OCR** (`ocr=False`), que es como se ejecuta la puerta del repositorio | Que se pintan **todas las que llegaron**, con valor, documento, página, texto literal, método y confianza, comparando contra el bloque `conflictos` servido. Si algún día los datos se generan con OCR, el test cuenta cuatro sin tocarlo |
+| `CA-REV-19` | "24 de 24 comprobaciones conformes" | `veredicto.reglas[]` trae **26** reglas evaluadas en el caso A | Que las conformes van plegadas tras un contador, y que el contador es el número que sirvió el servidor. La pantalla no cuenta hasta 24 ni hasta 26: cuenta lo que llega |
+| `CA-REV-10` / §7 | "p = 5,05 %" | `api/` sirve la fracción (`0,05045454…`), no el porcentaje | Que la línea de `p` sale con la cifra **tal cual llega** y con su origen de tabla. Componer el porcentaje en la interfaz sería una operación aritmética sobre una magnitud del cálculo (`R-UI-11`, `CLAUDE.md` §2). Si el porcentaje es lo que se quiere leer, lo sirve `api/` |
 
 ---
 

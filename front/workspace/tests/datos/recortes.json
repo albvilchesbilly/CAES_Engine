@@ -1,0 +1,34 @@
+{
+  "evidencia_maxima_bytes": 20000,
+  "documento_maximo_bytes": 12288,
+  "evidencias_omitidas": {
+    "C": [
+      "registro.datos_canonicos"
+    ],
+    "D": [
+      "registro.datos_canonicos"
+    ],
+    "B": [],
+    "G": [
+      "registro.datos_canonicos"
+    ],
+    "A": [
+      "registro.datos_canonicos"
+    ]
+  },
+  "documentos_omitidos": [
+    "A:04_informe_fotografico.pdf",
+    "A:06_registro_funcionamiento_MTR-SYN-0001.xlsx",
+    "B:04_informe_fotografico.pdf",
+    "C:04_informe_fotografico.pdf",
+    "C:06_registro_funcionamiento_MTR-SYN-0001.xlsx",
+    "D:04_informe_fotografico.pdf",
+    "D:06_registro_funcionamiento_MTR-SYN-0001.xlsx",
+    "G:datos.xlsx",
+    "G:foto1.jpg",
+    "G:foto2.jpg",
+    "G:foto3.jpg",
+    "G:foto4.jpg",
+    "G:scan.pdf"
+  ]
+}

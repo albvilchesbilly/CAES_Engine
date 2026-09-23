@@ -88,12 +88,60 @@ describe("CA-COLA-05 · `R-UI-02`: el veredicto es texto, nunca un control", () 
     }
   });
 
-  it("no hay ningún campo editable en todo el workspace", () => {
+  /**
+   * Los **unicos** campos editables del workspace son los de la correccion, y se nombran uno a uno.
+   *
+   * Hasta el 23/09/2026 aqui no habia ninguno, porque la cola no escribe nada (`T-REV-cola` §4) y era
+   * la unica pantalla. La vista de revision tiene que tener dos —el valor y la justificacion de
+   * `CAP-05`—, y eso **no debilita `R-UI-02`**: la regla prohibe un control que fije, fuerce o cambie un
+   * veredicto, no que se pueda corregir un dato. Es justo al reves: corregir el dato es el camino que
+   * sustituye al boton que no existe.
+   *
+   * Asi que la comprobacion no se relaja, se concreta: `<select>` y `contentEditable` siguen sin
+   * aparecer en ninguna parte, los campos de texto viven **en un solo fichero** y sus nombres estan en
+   * una lista cerrada. Un campo nuevo en cualquier otro sitio, o con otro nombre, rompe este test.
+   */
+  const FICHERO_DE_LA_CORRECCION = join("src", "revision", "Correccion.tsx");
+  const CAMPOS_ADMITIDOS = ["valor", "justificacion"];
+
+  it("no hay ningún desplegable ni ningún elemento editable a mano", () => {
     for (const [ruta, contenido] of codigo()) {
       expect(contenido, `${ruta}: <select`).not.toMatch(/<select\b/);
+      expect(contenido, `${ruta}: contentEditable`).not.toMatch(/contentEditable/i);
+    }
+  });
+
+  it("los campos de texto solo existen en el formulario de corrección", () => {
+    for (const [ruta, contenido] of codigo()) {
+      if (ruta === FICHERO_DE_LA_CORRECCION) {
+        continue;
+      }
       expect(contenido, `${ruta}: <input`).not.toMatch(/<input\b/);
       expect(contenido, `${ruta}: <textarea`).not.toMatch(/<textarea\b/);
-      expect(contenido, `${ruta}: contentEditable`).not.toMatch(/contentEditable/i);
+    }
+  });
+
+  it("y solo son el valor y la justificación de la corrección", () => {
+    const correccion = codigo().find(([ruta]) => ruta === FICHERO_DE_LA_CORRECCION);
+    expect(correccion, `no encuentro ${FICHERO_DE_LA_CORRECCION}`).toBeDefined();
+    const contenido = correccion?.[1] ?? "";
+
+    const campos = Array.from(contenido.matchAll(/<(?:input|textarea)\b[^>]*/g));
+    expect(campos.length).toBeGreaterThan(0);
+    for (const [etiqueta] of campos) {
+      const nombre = /name="([^"]+)"/.exec(etiqueta)?.[1];
+      expect(nombre, `un campo sin \`name\`: ${etiqueta}`).toBeDefined();
+      expect(CAMPOS_ADMITIDOS, `campo editable inesperado: ${nombre}`).toContain(nombre);
+    }
+  });
+
+  it("la cola no tiene ningún campo editable: una lista no es sitio para escribir en el log", () => {
+    for (const [ruta, contenido] of codigo()) {
+      if (!ruta.includes(join("src", "cola"))) {
+        continue;
+      }
+      expect(contenido, `${ruta}: <input`).not.toMatch(/<input\b/);
+      expect(contenido, `${ruta}: <textarea`).not.toMatch(/<textarea\b/);
     }
   });
 

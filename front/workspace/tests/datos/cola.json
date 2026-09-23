@@ -1,6 +1,7 @@
 {
   "capacidad": "CAP-17",
   "rol": "T-REV",
+  "rol_nombre": "Revisor tecnico",
   "eventos": [],
   "datos": {
     "cola": [

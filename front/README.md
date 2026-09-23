@@ -3,8 +3,8 @@
 Interfaz del CAE Engine (`ADR-050`). En **FR0 solo existía `compartido/`**: el sistema de diseño mínimo,
 es decir, los tres rótulos que impiden que la interfaz mienta (`ADR-011` §5, contrato C16). **FR1 le añade
 el cliente de `api/`** (`compartido/api/`, contrato C18 de `ADR-012` §3) y la primera superficie,
-**`workspace/`**, con la cola de revisión de `T-REV` (`FR1.c`). `externo/` y `consola/` llegan con sus
-pantallas.
+**`workspace/`**, con las dos pantallas de `T-REV` (`FR1.c`): la **cola de revisión** y la **vista de
+revisión**, que es donde se mide el valor del producto. `externo/` y `consola/` llegan con sus pantallas.
 
 **Las pantallas no se abren en un navegador, y es una decisión** (`ADR-014` §4): no existe capa HTTP en el
 repositorio, así que `FR1` entrega pantallas verificadas contra el contrato con un transporte de pruebas.
@@ -58,6 +58,7 @@ import { crearCliente, transporteHttp, ErrorPermiso, bloque } from "@cae/compart
 const cliente = crearCliente(transporteHttp("/api"));
 const respuesta = await cliente.leer("CAP-03", { superficie: "vista_revision", tenant_id, actuacion_id });
 const veredicto = bloque(respuesta, "veredicto");          // `undefined` si el ámbito no lo trae
+const quien = respuesta.rol_nombre;                        // "Revisor tecnico", leído de la matriz
 const papel = await cliente.leerDocumento("CAP-03", contexto, doc_id);   // los bytes de la ingesta
 ```
 
@@ -107,9 +108,9 @@ front/
     src/                index · textos · valores · los tres rótulos · estilos.css
     api/                cliente de `api/` · transporte · contrato.generado.ts (no se edita)
     tests/              casos adversariales, los tres rótulos y el cliente
-  workspace/            T-RES, T-OPE, T-REV — la cola de revisión (FR1.c) y el andamiaje que comparten
-    src/                marco de pantalla, lecturas, fallos, fechas, textos · cola/
-    tests/              un test por criterio CA-COLA-*, con datos generados desde `api/`
+  workspace/            T-RES, T-OPE, T-REV — las dos pantallas de `T-REV` (FR1.c) y su andamiaje
+    src/                marco de pantalla, lecturas, fallos, fechas, textos · cola/ · revision/
+    tests/              un test por criterio CA-COLA-* y CA-REV-*, con datos generados desde `api/`
 ```
 
 Cada superficie es un paquete de los workspaces de npm y se consume como código fuente, igual que

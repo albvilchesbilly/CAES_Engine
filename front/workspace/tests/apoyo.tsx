@@ -34,6 +34,8 @@ function leerJson(nombre: string): unknown {
 interface RespuestaBruta {
   readonly capacidad: string;
   readonly rol: string;
+  /** El nombre del perfil, que `api/` sirve junto al codigo desde el 23/09/2026 (`GAP-COLA-06`). */
+  readonly rol_nombre: string;
   readonly eventos: readonly string[];
   readonly datos: Record<string, unknown>;
   readonly avisos: readonly string[];

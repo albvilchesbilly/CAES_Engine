@@ -60,7 +60,7 @@ function CeldaAhorro({ calculo }: { readonly calculo: Resultado<CalculoCola> | u
       </>
     );
   }
-  const { presentable, exacto, provisional, motivoNoCalculo } = calculo.valor;
+  const { presentable, exacto, unidad, provisional, motivoNoCalculo } = calculo.valor;
   if (presentable === null) {
     return (
       <>
@@ -75,6 +75,10 @@ function CeldaAhorro({ calculo }: { readonly calculo: Resultado<CalculoCola> | u
         <span className="cae-cola__cifra" data-exacto={exacto ?? undefined}>
           {presentable}
         </span>
+        {/* La unidad la declara la ficha y la sirve `api/` (`GAP-COLA-05`). Una cifra de ahorro sin
+            unidad no es una cifra: 305.829,6 no dice nada hasta que dice de que. Lo que no llega no se
+            inventa, y entonces se pinta la cifra sola. */}
+        {unidad === null ? null : <span className="cae-cola__unidad">{` ${unidad}`}</span>}
       </RotuloPrevalidado>
       {provisional === true ? (
         <span className="cae-cola__estimacion">{ESTIMACION_NO_ACREDITADA}</span>

@@ -1,0 +1,42 @@
+{
+  "sin_justificacion": {
+    "datos_enviados": {
+      "variable": "PM",
+      "num_serie_motor": "MTR-SYN-0001",
+      "valor": "110"
+    },
+    "estado": 400,
+    "cuerpo": {
+      "error": "api",
+      "motivo": "CAP-05 (Resolver conflicto o corregir dato, con justificacion): exige `justificacion` no vacia. Una correccion sin justificacion no se ejecuta (`R-UI-04`); lo que se escribe queda en el log"
+    }
+  },
+  "coma_flotante": {
+    "datos_enviados": {
+      "variable": "PM",
+      "num_serie_motor": "MTR-SYN-0001",
+      "valor": "110.0 (float en la peticion)",
+      "justificacion": "La ficha tecnica del motor (fuente primaria), la ficha cumplimentada y la placa dicen 110 kW. El certificado del instalador arrastra una errata al transcribir la ficha tecnica."
+    },
+    "estado": 400,
+    "cuerpo": {
+      "error": "api",
+      "motivo": "CAP-05: ['valor'] llegan como coma flotante. Toda magnitud entra como cadena o entero y se convierte a Decimal; el ahorro no se calcula con float"
+    }
+  },
+  "documento_alterado": {
+    "doc_id": "2e1ed3667b23fb370f5988f098df569696d67861763aa0ce4574d95766f3b21b",
+    "estado": 400,
+    "cuerpo": {
+      "error": "api",
+      "motivo": "CAP-03: el documento '2e1ed3667b23fb370f5988f098df569696d67861763aa0ce4574d95766f3b21b' fue alterado despues de la ingesta. La ingesta declaro sha256 2e1ed3667b23fb370f5988f098df569696d67861763aa0ce4574d95766f3b21b y lo guardado suma c20b22329e76eb1092f4edca9310e75d90a8cdcc3576d681d2e8bdd809c14cb7: no se sirve. Lo que se ensena en una revision tiene que ser demostrablemente el mismo fichero que se calculo"
+    }
+  },
+  "otro_tenant": {
+    "estado": 403,
+    "cuerpo": {
+      "error": "permiso",
+      "motivo": "cruce de tenant: la actuacion 'C' es del tenant 'T-001' y el principal 'u-otro' es de 'T-999'"
+    }
+  }
+}
