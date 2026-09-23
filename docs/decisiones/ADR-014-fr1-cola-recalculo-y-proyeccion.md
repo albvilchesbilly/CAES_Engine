@@ -105,10 +105,23 @@ def reprocesar(self, actuacion_id: str) -> object:
 
 **Contrato C25 — `CorreccionRechazadaPostFirma` deja de ser un evento que nadie emite.**
 
-Está en el catálogo y no lo emite nadie: `de_log` descarta en silencio la corrección posterior a la firma
-(`engine/correcciones.py:288-290`), de modo que **quien corrige después de firmar no se entera de que su
-corrección se ignoró**. `ADR-013` §4 ya lo reconocía. Al cerrar el lazo, el disparo compara lo que `de_log`
-admitió con lo que hay en el log y emite el evento por cada corrección descartada.
+Está en el catálogo y no lo emite nadie: `de_log` descarta en silencio la corrección posterior a la firma,
+de modo que **quien corrige después de firmar no se entera de que su corrección se ignoró**. `ADR-013` §4 ya
+lo reconocía. Al cerrar el lazo, el disparo compara lo que `de_log` admitió con lo que hay en el log y emite
+el evento por cada corrección descartada.
+
+> **Corregido el 23/09/2026, durante la implementación.** La primera redacción de este contrato decía «emite
+> el evento» sin más, y eso **chocaba con la matriz de capacidades**. `api.comandos._comprobar_eventos_escritos`
+> exige que todo evento de una `Salida` esté declarado en `capacidad.eventos`; meter
+> `CorreccionRechazadaPostFirma` en `CAP-05` habría permitido que un `T-REV` sellara a mano «mi corrección fue
+> rechazada» —o que **no** lo fue—, y el control de inalterabilidad se habría vuelto decorativo. La matriz
+> tenía razón y el ADR estaba mal.
+>
+> Forma correcta, ya implementada: el evento lo sella el **actor `motor`** (`engine@ciclo`), ninguna capacidad
+> lo concede a ningún perfil, y no se esconde: sale en `Salida.datos["rechazos_post_firma"]` y en un aviso por
+> cada corrección descartada. Hay un test que fija la invariante
+> (`test_ninguna_capacidad_concede_el_evento_de_rechazo_a_un_perfil`). Si algún día se quiere que viaje en
+> `Respuesta.eventos`, eso es una decisión de diseño del contrato, no un detalle de implementación.
 
 ---
 
@@ -146,8 +159,14 @@ docstring es legítima; el precio no.
 
 **Contrato C26 — distinguir el log parcial del log ilegible.**
 
-- Un log **vacío o sin eventos de ciclo** no tiene rechazos que aplicar: devuelve conjunto vacío, como hoy.
-  Ese es el caso de prueba que el docstring quería proteger.
+- Un log **sin ninguna corrección** no tiene nada que filtrar: conjunto vacío **sin proyectar**.
+
+  *Precisión del 23/09/2026, durante la implementación: la primera redacción decía «log vacío o sin eventos
+  de ciclo», y era inexacta. Un `LogEventos` vacío **se proyecta perfectamente** y ya devolvía cero rechazos;
+  lo único que el `except` protegía de verdad eran los logs `duck-typed` de las pruebas, que no son
+  `LogEventos` y hacen levantar a `proyectar`. La condición correcta no es «el log está vacío» sino «no hay
+  correcciones que filtrar», que cubre el vacío, el parcial y el doble de prueba sin rendir la guarda cuando
+  sí hay una corrección delante.*
 - Un log que **falla al proyectarse** no permite afirmar que no hay rechazos: `de_log` **levanta**, y el
   llamante decide. Nunca se aplican correcciones sobre un log cuyo ciclo no se ha podido leer.
 - El test se escribe por **mutación**: volver al `except` que devuelve `frozenset()` tiene que romper algo.

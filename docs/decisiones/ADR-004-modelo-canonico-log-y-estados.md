@@ -207,8 +207,11 @@ Cerrado en tres piezas: modelo canónico (161 tests), log de eventos (112) y má
 - La inalterabilidad se evalúa por `firmada and requerimiento_abierto is None`, no por el estado, para que siga
   valiendo cuando una subsanación oficial devuelve la actuación a `EN_PROCESO`.
 - `aplicar` es pura y **no escribe en el log**: el rechazo post-firma se acumula en `Proyeccion.rechazos` y quien
-  llama emite `CorreccionRechazadaPostFirma`. Queda por decidir de quién es esa responsabilidad (¿`motor.py`, el
-  puerto de salida?).
+  llama emite `CorreccionRechazadaPostFirma`. **Decidido por `ADR-014` §3 (C25), 23/09/2026**: lo emite el
+  disparo del recálculo dentro de `CAP-05`, y lo sella el **actor `motor`** (`engine@ciclo`), no una persona.
+  Ninguna capacidad concede ese evento a ningún perfil, a propósito: si un `T-REV` pudiera sellarlo a mano
+  podría afirmar que su corrección fue rechazada, o que no lo fue, y el control de inalterabilidad sería
+  decorativo. Ni `motor.py` ni el puerto de salida, que eran las dos opciones que esta línea barajaba.
 - Una actuación terminal no se contagia: un requerimiento de GA o CN no revienta un expediente con actuaciones ya
   cerradas.
 - A los estados de expediente sin efecto declarado en `docs/02` §5.6 (entre ellos `RESUELTO_DESFAVORABLE`) **no se

@@ -9,6 +9,12 @@ segundos; una API que lo llamara en cada lectura seria inservible, y ademas el c
 actuacion (quien es su tenant, quien es parte en ella) no lo sabe el motor, que solo procesa lo que hay en
 una carpeta. Esas dos cosas las sabe el repositorio.
 
+Con una excepcion declarada, y solo una: **`reprocesar`** (contrato C23, `ADR-014` §3). Corregir un dato
+recalcula en el acto (Billy, 23/09/2026), asi que hay un camino —uno— en el que la latencia de segundos se
+paga dentro de un comando. Sigue siendo el repositorio quien llama al motor, no `api/`: el comando pide
+"rehaz tu trabajo con esta entrada mas" y no toca ni una decision. Si algun dia hay que reprocesar en lote,
+esa decision se revisa.
+
 `RepositorioAusente` es el valor por defecto: **falla diciendo que falta**, en vez de devolver vacio. Una
 lectura que devuelve "no hay datos" cuando lo que pasa es que nadie ha configurado el repositorio es la
 forma mas barata de que un error de despliegue parezca un expediente vacio.
@@ -66,11 +72,45 @@ class Repositorio(Protocol):
         """El requerimiento y la interpretacion **propuesta** de un agente, para que un humano la confirme."""
         ...
 
+    def reprocesar(self, actuacion_id: str) -> object:
+        """Vuelve a procesar la actuacion aplicando las correcciones humanas de su log, y guarda el resultado.
+
+        Contrato C23 (`ADR-014` §3). Es la unica operacion del puerto que hace trabajar al motor, y por eso
+        es la unica que tarda segundos: se acepto esa latencia dentro de `CAP-05` para que corregir un dato
+        y recalcular sean, de cara a la persona, un solo acto.
+
+        **Aqui no se decide nada.** Quien llama no elige valores, no evalua reglas y no fija veredicto: le
+        pide al nucleo que rehaga su trabajo con una entrada mas —las correcciones que ya estan selladas en
+        el log— y el nucleo vuelve a decidir. La regla de oro 1 se mantiene entera.
+
+        Por dentro es `procesar_actuacion(carpeta, correcciones=engine.correcciones.de_log(log))`, y
+        **sustituye** la actuacion guardada: la siguiente lectura ve el veredicto nuevo, no el viejo.
+
+        Levanta si no puede hacerlo (no conoce la carpeta, el ciclo del log no se puede leer, el motor
+        falla). Fallar diciendolo es lo correcto: quien dispara el reproceso tiene que poder avisar de que
+        el veredicto esta **pendiente de recalculo**, en vez de presentar el anterior como actualizado.
+        """
+        ...
+
     def registrar_documento(self, actuacion_id: str, ruta: str) -> Mapping[str, object]:
-        """Registra un fichero y devuelve su huella y metadatos, calculados por `engine.ingesta`.
+        """Registra un fichero **que ya esta del lado del servidor** y devuelve su huella y metadatos.
+
+        La `ruta` no viene nunca de una peticion: `CAP-02` rechaza `ruta`, `nombre_fichero` y `path`
+        (`ADR-012` §1 y su espejo). Esta operacion es para lo que ya esta en disco —la carpeta que ingesto
+        el nucleo, el arranque de desarrollo—; lo que sube una persona entra por `guardar_documento`.
 
         La huella la calcula el nucleo sobre los bytes, nunca la trae el cliente: vinculamos por hash, y un
         hash que envia quien sube el fichero no vincula nada.
+        """
+        ...
+
+    def guardar_documento(self, actuacion_id: str, contenido: bytes) -> str:
+        """Guarda los bytes de un documento aportado y devuelve su huella, calculada sobre el contenido.
+
+        **Esta en el puerto porque `CAP-02` la pide** (`ADR-014` §1, fleco 1 de `GAP-REV-03`): hasta el
+        23/09/2026 el comando la sondeaba con `getattr` y el `Protocol` no la declaraba. Un puerto que no
+        declara lo que se le pide no es un contrato: la implementacion que no la tenga esta incompleta, y
+        se entera al arrancar, no cuando alguien intente subir un fichero.
         """
         ...
 
@@ -122,7 +162,13 @@ class RepositorioAusente:
     def requerimiento(self, actuacion_id: str, requerimiento_id: str) -> tuple[object, object] | None:
         raise ErrorApi(f"{actuacion_id}: {self._MOTIVO}")
 
+    def reprocesar(self, actuacion_id: str) -> object:
+        raise ErrorApi(f"{actuacion_id}: {self._MOTIVO}")
+
     def registrar_documento(self, actuacion_id: str, ruta: str) -> Mapping[str, object]:
+        raise ErrorApi(f"{actuacion_id}: {self._MOTIVO}")
+
+    def guardar_documento(self, actuacion_id: str, contenido: bytes) -> str:
         raise ErrorApi(f"{actuacion_id}: {self._MOTIVO}")
 
     def bytes_de_documento(self, actuacion_id: str, sha256: str) -> bytes | None:

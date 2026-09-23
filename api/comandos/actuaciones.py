@@ -14,18 +14,26 @@ Que manejador atiende que capacidad lo dice `engine/capacidades.yaml`, en `manej
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 
 from api.contrato import Peticion, Salida, actor_de
 from api.permisos import Capacidad, ErrorApi
 from api.servicios import Servicios
+from engine.correcciones import rechazos_post_firma
 from engine.eventos.canonico import ErrorEvento, ahora_utc
 from engine.eventos.catalogo import ORIGENES_SUBSANACION
-from engine.eventos.log import Evento, LogEventos
+from engine.eventos.grabacion import CLASE_MOTOR
+from engine.eventos.log import Actor, Evento, LogEventos
 from engine.requerimientos import ErrorRequerimiento, confirmar, reabrir
 from engine.seguimiento import ErrorSeguimiento, anadir_una_vez
 
 #: Origen de una subsanacion que nace de nuestra propia revision (`ADR-006` CAP-09, `docs/03` §10.5).
 ORIGEN_INTERNO = "interno"
+
+#: Quien sella `CorreccionRechazadaPostFirma`: el ciclo, no la persona (ver `_anotar_rechazos_post_firma`).
+#: Es un actor **motor** porque ninguna capacidad de la matriz concede ese evento a ningun perfil, que es
+#: justo lo que impide escribirlo a mano (`engine.capacidades.autorizador`, criterio 3).
+ACTOR_CICLO = Actor(clase=CLASE_MOTOR, id="engine@ciclo")
 
 
 def instante_de(servicios: Servicios):
@@ -121,9 +129,15 @@ def registrar_documento(peticion: Peticion, servicios: Servicios, capacidad: Cap
     servidor leyera un fichero alcanzable y le devolviera su huella, su tamano y si existia. Es el espejo
     exacto del agujero que `ADR-012` §1 cierra en la lectura, y lo encontro el agente que cerro aquel.
 
-    Hoy no hay canal de subida desde el navegador (`GAP-REV-03`), asi que esta capacidad no se puede ejercer
-    de extremo a extremo: **falla diciendo que falta el canal**, que es lo que hace el resto del contrato de
-    `FR0` con lo que todavia no existe. Lo que no hace es funcionar por una via que no debe existir.
+    **Se ejerce de extremo a extremo** con `RepositorioMemoria`: llegan los bytes, el nucleo calcula la
+    huella y el evento se sella. Hasta el 23/09/2026 este docstring decia lo contrario —"no se puede
+    ejercer de extremo a extremo"— y era falso desde que se cerro `GAP-REV-03` en la forma de `CAP-02`
+    (`ADR-014` §1). Lo que sigue faltando no es el canal del servidor sino el del navegador: `GAP-HTTP-01`,
+    la capa HTTP, que es transversal a las trece pantallas y no un hueco de esta capacidad.
+
+    Lo que si puede faltar es que el repositorio configurado no sepa guardar bytes. Se comprueba y se dice,
+    aunque el puerto declare la operacion: una implementacion incompleta tiene que fallar nombrando lo que
+    le falta, no con un `AttributeError` a mitad de una subida.
     """
     coladas = [clave for clave in CLAVES_DE_SERVIDOR if clave in peticion.datos]
     if coladas:
@@ -139,8 +153,8 @@ def registrar_documento(peticion: Peticion, servicios: Servicios, capacidad: Cap
     guardar = getattr(servicios.repositorio, "guardar_documento", None)
     if not callable(guardar):
         raise ErrorApi(
-            f"{capacidad.id}: falta el canal de subida (`GAP-REV-03`): el repositorio no sabe guardar el "
-            "contenido de un documento aportado"
+            f"{capacidad.id}: el repositorio configurado no implementa `guardar_documento`, que el puerto "
+            "de `api/servicios.py` declara. Sin el no hay donde dejar los bytes de un documento aportado"
         )
     sha256 = str(guardar(peticion.actuacion_id, bytes(contenido)))
     huella: Mapping[str, object] = {"sha256": sha256, "bytes": len(contenido)}
@@ -157,13 +171,103 @@ def registrar_documento(peticion: Peticion, servicios: Servicios, capacidad: Cap
     return Salida(datos={"sha256": huella["sha256"], "nombre": huella.get("nombre")}, eventos=(evento,))
 
 
+def _anotar_rechazos_post_firma(log: LogEventos, servicios: Servicios) -> tuple[str, ...]:
+    """Contrato C25: emite `CorreccionRechazadaPostFirma` por cada correccion que el ciclo descarto.
+
+    `de_log` descartaba en silencio la correccion posterior a la firma, asi que **quien corregia despues de
+    firmar no se enteraba de que se ignoro** (`ADR-013` §4 ya lo reconocia). Aqui se compara lo que se
+    aplica con lo que hay en el log y se deja constancia de la diferencia.
+
+    Lo sella un actor **motor**, no la persona, y por eso este evento no esta entre los que declara
+    `CAP-05`: ninguna capacidad de la matriz lo concede a ningun perfil, justamente para que nadie pueda
+    escribirlo a mano (`engine.capacidades.autorizador`, criterio 3). Es una consecuencia del ciclo, no un
+    acto humano, y por eso tampoco viaja en `Salida.eventos`, que es lo que el comando escribio como la
+    persona. Viaja en `Salida.datos` y en un aviso: se dice, no se esconde.
+
+    El payload es la anotacion tal cual la escribio `engine.estados`. Aqui no se redacta ningun motivo.
+    """
+    rechazadas: list[str] = []
+    for anotacion in rechazos_post_firma(log):
+        anadir_una_vez(
+            log,
+            "CorreccionRechazadaPostFirma",
+            dict(anotacion),
+            instante=instante_de(servicios),
+            actor=ACTOR_CICLO,
+        )
+        rechazadas.append(str(anotacion["evento_id"]))
+    return tuple(rechazadas)
+
+
+@dataclass(frozen=True)
+class _Reproceso:
+    """Lo que dio el disparo del recalculo: si se hizo, que se descarto y que hay que avisar."""
+
+    recalculada: bool
+    rechazados: tuple[str, ...] = ()
+    avisos: tuple[str, ...] = ()
+
+
+def _recalcular(peticion: Peticion, servicios: Servicios, log: LogEventos) -> _Reproceso:
+    """Contrato C24: el disparo del reproceso, **despues** de sellar la correccion, y a prueba de fallos.
+
+    Dos cosas que no son negociables aqui:
+
+    - **El comando no falla si el reproceso falla.** Que una persona corrigio es un hecho aunque el
+      recalculo se caiga; perder el evento seria perder el acto humano. Se devuelve la correccion sellada y
+      un aviso que dice que el veredicto esta **pendiente de recalculo**.
+    - **Y no se calla.** Ocultar el fallo seria peor que la latencia: la pantalla tiene que poder no
+      presentar como actualizado un veredicto que no lo esta (`CA-REV-09`).
+
+    Se captura `Exception` a proposito y no una lista de tipos: lo que hay detras es el motor entero
+    —ingesta, OCR, specs, reglas— y cualquier cosa que se rompa ahi tiene que acabar en el mismo aviso, no
+    en un error que se lleve por delante la correccion. Lo que **no** se captura es lo que pasa antes, al
+    sellar el evento: eso si falla el comando, y el log no se toca.
+
+    El aviso de C25 (la correccion que se descarto por ser posterior a la firma) va dentro del mismo
+    intento: si el ciclo del log no se puede leer (`ADR-014` C26), no se puede saber ni que se descarto ni
+    que se aplica, y las dos cosas se cuentan como "pendiente de recalculo".
+    """
+    rechazados: tuple[str, ...] = ()
+    try:
+        rechazados = _anotar_rechazos_post_firma(log, servicios)
+        servicios.repositorio.reprocesar(peticion.actuacion_id)
+    except Exception as exc:  # noqa: BLE001 - ver el docstring: el acto humano no se pierde por esto
+        pendiente = (
+            "correccion registrada y pendiente de recalculo: el motor no ha podido reprocesar "
+            f"{peticion.actuacion_id!r} ({exc}). El veredicto que se lea sigue siendo el anterior"
+        )
+        return _Reproceso(False, rechazados, (pendiente, *_avisos_de_rechazo(rechazados)))
+    return _Reproceso(True, rechazados, _avisos_de_rechazo(rechazados))
+
+
+def _avisos_de_rechazo(rechazados: tuple[str, ...]) -> tuple[str, ...]:
+    """Un aviso por correccion descartada por posterior a la firma. Lo que antes no se decia (C25)."""
+    return tuple(
+        f"la correccion {identificador!r} es posterior a la firma y no se ha aplicado: la informacion "
+        "revisada y firmada solo se modifica por requerimiento oficial (`docs/02` §5.4). Queda "
+        "constancia con un `CorreccionRechazadaPostFirma`"
+        for identificador in rechazados
+    )
+
+
 def _correccion(
     peticion: Peticion, servicios: Servicios, capacidad: Capacidad, rol: str, motivo: str
 ) -> Salida:
-    """Lo comun a corregir un dato y a resolver un desacuerdo: las dos son la misma correccion humana."""
+    """Lo comun a corregir un dato y a resolver un desacuerdo: las dos son la misma correccion humana.
+
+    Y el lazo de `R-UI-02`, cerrado el 23/09/2026 (`ADR-014` §3): **se corrige el dato y el motor
+    recalcula**, en el acto, dentro del mismo comando. El orden importa y es el que esta escrito: primero
+    se sella el evento, y solo despues se pide el reproceso. Nunca al reves.
+
+    `api/` sigue sin decidir nada. No elige el valor, no evalua ninguna regla y no fija ningun veredicto:
+    le pide al nucleo que rehaga su trabajo con una entrada mas —la que acaba de sellar— y el nucleo vuelve
+    a decidir. La regla de oro 1 entera.
+    """
     variable = str(peticion.exige("variable"))
+    log = log_de(peticion, servicios)
     evento = escribir(
-        log_de(peticion, servicios),
+        log,
         "DatoCorregidoPorHumano",
         {
             **_marca(capacidad),
@@ -177,7 +281,18 @@ def _correccion(
         servicios=servicios,
         rol=rol,
     )
-    return Salida(datos={"variable": variable}, eventos=(evento,))
+    reproceso = _recalcular(peticion, servicios, log)
+    return Salida(
+        datos={
+            "variable": variable,
+            # `CA-REV-09`: la pantalla necesita saber si lo que lea despues es el veredicto nuevo o el de
+            # antes. Un booleano, no una cifra: aqui no se proyecta ningun veredicto.
+            "recalculada": reproceso.recalculada,
+            "rechazos_post_firma": list(reproceso.rechazados),
+        },
+        eventos=(evento,),
+        avisos=reproceso.avisos,
+    )
 
 
 def corregir_dato(peticion: Peticion, servicios: Servicios, capacidad: Capacidad, rol: str) -> Salida:

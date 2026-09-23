@@ -11,6 +11,11 @@ del fichero. Ni se acepta del cliente ni se inventa: vinculamos por hash (regla 
 Lo mismo al reves (`ADR-012` §1): los bytes se piden **por huella** (`bytes_de_documento`), y quien sabe
 donde estan es este objeto. La ruta se apunta al registrar el fichero y no vuelve a salir; asi no hay
 ninguna via por la que una peticion pueda elegir que fichero del servidor se lee.
+
+`reprocesar` (contrato C23, `ADR-014` §3) es la unica operacion que llama al motor, y es la que cierra el
+lazo «se corrige un dato y el motor recalcula». Sigue siendo cierto que este objeto no calcula nada: lo que
+hace es pedirle a `engine.motor` que rehaga su trabajo con las correcciones que ya estan en el log, y
+guardar lo que devuelva en lugar de lo anterior.
 """
 
 from __future__ import annotations
@@ -21,8 +26,11 @@ from pathlib import Path
 
 from api.permisos import ErrorApi
 from engine.capacidades import autorizador
+from engine.correcciones import de_log
 from engine.eventos.log import LogEventos
 from engine.ingesta import sha256_bytes
+from engine.motor import procesar_actuacion
+from engine.spec_registry import SpecRegistry
 
 
 @dataclass
@@ -39,6 +47,10 @@ class Registro:
     rutas: dict[str, Path] = field(default_factory=dict)
     #: Huella → los bytes, cuando se guardan en memoria en vez de en disco (desarrollo y pruebas).
     contenidos: dict[str, bytes] = field(default_factory=dict)
+    #: Con que opciones se proceso esta actuacion la primera vez. Reprocesar es **rehacer el mismo
+    #: trabajo** con una entrada mas, no procesarla de otra manera: si la primera pasada fue sin OCR, la
+    #: segunda tampoco lo usa, o el veredicto cambiaria por algo que nadie corrigio.
+    ocr: bool = True
 
 
 class RepositorioMemoria:
@@ -46,6 +58,8 @@ class RepositorioMemoria:
 
     def __init__(self) -> None:
         self._registros: dict[str, Registro] = {}
+        # Las specs activas, cargadas la primera vez que haga falta reprocesar (ver `_specs`).
+        self._registro_specs: SpecRegistry | None = None
         # A8: los logs que nacen aqui llevan puesto el control de perfiles de la matriz. Se instala en la
         # composicion, no en el nucleo: el log no conoce ningun perfil, solo pregunta.
         self._autorizador = autorizador()
@@ -64,8 +78,12 @@ class RepositorioMemoria:
         actuacion: object | None = None,
         log: LogEventos | None = None,
         partes: tuple[str, ...] = (),
+        ocr: bool = True,
     ) -> Registro:
-        """Mete una actuacion ya conocida. Lo usan las pruebas y el arranque de desarrollo."""
+        """Mete una actuacion ya conocida. Lo usan las pruebas y el arranque de desarrollo.
+
+        `ocr` es con que opciones se proceso, para poder **rehacer** el mismo trabajo en `reprocesar`.
+        """
         if not str(actuacion_id).strip():
             raise ErrorApi("una actuacion necesita identificador")
         registro = Registro(
@@ -73,6 +91,7 @@ class RepositorioMemoria:
             actuacion=actuacion,
             log=log if log is not None else self.log_nuevo(actuacion_id),
             partes=tuple(partes),
+            ocr=bool(ocr),
         )
         self._registros[actuacion_id] = registro
         return registro
@@ -119,6 +138,54 @@ class RepositorioMemoria:
 
     def requerimiento(self, actuacion_id: str, requerimiento_id: str) -> tuple[object, object] | None:
         return self._registro(actuacion_id).requerimientos.get(requerimiento_id)
+
+    def reprocesar(self, actuacion_id: str) -> object:
+        """Contrato C23 (`ADR-014` §3): el motor rehace su trabajo con las correcciones del log.
+
+        Las cuatro cosas que hace, en este orden, y ninguna mas:
+
+        1. Lee del log las correcciones humanas, con `engine.correcciones.de_log`, que es quien descarta
+           las que el ciclo rechazo (inalterabilidad post-firma) y quien **levanta** si el ciclo no se
+           puede leer (`ADR-014` C26). Aqui no se filtra nada a mano.
+        2. Vuelve a llamar a `engine.motor.procesar_actuacion` sobre **la misma carpeta**, con la misma
+           fecha de evaluacion, la misma ficha y las mismas opciones que la primera vez. Lo unico que
+           cambia entre las dos ejecuciones son las correcciones.
+        3. **Sustituye** la actuacion guardada, para que la siguiente lectura vea el veredicto nuevo. Si
+           se anadiera al lado, habria dos veredictos y alguien acabaria leyendo el viejo.
+        4. La devuelve.
+
+        Este objeto **no decide nada**: no elige el valor de ninguna variable, no evalua una regla y no
+        fija un veredicto. Encadena, igual que `engine/motor.py`.
+
+        Reprocesa lo que conoce: sin la actuacion procesada no sabe de que carpeta salio, y entonces dice
+        que no puede en vez de inventarse una ruta. Es el mismo criterio que `RepositorioAusente`.
+        """
+        registro = self._registro(actuacion_id)
+        carpeta = getattr(registro.actuacion, "carpeta", None)
+        if carpeta is None:
+            raise ErrorApi(
+                f"no se puede reprocesar {actuacion_id!r}: el repositorio no tiene su actuacion procesada, "
+                "asi que no sabe de que carpeta de documentos salio"
+            )
+        spec = getattr(registro.actuacion, "spec", None)
+        nueva = procesar_actuacion(
+            Path(carpeta),
+            spec_id=getattr(spec, "codigo", None),
+            fecha_evaluacion=getattr(registro.actuacion, "fecha_evaluacion", None),
+            ocr=registro.ocr,
+            registro=self._specs(),
+            correcciones=de_log(registro.log) if registro.log is not None else (),
+        )
+        registro.actuacion = nueva
+        return nueva
+
+    def _specs(self) -> SpecRegistry:
+        """El registro de specs activas, cargado una vez por repositorio. Reprocesar no relee el YAML."""
+        if self._registro_specs is None:
+            registro = SpecRegistry()
+            registro.cargar_todas()
+            self._registro_specs = registro
+        return self._registro_specs
 
     def registrar_documento(self, actuacion_id: str, ruta: str) -> Mapping[str, object]:
         registro = self._registro(actuacion_id)

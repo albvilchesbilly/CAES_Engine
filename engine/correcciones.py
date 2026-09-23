@@ -263,6 +263,17 @@ def de_evento(evento: Any) -> Correccion:
     )
 
 
+def _eventos_de_correccion(log: Any) -> list[Any]:
+    """Los `DatoCorregidoPorHumano` del log, en orden de secuencia. Consumidos por atributos."""
+    por_tipo = getattr(log, "por_tipo", None)
+    if callable(por_tipo):
+        eventos = list(por_tipo(TIPO_EVENTO))
+    else:
+        eventos = [e for e in log if getattr(e, "tipo", None) == TIPO_EVENTO]
+    eventos.sort(key=lambda e: getattr(e, "secuencia", 0))
+    return eventos
+
+
 def de_log(log: Any) -> tuple[Correccion, ...]:
     """Las correcciones del log, **en orden de secuencia** (`ADR-013` §2, C20).
 
@@ -278,31 +289,77 @@ def de_log(log: Any) -> tuple[Correccion, ...]:
     Se filtra **aqui**, no en quien llama: `de_log` tiene el log, asi que puede proyectarlo, y una guarda que
     depende de que el llamante se acuerde no es una guarda. Es el mismo criterio con el que se cerraron
     `R-REQ-02` y el alcance por tenant de `api/`.
+
+    Y **levanta** si el ciclo no se puede leer (`ADR-014` C26, 23/09/2026): ver `_proyeccion_del_ciclo`.
+    Quien quiera saber que se descarto, sin aplicar nada, tiene `rechazos_post_firma`.
     """
-    por_tipo = getattr(log, "por_tipo", None)
-    if callable(por_tipo):
-        eventos = list(por_tipo(TIPO_EVENTO))
-    else:
-        eventos = [e for e in log if getattr(e, "tipo", None) == TIPO_EVENTO]
-    eventos.sort(key=lambda e: getattr(e, "secuencia", 0))
-    rechazados = _rechazados_por_el_ciclo(log)
+    eventos = _eventos_de_correccion(log)
+    rechazados = _rechazados_por_el_ciclo(log, eventos)
     admitidos = [e for e in eventos if getattr(e, "evento_id", None) not in rechazados]
     return tuple(de_evento(evento) for evento in admitidos)
 
 
-def _rechazados_por_el_ciclo(log: Any) -> frozenset[str]:
-    """Los `evento_id` que la maquina de estados anoto como rechazo (inalterabilidad post-firma).
+def rechazos_post_firma(log: Any) -> tuple[Mapping[str, object], ...]:
+    """Las correcciones del log que el ciclo rechazo por inalterabilidad (contrato C25, `ADR-014` §3).
 
-    Se importa aqui dentro y no arriba porque es el unico punto de este modulo que necesita la proyeccion, y
-    un log que no se puede proyectar (uno de prueba, uno parcial) no debe impedir leer sus correcciones: en
-    ese caso no se filtra nada y se dice por que en el propio codigo, no en un comentario lejano.
+    Devuelve la anotacion tal cual la escribio `engine.estados` (`tipo`, `evento_id`, `secuencia`,
+    `motivo`), que es exactamente el payload de `CorreccionRechazadaPostFirma`. **Este modulo no sella el
+    evento**: no importa `engine.eventos` (`ADR-013` §3), y ademas ese evento no lo escribe una persona
+    —ninguna capacidad de la matriz lo concede a ningun perfil— sino el motor. Lo sella quien tiene el log.
+
+    Es la otra cara de `de_log`: una dice que se aplica y la otra que se descarto, leidas de la misma
+    proyeccion. Que la segunda exista es lo que impide que descartar sea descartar **en silencio**.
+    """
+    eventos = _eventos_de_correccion(log)
+    if not eventos:
+        return ()
+    proyeccion = _proyeccion_del_ciclo(log)
+    return tuple(
+        dict(anotacion)
+        for anotacion in getattr(proyeccion, "rechazos", ())
+        if isinstance(anotacion, Mapping)
+        and anotacion.get("evento_id")
+        and anotacion.get("tipo") == TIPO_EVENTO
+    )
+
+
+def _proyeccion_del_ciclo(log: Any) -> Any:
+    """La proyeccion del log, o `ErrorCorreccion` si no se puede leer (contrato C26, `ADR-014` §5).
+
+    Se importa aqui dentro porque es el unico punto de este modulo que necesita la proyeccion, y asi
+    `engine/motor.py` no adquiere por la puerta de atras una dependencia de la maquina de estados.
+
+    **Hasta el 23/09/2026 esto capturaba el fallo y devolvia un conjunto de rechazos vacio**, es decir: un
+    log que no se podia proyectar aplicaba todas las correcciones, incluidas las que la inalterabilidad
+    prohibe. Un control que se desactiva justo cuando algo va mal no es un control (`ADR-014` §5, misma
+    familia que H3 y que `api.contrato.comprobar_alcance`). Si el ciclo no se puede leer no se puede
+    afirmar que no haya rechazos, asi que se levanta y decide el llamante.
+
+    Lo que el docstring viejo queria proteger —el log de prueba, el parcial— sigue protegido y esta un piso
+    mas arriba: si el log **no trae ninguna correccion**, no hay nada que filtrar y no se proyecta nada.
     """
     from engine.estados import ErrorEstado, proyectar
 
     try:
-        proyeccion = proyectar(log)
-    except (ErrorEstado, AttributeError, TypeError):
+        return proyectar(log)
+    except (ErrorEstado, AttributeError, TypeError) as exc:
+        raise ErrorCorreccion(
+            "no se ha podido proyectar el ciclo de este log, asi que no se puede afirmar que ninguna de "
+            "sus correcciones sea posterior a la firma: no se aplica ninguna (`ADR-014` C26). El motivo "
+            f"que dio la proyeccion: {exc}"
+        ) from exc
+
+
+def _rechazados_por_el_ciclo(log: Any, eventos: Sequence[Any]) -> frozenset[str]:
+    """Los `evento_id` que la maquina de estados anoto como rechazo (inalterabilidad post-firma).
+
+    Sin correcciones en el log no hay nada que filtrar: conjunto vacio **sin proyectar**. Ese es el caso
+    del log vacio o sin eventos de ciclo, y es el unico que se salta la lectura del ciclo; con una sola
+    correccion delante, el ciclo se lee o se levanta (`_proyeccion_del_ciclo`).
+    """
+    if not eventos:
         return frozenset()
+    proyeccion = _proyeccion_del_ciclo(log)
     rechazos = getattr(proyeccion, "rechazos", ())
     return frozenset(
         str(anotacion["evento_id"])
@@ -366,5 +423,6 @@ __all__ = [
     "a_evidencias",
     "de_evento",
     "de_log",
+    "rechazos_post_firma",
     "validar",
 ]
