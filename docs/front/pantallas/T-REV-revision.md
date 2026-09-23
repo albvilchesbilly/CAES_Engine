@@ -158,16 +158,26 @@ Es lo primero del panel derecho, con borde rojo, y contiene exactamente esto:
 
 - Cada fila tiene dos acciones: **"Ver en el documento"** (lleva el panel izquierdo a ese documento y esa
   página) y **"Usar este valor"**.
-- La tarjeta dice además **qué arrastra** el dato: "`PM` entra en el cálculo y en la búsqueda de la fila del
-  cuadro 6". No se calcula nada para decirlo: se lee de `calculo.por_unidad[].entradas` y `fuentes`.
+- La tarjeta dice además **qué es** el dato y **de dónde sale cada valor**: la descripción de la ficha
+  ("Potencia nominal de salida del motor sin variador"), su referencia normativa (`SRC-FICHA §3; §5.5.a`) y
+  el valor que aporta cada fuente, con su cita. Todo ello sale del bloque `evidencias`
+  (`descripcion`, `definicion`, `referencia`, `valores_por_fuente`) y **existe con cálculo o sin él**.
 
-  > **Hallazgo de `FR1.a` (23/09/2026), sin resolver y sin rellenar.** En el caso C eso **no se puede
-  > leer**: con un conflicto bloqueante el motor se salta la fase de cálculo entera y `actuacion.calculo`
-  > es `None`, así que `calculo.por_unidad` llega vacío y `traza` también. No es un hueco de proyección
-  > —`api/` sirve todo lo que hay— y no estaba en los 13 de `ADR-014`: o la frase se apoya en otra fuente
-  > (las `fuentes` de la spec para esa variable), o el motor tendría que dejar constancia de las entradas
-  > que iba a consumir antes de detenerse, y eso es `engine/` y su ADR. **No se inventa el campo**: hasta
-  > que se decida, la tarjeta no puede decir qué arrastra el dato en un caso bloqueado.
+  > **Resuelto el 23/09/2026 (hallazgo de `FR1.a`).** La redacción anterior decía que esto se lee de
+  > `calculo.por_unidad[].entradas` y `fuentes`, y **en un caso bloqueado no se puede**: con un conflicto
+  > el motor se salta la fase de cálculo entera y `actuacion.calculo` es `None` —comprobado sobre el caso
+  > C, que es justamente el que esta sección narra—. `por_unidad` llega vacío y `traza` también.
+  >
+  > El diagnóstico fue que **se le estaba pidiendo a la fuente equivocada**. Que `PM` importe no es un
+  > resultado del cálculo: es una verdad de la **ficha**, y la ficha está cargada aunque no se calcule
+  > nada. Por eso la tarjeta se apoya en `evidencias`, no en `calculo`. No hizo falta tocar el motor ni
+  > añadir un campo: `api/` ya sirve las cuatro claves desde `FR1.a`.
+  >
+  > Lo que la tarjeta **no** dice en un caso bloqueado es qué salidas concretas dependían del dato, porque
+  > no hay salidas. Para eso está `calculo.motivo_no_calculo`, que llega con el texto exacto —"conflicto
+  > entre fuentes fiables en `PM`: el motor no elige valor ni calcula"— y explica el hueco en vez de
+  > dejarlo en blanco (`R-UI-07`). La alternativa que se descartó era que el motor dejase constancia de las
+  > entradas previstas antes de detenerse: es `engine/` con su ADR, y no hace falta.
 
 ### El presupuesto de tiempo
 
