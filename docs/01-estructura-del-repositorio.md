@@ -53,7 +53,7 @@ cae-engine/
 │   └── _resultados_esperados/            GROUND TRUTH. Nunca se entrega al Engine. Solo cambia con ADR
 ├── metricas/                        NUEVO   Catálogo de métricas en YAML, proyecciones y render (ADR-007)
 ├── api/                             EXISTE  Comandos y lecturas por capacidad; valida permisos en servidor (FR0)
-├── front/                           PARCIAL Cuatro superficies; hoy solo compartido/. Solo habla con api/ (FR0)
+├── front/                           PARCIAL Cuatro superficies; hoy compartido/ y workspace/. Solo habla con api/ (FR0, FR1.c)
 ├── informes/                        EXISTE  Salida generada (markdown + JSON). No se commitea
 ├── tests/                           EXISTE  Pruebas: cálculo, spec, paquete, Engine end-to-end, metamórficas
 └── evaluar_casos.py                 EXISTE  Matriz esperado/obtenido sobre los casos de expedientes/
@@ -376,16 +376,23 @@ El contrato se construye **antes** que las pantallas (`FR0`). Dos reglas que no 
 (`R-UI-01`)— y **el portal externo no recibe campos que su perfil no puede ver**, no basta con no pintarlos
 (`R-UI-12`). `api/` lee de `engine/` y de `metricas/`; **nada importa de `api/`**.
 
-### 3.9 quater `front/` — cuatro superficies por capacidades (`PARCIAL`: solo `compartido/`, desde FR0)
+### 3.9 quater `front/` — cuatro superficies por capacidades (`PARCIAL`: `compartido/` desde FR0, `workspace/` desde FR1.c)
 
 ```
 front/
-  compartido/     EXISTE (FR0) los tres rótulos obligatorios (R-UI-06 a R-UI-08); React + TypeScript, sin
-                  dependencias de producción. Visor de evidencias y el resto del sistema de diseño, en FR1
-  workspace/      T-RES, T-OPE, T-REV — escritorio, cuenta del tenant
+  compartido/     EXISTE (FR0) los tres rótulos obligatorios (R-UI-06 a R-UI-08) y el cliente de api/;
+                  React + TypeScript, sin dependencias de producción. 98 tests
+  workspace/      PARCIAL (FR1.c) T-RES, T-OPE, T-REV — escritorio, cuenta del tenant. Hoy `T-REV-cola`
+                  y el andamiaje que comparten las pantallas (marco, hook de lectura, catálogo de textos,
+                  lectores defensivos del JSON). 54 tests
   externo/        EXT-INS, EXT-CLI — móvil primero, sin navegación
   consola/        ADM-MOD, ADM-OPS — cuenta interna, segundo factor, cambio de rol explícito
 ```
+
+**Ninguna pantalla se abre hoy en un navegador contra datos reales.** El transporte se inyecta y no existe
+capa HTTP en el repositorio: es el entregable `FR-HTTP` (`docs/06` §3 ter, `ADR-014` §4). Lo que `FR1.c`
+entrega son pantallas verificadas contra el contrato con un transporte de pruebas, cuyos datos se generan
+llamando a `api/` de verdad (`front/workspace/tests/datos/generar.py`), nunca escribiendo payloads a mano.
 
 Cuatro superficies, **no ocho aplicaciones**: un perfil es un paquete de capacidades, no una app (`ADR-005`),
 así que cambiar un perfil no obliga a tocar pantallas. `SYS-API` no tiene front. Cada pantalla se entrega con

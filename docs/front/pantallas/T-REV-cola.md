@@ -9,7 +9,7 @@
 | Entregable | `FR1` (absorbe `S4.4`) |
 | Contrato | `ADR-012` §4 (C19) · `ADR-050` §"Front por perfil" y §"Paquete por pantalla" |
 | Mockup | `docs/front/mockups/T-REV-cola.html` — **si el mockup y esta spec discrepan, manda la spec** |
-| Estado | `NUEVO` (diseño aprobado, sin implementar) |
+| Estado | `EXISTE` (`FR1.c`, 23/09/2026): `front/workspace/src/cola/`, 54 tests. Los 14 `CA-COLA-*` tienen test |
 
 ---
 
