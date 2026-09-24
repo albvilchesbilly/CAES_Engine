@@ -225,10 +225,15 @@ export const INACTIVO_INTERPRETACION =
   "Inactivo: `api/` no sirve todavía la interpretación propuesta del requerimiento (GAP-REV-04), y " +
   "confirmar a ciegas lo que no se ha podido leer sería peor que esperar.";
 
-/** `GAP-HTTP-01`: el comando admite los bytes; lo que falta es el canal del navegador. */
+/**
+ * `GAP-HTTP-02`: el comando admite los bytes, y desde el 24/09/2026 hay capa HTTP. Lo que falta es que
+ * los bytes quepan en el sobre — JSON no los lleva, y la ida no esta resuelta en `api/` como si lo esta
+ * la vuelta (`documento_a_transporte`, base64). El texto decia "la capa HTTP no existe" y eso dejo de ser
+ * verdad el mismo dia que se escribio el servidor: el fondo era cierto y la razon, falsa.
+ */
 export const INACTIVO_SUBIDA =
-  "Inactivo: subir un fichero desde el navegador necesita la capa HTTP, que todavía no existe " +
-  "(GAP-HTTP-01). Mientras tanto, lo que falta se pide por subsanación.";
+  "Inactivo: el contenido de un fichero todavía no viaja en el sobre de la API " +
+  "(GAP-HTTP-02). Mientras tanto, lo que falta se pide por subsanación.";
 
 /**
  * `GAP-REV-13`: el comando exige un texto que no tenemos.
