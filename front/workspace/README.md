@@ -11,10 +11,11 @@ este andamiaje, y no hizo falta rehacer nada de la primera: lo único que cambi�
 
 ## Lo que hay que saber antes de tocar nada
 
-1. **El transporte se inyecta y no existe capa HTTP** (`ADR-014` §4, decisión de Billy del 23/09/2026).
-   `FR1` entrega pantallas verificadas contra el contrato con un transporte de pruebas, no una
-   aplicación que se abra en un navegador. Aquí no se escribe un `fetch`, no se levanta un servidor y
-   no se inventa una sesión: la pantalla recibe un `Cliente` ya construido.
+1. **El transporte se inyecta** (`ADR-014` §4, decisión de Billy del 23/09/2026). Aquí no se escribe un
+   `fetch`, no se levanta un servidor y no se inventa una sesión: la pantalla recibe un `Cliente` ya
+   construido. Desde el 24/09/2026 hay quien lo construya de verdad —`front/aplicacion/` monta estas
+   pantallas contra `servidor_desarrollo.py` y se abren en un navegador (`GAP-HTTP-03`, cerrado)—, y
+   **eso no cambió ni una línea de aquí**: es la prueba de que la inyección estaba bien puesta.
 2. **El front no contiene lógica de negocio** (`R-UI-11`). No calcula, no evalúa reglas, no decide
    transiciones y **no ordena**. Hay un test que recorre el árbol y falla si aparece un `sort`.
 3. **Ninguna cifra de ahorro pasa por `Number`.** `api/` sirve `total_exacto` y

@@ -1,0 +1,20 @@
+{
+  "name": "@cae/aplicacion",
+  "private": true,
+  "version": "0.1.0",
+  "description": "La pagina que monta el workspace contra `servidor_desarrollo.py`: empaquetador de desarrollo y enrutado por hash (GAP-HTTP-03, ADR-015 §5).",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@cae/compartido": "0.1.0",
+    "@cae/workspace": "0.1.0"
+  },
+  "peerDependencies": {
+    "react": ">=19",
+    "react-dom": ">=19"
+  }
+}

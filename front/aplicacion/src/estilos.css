@@ -1,0 +1,66 @@
+/*
+ * Estilos del marco de la pagina, y solo del marco.
+ *
+ * Las pantallas traen los suyos (`@cae/compartido/estilos.css` y `@cae/workspace/estilos.css`) y aqui
+ * no se pisa ninguno: esto viste la cabecera, el aviso de autenticacion y el lienzo que las contiene.
+ */
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background: #f6f7f9;
+  color: #16202c;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.cae-app__marco {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: #16202c;
+  color: #f6f7f9;
+}
+
+.cae-app__nombre {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.cae-app__volver {
+  color: #b9d9ff;
+}
+
+.cae-app__aviso {
+  padding: 0.6rem 1.25rem;
+  background: #ffe9c7;
+  border-bottom: 2px solid #b8791a;
+  color: #4a3208;
+  font-size: 0.85rem;
+}
+
+.cae-app__aviso-texto {
+  margin: 0;
+  font-weight: 600;
+}
+
+.cae-app__aviso-principal {
+  margin: 0.25rem 0 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.cae-app__lienzo {
+  padding: 1.25rem;
+}
+
+.cae-app__sin-principal {
+  max-width: 44rem;
+}
+
+.cae-app__nota {
+  color: #4b5a6b;
+}

@@ -27,11 +27,20 @@ curl -s localhost:8000/lecturas/CAP-17 \
   -d '{"contexto":{"superficie":"cola_revision","tenant_id":"T-001"},"datos":{}}'
 ```
 
-Las pantallas de `FR1` viven en `front/workspace/` y se consumen como codigo fuente: **este repositorio
-todavia no tiene empaquetador ni pagina que las monte**, asi que lo que se abre hoy contra este servidor
-es el contrato (navegador, `curl`, o el cliente de `@cae/compartido/api` apuntado a
-`http://127.0.0.1:8000` desde el bundler de quien lo tenga). Que falta esa pieza esta anotado en el
-informe de `FR-HTTP`; no se resuelve desde aqui, porque tocaria `front/`.
+Las pantallas de `FR1` viven en `front/workspace/` y **se abren en un navegador contra este servidor**
+desde el 24/09/2026 (`GAP-HTTP-03`, `ADR-015` §7.2). En otra terminal:
+
+```bash
+cd front
+VITE_CAE_PRINCIPAL='{"usuario_id":"u-rev","perfiles":["T-REV"],"tenant_id":"T-001"}' npm run dev
+```
+
+y la cola queda en <http://127.0.0.1:5173/>. El empaquetador reenvia `/api` aqui, asi que no hace falta
+abrir CORS. Tambien se puede seguir hablando con el contrato a pelo, con `curl`.
+
+Una advertencia de la primera demo: los casos entran en el repositorio **sin log**, asi que la cola sale
+sin antiguedades y con la secuencia a 0 (`GAP-HTTP-04`). Y el repositorio es de memoria: una correccion
+hecha desde el navegador cambia lo que se ve en la siguiente recarga y dura lo que dure el proceso.
 """
 
 from __future__ import annotations

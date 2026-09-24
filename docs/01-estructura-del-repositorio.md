@@ -55,6 +55,7 @@ cae-engine/
 ├── api/                             EXISTE  Comandos y lecturas por capacidad; valida permisos en servidor (FR0)
 │   └── http/                        EXISTE  Publica lo anterior por red: Starlette + uvicorn (FR-HTTP, ADR-015)
 ├── front/                           PARCIAL Cuatro superficies; hoy compartido/ y workspace/. Solo habla con api/ (FR0, FR1.c)
+│   └── aplicacion/                  EXISTE  Empaquetador y página que las montan en el navegador (GAP-HTTP-03)
 ├── informes/                        EXISTE  Salida generada (markdown + JSON). No se commitea
 ├── tests/                           EXISTE  Pruebas: cálculo, spec, paquete, Engine end-to-end, metamórficas
 ├── evaluar_casos.py                 EXISTE  Matriz esperado/obtenido sobre los casos de expedientes/
@@ -412,15 +413,18 @@ front/
                   catálogo de textos, lectores defensivos del JSON). 110 tests
   externo/        EXT-INS, EXT-CLI — móvil primero, sin navegación
   consola/        ADM-MOD, ADM-OPS — cuenta interna, segundo factor, cambio de rol explícito
+  aplicacion/     EXISTE (GAP-HTTP-03, 24/09) la composición del navegador: empaquetador (Vite, en
+                  devDependencies), página, enrutado por hash y la cabecera del principal. No es una
+                  superficie: es el equivalente de servidor_desarrollo.py de este lado. 17 tests
 ```
 
-**Desde `FR-HTTP` (24/09/2026, `ADR-015`) el contrato sí se publica por red** (`api/http/`, arranque local
-con `python servidor_desarrollo.py --desarrollo`), pero **ninguna pantalla se abre todavía en un navegador**:
-`front/` se entrega como código fuente y este repositorio no tiene empaquetador ni página que monte las
-superficies, así que lo que hay al otro lado del servidor es el contrato, no la cola de revisión. Lo que
-`FR1.c` entregó son pantallas verificadas contra el contrato con un transporte de pruebas, cuyos datos se
-generan llamando a `api/` de verdad (`front/workspace/tests/datos/generar.py`), nunca escribiendo payloads a
-mano. El empaquetador de `front/` es el hueco que queda, y entra por `FR2`.
+**Las pantallas se abren en un navegador desde el 24/09/2026** (`GAP-HTTP-03`, cerrado; `ADR-015` §7.2):
+`python servidor_desarrollo.py --desarrollo` levanta `api/` y `npm run dev` en `front/` monta el
+`workspace/` contra él, con el principal escrito a mano en `VITE_CAE_PRINCIPAL`. Lo que `FR1.c` entregó
+son pantallas verificadas contra el contrato con un transporte de pruebas, cuyos datos se generan llamando
+a `api/` de verdad (`front/workspace/tests/datos/generar.py`), nunca escribiendo payloads a mano; montarlas
+de verdad **no exigió tocar ninguna**. Sigue sin haber despliegue: ni TLS, ni sesión, ni datos reales
+(`FR-DESPLIEGUE`).
 
 Cuatro superficies, **no ocho aplicaciones**: un perfil es un paquete de capacidades, no una app (`ADR-005`),
 así que cambiar un perfil no obliga a tocar pantallas. `SYS-API` no tiene front. Cada pantalla se entrega con

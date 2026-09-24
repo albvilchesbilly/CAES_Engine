@@ -191,14 +191,50 @@ dos veces:
    entonces la subida falla diciéndolo, que es lo correcto, pero **`FR2` no puede cerrar su pantalla sin
    esto**. Anotado como `GAP-HTTP-02`.
 
-### 7.2 Lo que sigue sin poder hacerse, y no es del servidor
+### 7.2 `GAP-HTTP-03`, cerrado el 24/09/2026: la cola se abre en un navegador
 
-**No se puede abrir la cola de revisión en un navegador**, aunque el servidor esté levantado: `front/` se
-consume como código fuente y este repositorio **no tiene empaquetador ni página que monte las
-superficies** (`front/package.json` solo trae vitest). Lo que hay al otro lado de `servidor_desarrollo.py`
-es el contrato, servido y comprobable con `curl` o con el cliente de `@cae/compartido/api`. La pieza que
-falta es de `front/` y entra por `FR2`; se anota como `GAP-HTTP-03` para que la promesa de §5 no se dé por
-cumplida antes de tiempo.
+Cuando se escribió §7.1 faltaba la tercera pieza: `front/` se consumía como código fuente y no había
+empaquetador ni página que montase las superficies, así que lo único que se abría contra
+`servidor_desarrollo.py` era el contrato, con `curl`. Eso se anotó como `GAP-HTTP-03` para que la promesa
+de §5 no se diera por cumplida antes de tiempo. **Ya está cumplida.**
+
+`front/aplicacion/` es la composición del lado del navegador, el equivalente de `servidor_desarrollo.py`:
+el único sitio del front que conoce una URL, construye un `Cliente` y sabe de dónde sale el principal.
+
+| Qué | Cómo quedó |
+|---|---|
+| Empaquetador | **Vite**, en `devDependencies`. Ya estaba en el árbol —es sobre lo que corre `vitest` desde `FR0`—, así que las pruebas y el navegador ven el mismo código transformado igual. Sin plugin de React: esbuild respeta `jsx: "react-jsx"` del `tsconfig`, y el plugin solo añadiría recarga en caliente. **El front sigue sin ninguna dependencia de producción** |
+| La página | Un `index.html` y un enrutado **por hash**, que es el que `FilaCola` ya componía (`#/revision/<id>`). El enlace de la cola sigue siendo un `<a href>` navegable y copiable, no un control que intercepta el clic |
+| El principal | Sale de `VITE_CAE_PRINCIPAL`, escrita a mano al arrancar. **Sin valor por defecto**, igual que el `--desarrollo` del servidor: sin ella la página no pide nada y lo dice. Un test recorre `aplicacion/src/` y falla si aparece un perfil, un usuario o un tenant cableados |
+| Que se vea que no autentica | El aviso va **fuera de las pantallas y encima de todo**, en todos los estados, junto al principal que la página declara. Y dentro, `Pantalla` sigue pintando los `avisos` del servidor, donde viaja el de C29. Los dos a la vez, a propósito: el de arriba se ve aunque no haya habido respuesta |
+| CORS | Sigue desactivado. Vite reenvía `/api` al servidor, así que el navegador habla con un solo origen y la petición le llega a uvicorn desde el bucle local, que es lo único que C29 atiende |
+| Las pantallas | **No se tocó ninguna.** Los 208 tests de `FR1` siguen pasando sin una sola modificación, que era la comprobación de que la inyección del transporte (`ADR-014` §4) estaba bien puesta |
+| Pruebas | Un test de humo monta la aplicación entera en jsdom y exige la consola limpia (17 tests nuevos, dentro de la puerta) y `npm run e2e` abre Chromium con Playwright contra los dos procesos. El e2e **no entra en la puerta**: necesita los dos servidores levantados y un navegador, y eso no cabe en `npm test` |
+
+Comprobado en un navegador de verdad el 24/09/2026: la cola se abre, se navega a una actuación, el PDF
+original se incrusta por su huella y **el lazo del caso C se cierra entero por HTTP** —corregir `PM` con
+su justificación devuelve `PREVALIDADO` y 305.829,6 kWh/año—, con la consola limpia.
+
+Lo que ese primer arranque enseñó, y no se ve en jsdom, está en §7.3.
+
+### 7.3 Lo que se vio al abrirlo por primera vez
+
+Tres cosas, ninguna de las pantallas y ninguna resuelta aquí:
+
+1. **La cola no tiene antigüedades.** Todas las filas dicen `ESPERANDO DESDE · SIN DATO` y
+   `Ciclo: ABIERTA`, porque `servidor_desarrollo.py` mete las actuaciones en el repositorio **sin log**:
+   `antiguedad.abierta_en` llega `null` y la secuencia es 0. Los datos de prueba de `FR1` no lo enseñan
+   porque `generar.py` sí puebla el log. La pantalla se comporta bien —un dato que no llega se dice `SIN
+   DATO`, no se inventa—, pero la demo pierde una columna entera. Se arregla en la composición, y
+   rellenarla es decidir qué historia tienen los casos sintéticos: no se ha hecho aquí.
+2. **Un texto de pantalla se ha quedado viejo.** El control «Subir documentación» dice «subir un fichero
+   desde el navegador necesita la capa HTTP, que todavía no existe (`GAP-HTTP-01`)». La capa HTTP existe
+   desde hoy; lo que falta es `GAP-HTTP-02` (el contenido de `CAP-02` no cabe en el sobre JSON). El
+   motivo que se enseña es cierto en el fondo —no se puede subir— pero falso en la razón, y `FR2` tiene
+   que corregirlo cuando cierre esa pantalla.
+3. **El repositorio es de memoria y el navegador escribe en él.** Una corrección hecha desde la página
+   cambia la cola de la siguiente recarga y dura hasta que se para el proceso. Es lo esperable de
+   `RepositorioMemoria`, pero conviene saberlo antes de enseñar una demo dos veces seguidas.
 
 ---
 

@@ -6,11 +6,11 @@ el cliente de `api/`** (`compartido/api/`, contrato C18 de `ADR-012` §3) y la p
 **`workspace/`**, con las dos pantallas de `T-REV` (`FR1.c`): la **cola de revisión** y la **vista de
 revisión**, que es donde se mide el valor del producto. `externo/` y `consola/` llegan con sus pantallas.
 
-**Las pantallas todavía no se abren en un navegador.** `FR1` las entregó verificadas contra el contrato con
-un transporte de pruebas (`ADR-014` §4), y desde `FR-HTTP` (24/09/2026, `ADR-015`) el contrato **sí se
-publica por red**: `python servidor_desarrollo.py --desarrollo` levanta `api/` en local contra los casos
-sintéticos. Lo que falta ya no es el servidor, sino el empaquetador y la página que monten las superficies
-—este paquete se consume como código fuente—: `GAP-HTTP-03`, que entra por `FR2`.
+**Las pantallas se abren en un navegador desde el 24/09/2026** (`GAP-HTTP-03`, cerrado; `ADR-015` §5).
+`FR1` las entregó verificadas contra el contrato con un transporte de pruebas (`ADR-014` §4), `FR-HTTP`
+publicó el contrato por red, y **`aplicacion/`** es la tercera pieza: el empaquetador (Vite) y la página
+que monta el `workspace/` y navega entre la cola y la vista de revisión. No cambió ni una pantalla para
+conseguirlo.
 
 React con TypeScript (C1, aprobado por Billy el 19/09/2026). Node 22 y npm 10.
 
@@ -19,10 +19,47 @@ React con TypeScript (C1, aprobado por Billy el 19/09/2026). Node 22 y npm 10.
 ```bash
 cd front
 npm install          # instala el workspace completo; no se commitea node_modules/
-npm test             # vitest: los tests de compartido/ y de workspace/
+npm test             # vitest: los tests de compartido/, workspace/ y aplicacion/
 npm run test:watch   # los mismos, en observación
 npm run typecheck    # tsc --build sobre src/ y tests/
+npm run e2e          # Playwright contra los dos servidores levantados. NO entra en la puerta
 ```
+
+## Abrir la cola de revisión en un navegador
+
+Dos procesos, dos terminales. El primero es el servidor (`FR-HTTP`); el segundo, esta página.
+
+```bash
+# 1 · el servidor, desde la raíz del repositorio: api/ sobre los siete casos sintéticos
+python servidor_desarrollo.py --desarrollo
+
+# 2 · el front, desde front/. El principal se escribe a mano: no hay valor por defecto
+cd front
+VITE_CAE_PRINCIPAL='{"usuario_id":"u-rev","perfiles":["T-REV"],"tenant_id":"T-001"}' npm run dev
+```
+
+Y se abre **<http://127.0.0.1:5173/>**. Lo que se ve:
+
+- La **cola de revisión** con las actuaciones que el servidor pone en ella, en el orden que él decide.
+  Cada fila enlaza a `#/revision/<actuacion_id>`; pulsando «Revisar» se abre la **vista de revisión**
+  con el documento original incrustado, cada dato con su cita y el formulario de corrección. El lazo
+  del caso C se cierra entero en el navegador: corregir `PM` con su justificación devuelve
+  `PREVALIDADO` y **305.829,6 kWh/año**.
+- Arriba del todo, en amarillo y en todos los estados, **el aviso de que la autenticación es de
+  mentira**, con el principal que esta página declara. Y dentro de cada pantalla, el aviso que manda
+  el propio servidor en `avisos` (`ADR-015` C29). Los dos se ven a la vez a propósito.
+- Si `VITE_CAE_PRINCIPAL` falta o está mal escrita, la página **no pide nada** y lo dice: no se
+  autentica sola.
+
+`VITE_CAE_PRINCIPAL` no tiene valor por defecto, y no lo tiene a propósito: esa cabecera
+(`x-cae-principal-desarrollo`) es la pieza que, olvidada, regala el sistema. El servidor la exige y esta
+página obliga a escribirla, igual que `servidor_desarrollo.py` obliga a escribir `--desarrollo`.
+`CAE_SERVIDOR` cambia a dónde se reenvía `/api` (por defecto `http://127.0.0.1:8000`); eso sí es una
+dirección, no una credencial.
+
+**No es un despliegue**: no hay TLS, ni sesión, ni límite de peticiones, y el principal lo declara quien
+pregunta. Eso es `FR-DESPLIEGUE` (`ADR-015` §5). Y el repositorio del servidor es de memoria: las
+correcciones que se hagan desde el navegador duran lo que dure el proceso.
 
 `compartido/` se consume como código fuente (`main`/`exports` apuntan a `src/index.ts`): las superficies
 viven en este mismo repositorio y las empaqueta su propio bundler, así que no hay paso de compilación
@@ -91,6 +128,11 @@ que añadir una en un sitio y no en el otro se ve enseguida. Dos cosas que el so
 anotadas en `ADR-015` §7.1: `/documentos` no lleva la capacidad (el servidor la deriva de la matriz) y el
 contenido de una subida (`CAP-02`) no cabe en JSON (`GAP-HTTP-02`).
 
+Quien lo usa contra el servidor de desarrollo es `aplicacion/`: `transporteHttp("/api")` con un `fetch`
+envuelto que añade la cabecera `x-cae-principal-desarrollo`. El sobre **no se toca** para eso (`ADR-015`
+§1): la cabecera se añade fuera, en `aplicacion/src/transporte.ts`, porque quién pide es cosa de la
+composición y no del contrato.
+
 ## Lo que este paquete no hace, por diseño
 
 - **No contiene lógica de negocio** (`R-UI-11`): no calcula, no evalúa reglas, no decide transiciones.
@@ -116,10 +158,20 @@ front/
   workspace/            T-RES, T-OPE, T-REV — las dos pantallas de `T-REV` (FR1.c) y su andamiaje
     src/                marco de pantalla, lecturas, fallos, fechas, textos · cola/ · revision/
     tests/              un test por criterio CA-COLA-* y CA-REV-*, con datos generados desde `api/`
+  aplicacion/           La página que monta las superficies contra el servidor (GAP-HTTP-03)
+    index.html          Un único documento; el enrutado es por hash
+    vite.config.ts      Vite, sin plugin de React; /api se reenvía al servidor de desarrollo
+    src/                configuración del principal · transporte con cabecera · enrutador · marco
+    tests/              humo (la aplicación entera montada) y el principal, que no tiene defecto
+    e2e/                Playwright contra los dos servidores. `npm run e2e`, fuera de la puerta
 ```
 
 Cada superficie es un paquete de los workspaces de npm y se consume como código fuente, igual que
 `compartido/`. `front/workspace/README.md` explica cómo entra una pantalla nueva sin rehacer las que hay.
+
+**`aplicacion/` no es una superficie**: es la composición, el equivalente de `servidor_desarrollo.py` en
+el lado del navegador. Es el único sitio del front que conoce una URL, construye un `Cliente` y sabe de
+dónde sale el principal. Las superficies siguen recibiendo el cliente ya hecho.
 
 Todos los textos de interfaz viven en `compartido/src/textos.ts`, en español y con sus tildes. Están
 centralizados para que un test pueda recorrerlos y comprobar que no aparece ninguna fórmula prohibida
