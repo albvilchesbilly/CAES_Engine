@@ -126,11 +126,11 @@ abiertas C2 a C6 (`ADR-050` §Pendiente), ninguna de las cuales bloquea `FR0`.
 | FR0 | Contrato de comandos y lecturas por capacidad en `api/`; sistema de diseño mínimo en `front/compartido/` | S3.1 (HECHO) · stack C1 (**APROBADO**) · A8 de `ADR-005` para persistir `actor.rol` | **HECHO** (19/09/2026, `ADR-011`) |
 | FR1 | Workspace `T-REV`: cola y vista de revisión. **Absorbe `S4.4`** | FR0 (HECHO), S3.5 (HECHO), S3.8 (HECHO) | **HECHO** (23/09/2026, `ADR-014`): `FR1.a` (proyección y matriz), `FR1.b` (el lazo del recálculo) y `FR1.c` (las dos pantallas, `front/workspace/`, 110 tests; 208 en todo `front/`). **"Hecho" significa lo que dice `ADR-014` §4**: las pantallas existen, cumplen sus criterios de aceptación y están verificadas contra el contrato con un transporte de pruebas; **no se abren en un navegador contra datos reales** hasta `FR-HTTP` |
 | **FR-HTTP** | **Capa HTTP y sesión autenticada**: publicar `api/` por red | FR0 (HECHO) · decisiones de Billy: framework, sesiones, despliegue | **NUEVO** (23/09/2026, `ADR-014` §4). Hasta que exista, **ninguna pantalla se puede abrir en un navegador contra datos reales**: el sobre está diseñado en `front/compartido/api/transporte.ts` y nada lo publica. No es un hueco de `T-REV`: afecta a las cuatro superficies por igual |
-| FR2 | Workspace `T-OPE`: bandeja, alta, subida y "qué te falta" | FR0 | PENDIENTE (espera FR0) |
-| FR3 | Workspace `T-RES`: pendiente de mí, registro de firma, equipo, `O-FUN` | FR0, DB1 | PENDIENTE (espera FR0 y DB1) |
+| FR2 | Workspace `T-OPE`: bandeja, alta, subida y "qué te falta" | FR0 (HECHO) | **LISTO PARA ARRANCAR** (24/09/2026): su única dependencia se cerró el 19/09 y el andamiaje de `front/workspace/` ya existe desde `FR1.c`. **Es el siguiente entregable de front que no depende de una decisión de Billy.** Ojo: la subida de documento (`CAP-02`) es el corazón de esta pantalla y necesita `FR-HTTP` para ejercerse de verdad |
+| FR3 | Workspace `T-RES`: pendiente de mí, registro de firma, equipo, `O-FUN` | FR0 (HECHO), DB1 | PENDIENTE: **solo espera DB1** (proyecciones sobre el log y las tres vistas operativas) |
 | FR4 | Portal externo (`EXT-INS`, `EXT-CLI`) | FR0 · A1 y A2 de `ADR-005` | BLOQUEADO (decisión) |
 | FR5 | Consola `ADM-OPS` | FR0 · primer tenant real | BLOQUEADO (externo) |
-| FR6 | Consola `ADM-MOD`, **en solo lectura** | FR0, DB0 | PENDIENTE (espera FR0 y DB0) |
+| FR6 | Consola `ADM-MOD`, **en solo lectura** | FR0 (HECHO), DB0 | PENDIENTE: **solo espera DB0** (catálogo de métricas) · y C5 de `ADR-050` |
 
 Tres reglas del ADR que condicionan todo lo demás y que no se reabren en una pantalla:
 
