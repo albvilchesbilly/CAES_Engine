@@ -138,6 +138,7 @@ pip install -e ".[dev]"                             # pyyaml openpyxl reportlab 
 python -m generator.generar                         # regenera los 7 casos y el ground truth
 python -m engine.cli expedientes/EXP001-A_completo --md informe.md --json informe.json
 python evaluar_casos.py                             # matriz esperado/obtenido
+pip install -e ".[http]" && python servidor_desarrollo.py --desarrollo   # api/ por red, en local (ADR-015)
 python -m pytest -q
 ruff check . && ruff format --check .
 ```

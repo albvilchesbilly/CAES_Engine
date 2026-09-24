@@ -43,6 +43,12 @@ python evaluar_casos.py --sin-ocr --caso A
 # Regenerar los casos sintéticos (determinista: mismos bytes)
 python -m generator.generar
 
+# Servir `api/` por red, en local y contra los 7 casos sintéticos (FR-HTTP, ADR-015)
+pip install -e ".[http]"                # starlette y uvicorn: extra, nunca dependencia obligatoria
+python servidor_desarrollo.py --desarrollo
+# Sin `--desarrollo` no arranca: lee el principal de una cabecera y no comprueba ninguna credencial,
+# así que solo sirve en el bucle local y lo dice en `avisos` de cada respuesta.
+
 # Puerta de calidad completa
 python -m pytest -q
 ruff check . && ruff format --check .

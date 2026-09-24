@@ -53,10 +53,13 @@ cae-engine/
 │   └── _resultados_esperados/            GROUND TRUTH. Nunca se entrega al Engine. Solo cambia con ADR
 ├── metricas/                        NUEVO   Catálogo de métricas en YAML, proyecciones y render (ADR-007)
 ├── api/                             EXISTE  Comandos y lecturas por capacidad; valida permisos en servidor (FR0)
+│   └── http/                        EXISTE  Publica lo anterior por red: Starlette + uvicorn (FR-HTTP, ADR-015)
 ├── front/                           PARCIAL Cuatro superficies; hoy compartido/ y workspace/. Solo habla con api/ (FR0, FR1.c)
 ├── informes/                        EXISTE  Salida generada (markdown + JSON). No se commitea
 ├── tests/                           EXISTE  Pruebas: cálculo, spec, paquete, Engine end-to-end, metamórficas
-└── evaluar_casos.py                 EXISTE  Matriz esperado/obtenido sobre los casos de expedientes/
+├── evaluar_casos.py                 EXISTE  Matriz esperado/obtenido sobre los casos de expedientes/
+└── servidor_desarrollo.py           EXISTE  Arranque local de api/http/ contra los 7 casos (FR-HTTP). Exige
+                                             --desarrollo: lee el principal de una cabecera y no autentica
 ```
 
 **Regla de dependencias (no negociable):** las importaciones apuntan hacia dentro.
@@ -214,7 +217,7 @@ expedientes/
 
 Se regeneran con `python -m generator.generar`; se commitean para que los tests no dependan de reportlab/pillow. **Nota sobre E y F**: los totales proceden del Engine 0.1 original; los parámetros exactos de los motores 2 y 3 no están documentados fuera de aquel código, así que el generator reconstruido fija los suyos y el ground truth de E y F se recalcula y se registra en ADR (`docs/05` §2). El caso A sí es reproducible exactamente: 110 kW, 1.485 → 1.188 rpm, 6.000 h, p = 5,55/110.
 
-### 3.6 `tests/` — banco de pruebas (`EXISTE`: 2.532 tests, 29 saltados sin OCR)
+### 3.6 `tests/` — banco de pruebas (`EXISTE`: 2.679 pasados y 29 saltados con `-m "not ocr"`)
 
 ```
 tests/
@@ -265,6 +268,18 @@ tests/
   test_api_documento.py          Alta de documento por contenido; rechaza rutas del servidor
   test_api_rol_inferido.py       Rol inferido frente a cambio explícito (C2, pendiente de Billy)
   test_api_tipos_front.py        Los tipos que consume `front/` salen del contrato, no de las pantallas
+  test_api_proyeccion.py         Un bloque fuera de ámbito no se construye (R-UI-12)
+  test_api_cola.py               La cola y sus motivos, decididos en el servidor (CAP-17)
+  test_api_recalculo.py          El lazo de la corrección humana: se sella y el motor rehace su trabajo
+
+  — Capa HTTP (`FR-HTTP`; se saltan sin el extra `[http]`) —
+  test_http_servidor.py          Extremo a extremo por HTTP real (uvicorn + httpx): lectura, comando que
+                                 recalcula, documento con su huella, denegación por permiso y **tenant
+                                 cruzado por sus dos vías** (la del servidor y la de `api/`)
+  test_http_autenticacion.py     El puerto del principal: nunca `None`, el Ausente deniega, el de desarrollo
+                                 no se instancia sin la señal ni fuera del bucle local
+  test_http_arbol.py             Sobre el árbol de `api/http/`: ni un import de `engine/`, ni un `CAP-nn`, no
+                                 decide permisos ni proyecta; las rutas son las de `transporte.ts`
 
   — Banco, transversales y regresión —
   test_generator.py              Los 7 casos se generan; marca sintética en cada página; ground truth coherente
@@ -279,8 +294,9 @@ tests/
   test_qa_hallazgos_f04.py       Ídem para el Spec Registry
 ```
 
-Los tests que necesitan `tesseract` llevan `@pytest.mark.ocr` y se saltan si no está instalado: en un clon sin
-OCR la suite queda en 2.532 pasados y 29 saltados, y `evaluar_casos.py` sigue dando 7/7. En una máquina donde
+Los tests que necesitan `tesseract` llevan `@pytest.mark.ocr` y se saltan si no está instalado. Medido el
+24/09/2026 con `pytest -q -m "not ocr"`: **2.679 pasados, 29 saltados y 23 deseleccionados**, y
+`evaluar_casos.py --sin-ocr` sigue dando 7/7. En una máquina donde
 `tesseract` va lento conviene correrlos aparte (`pytest -m ocr`): el caso A con OCR puede pasar de cuatro
 minutos él solo.
 
@@ -353,7 +369,7 @@ Una métrica se define **una sola vez en configuración**, con el mismo criterio
 YAML validado, no código. Una métrica sin fuente se muestra `SIN DATO` con su "desde", nunca como cero.
 Dependencias: `metricas/` lee de `engine/` y de `telemetria/`; **nada importa de `metricas/`**.
 
-### 3.9 ter `api/` — comandos y lecturas por capacidad (`EXISTE`, FR0, `ADR-011`)
+### 3.9 ter `api/` — comandos y lecturas por capacidad (`EXISTE`, FR0, `ADR-011`; `http/` desde `FR-HTTP`)
 
 ```
 api/
@@ -364,7 +380,16 @@ api/
   lecturas/       Un lector por capacidad de consulta; **no construye** los campos fuera del ámbito (R-UI-12)
   servicios.py    Puerto de datos: quién es el tenant de una actuación y quién es parte en ella. Sin él, falla
   repositorio.py  Implementación en memoria, el equivalente de `salida/simulador/` para las pruebas
+  http/           EXISTE (FR-HTTP, ADR-015) publica lo anterior por red. `servidor.py` traduce el sobre de
+                  `front/compartido/api/transporte.ts` y nada más (C27); `autenticacion.py` es el puerto del
+                  que sale el Principal (C28), con el Ausente que deniega todo por defecto y el de desarrollo
+                  que se niega a existir fuera de local (C29). Starlette + uvicorn, en el extra `[http]`
 ```
+
+`api/http/` **no importa nada de `engine/`** y hay un test que recorre su árbol para comprobarlo
+(`tests/test_http_arbol.py`). Quien compone las piezas concretas —repositorio, casos, autenticador— es
+`servidor_desarrollo.py`, en la raíz y al lado de `evaluar_casos.py`, que es el único sitio del código que
+se entrega donde se nombra el autenticador de desarrollo.
 
 **La matriz de capacidades NO vive aquí**: está en `engine/capacidades.yaml`, porque el log tiene que poder
 rechazar un evento que el perfil no concede y `engine/` no importa de `api/` (`ADR-011` §1). 46 capacidades,
@@ -389,10 +414,13 @@ front/
   consola/        ADM-MOD, ADM-OPS — cuenta interna, segundo factor, cambio de rol explícito
 ```
 
-**Ninguna pantalla se abre hoy en un navegador contra datos reales.** El transporte se inyecta y no existe
-capa HTTP en el repositorio: es el entregable `FR-HTTP` (`docs/06` §3 ter, `ADR-014` §4). Lo que `FR1.c`
-entrega son pantallas verificadas contra el contrato con un transporte de pruebas, cuyos datos se generan
-llamando a `api/` de verdad (`front/workspace/tests/datos/generar.py`), nunca escribiendo payloads a mano.
+**Desde `FR-HTTP` (24/09/2026, `ADR-015`) el contrato sí se publica por red** (`api/http/`, arranque local
+con `python servidor_desarrollo.py --desarrollo`), pero **ninguna pantalla se abre todavía en un navegador**:
+`front/` se entrega como código fuente y este repositorio no tiene empaquetador ni página que monte las
+superficies, así que lo que hay al otro lado del servidor es el contrato, no la cola de revisión. Lo que
+`FR1.c` entregó son pantallas verificadas contra el contrato con un transporte de pruebas, cuyos datos se
+generan llamando a `api/` de verdad (`front/workspace/tests/datos/generar.py`), nunca escribiendo payloads a
+mano. El empaquetador de `front/` es el hueco que queda, y entra por `FR2`.
 
 Cuatro superficies, **no ocho aplicaciones**: un perfil es un paquete de capacidades, no una app (`ADR-005`),
 así que cambiar un perfil no obliga a tocar pantallas. `SYS-API` no tiene front. Cada pantalla se entrega con

@@ -1,7 +1,7 @@
 # ADR-015 — `FR-HTTP`: publicar `api/` por red, y de dónde sale el principal
 
 **Estado: ACEPTADO en sus tres decisiones de Billy (24/09/2026). Los contratos C27–C30 son diseño de esta
-sesión y se implementan en `FR-HTTP`.**
+sesión y están IMPLEMENTADOS (24/09/2026): `api/http/` y `servidor_desarrollo.py`; cómo quedó, en §7.**
 
 **Contexto**: desde `FR0` existe un contrato completo en `api/` y desde `FR1` dos pantallas que lo consumen,
 pero **nada lo publica por red**. El sobre está descrito en un solo sitio —`front/compartido/api/transporte.ts`,
@@ -148,6 +148,57 @@ datos sintéticos. **No** puede haber un cliente real al otro lado.
 | **`FR-DESPLIEGUE`**: dónde vive el sistema | Ligado a `API-09`. Sin esto no hay producción, por mucho servidor que haya |
 | **Revisión jurídica de la monitorización de trabajadores** | Ya estaba abierta (`ADR-007`) y este entregable la acerca: un servicio en red con usuarios identificados es el momento en que deja de ser teórica |
 | **Límites de tamaño y de frecuencia** | Un servidor que sirve documentos acepta subidas. Hoy no hay ni límite de tamaño ni límite de peticiones, y eso es una decisión de producto, no un detalle |
+
+---
+
+---
+
+## 7. Cómo quedó (implementado el 24/09/2026)
+
+`api/http/servidor.py` (C27) y `api/http/autenticacion.py` (C28, C29, C30), con `servidor_desarrollo.py`
+en la raíz como **composición**: es quien conoce a la vez `engine/`, `api/` y uvicorn, y por eso el
+servidor puede no importar nada de `engine/` (hay un test que recorre el árbol y lo comprueba).
+
+| Qué | Cómo quedó |
+|---|---|
+| Rutas | Las tres del sobre y ninguna más, solo `POST`. Un test compara las rutas registradas con las que declara `transporte.ts`: añadir una en un sitio y no en el otro pone el banco en rojo |
+| 404 y 405 | También salen en el sobre (`{error: "api", motivo, codigo: "ruta"}`): el cliente solo sabe leer eso |
+| Errores | `403 {error:"permiso"}` para denegación **y para fallo de autenticación** (`ErrorAutenticacion` hereda de `ErrorPermiso`; el sobre declara dos salidas, no tres) · `400 {error:"api"}` para `ErrorApi` · `413` con `codigo:"cuerpo_demasiado_grande"` · `500` genérico **sin traza**, que va al log del servidor |
+| El principal | Lo da el puerto. Por defecto `AutenticadorAusente`, que deniega todo citando este ADR. En local, `AutenticadorDeDesarrollo` lo lee de la cabecera `x-cae-principal-desarrollo` (`{"usuario_id", "perfiles", "tenant_id"}`), y **cada respuesta lo dice en `avisos`** |
+| C29, las tres barreras | No se construye sin `confirmacion=CONFIRMACION_DESARROLLO` (una cadena, no un booleano: un `True` se pone sin leerlo) · no se construye con un anfitrión que no sea el bucle local · deniega la petición cuyo cliente no sea el bucle local. Y `servidor_desarrollo.py` exige `--desarrollo` escrito a mano |
+| C30 | Comparación **exacta** de `contexto.tenant_id` con `principal.tenant_id`, `None` incluido, antes de construir la `Peticion`. Probado por sus dos vías: declarando el tenant ajeno (lo para el servidor) y declarando el propio (lo para `comprobar_alcance`) |
+| Tamaño | 8 MiB de cuerpo, cortando en el flujo y sin acumular lo que no cabe. **Es un valor puesto para no dejar el hueco abierto, no uno medido**: sigue siendo decisión de Billy (§6) |
+| Frecuencia | **No hay límite de peticiones.** Sigue en §6, y con el autenticador de desarrollo no hay nada que limitar por usuario porque el usuario lo declara quien pregunta |
+| CORS | Desactivado salvo que se pasen orígenes explícitos (`--origen`), y **sin comodín**: un `*` en un servidor que sirve documentos de un tenant es un agujero, no una comodidad |
+| Cabeceras | `cache-control: no-store`, `x-content-type-options: nosniff`, `referrer-policy: no-referrer` en toda respuesta |
+
+### 7.1 Dos discrepancias entre el sobre y lo que `api/` puede dar
+
+Ninguna de las dos obliga a cambiar `transporte.ts` hoy, y las dos están aquí para que no se descubran
+dos veces:
+
+1. **`/documentos` no lleva la capacidad.** El cliente la usa solo para el mensaje de error, así que el
+   servidor tiene que saber cuál es. No se ha escrito ningún `CAP-nn`: se **deriva de la matriz**, como la
+   única lectura que proyecta el bloque `documentos` —el mismo criterio con el que `leer_documento` decide
+   si hay bytes—, y si algún día hay dos el servidor **no arranca**. La alternativa era
+   `POST /documentos/{capacidad}`, que toca el cliente y sus 208 tests para ganar poco: la matriz ya lo
+   sabe. Si aparece una segunda lectura con contenido documental, se decide entonces y se cambian los dos
+   sitios a la vez.
+2. **`CAP-02` (subir documentación) no se puede ejercer por este sobre.** El manejador exige
+   `datos["contenido"]` como `bytes` y JSON no lleva bytes; el camino de vuelta sí existe
+   (`documento_a_transporte`, base64, en `api/`). Falta su simétrico **en `api/`**, no en el servidor:
+   traducir base64 en la capa HTTP sería decidir allí una codificación que el contrato no declara. Hasta
+   entonces la subida falla diciéndolo, que es lo correcto, pero **`FR2` no puede cerrar su pantalla sin
+   esto**. Anotado como `GAP-HTTP-02`.
+
+### 7.2 Lo que sigue sin poder hacerse, y no es del servidor
+
+**No se puede abrir la cola de revisión en un navegador**, aunque el servidor esté levantado: `front/` se
+consume como código fuente y este repositorio **no tiene empaquetador ni página que monte las
+superficies** (`front/package.json` solo trae vitest). Lo que hay al otro lado de `servidor_desarrollo.py`
+es el contrato, servido y comprobable con `curl` o con el cliente de `@cae/compartido/api`. La pieza que
+falta es de `front/` y entra por `FR2`; se anota como `GAP-HTTP-03` para que la promesa de §5 no se dé por
+cumplida antes de tiempo.
 
 ---
 

@@ -17,7 +17,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "ruff>=0.5"]
+dev = ["pytest>=8.0", "ruff>=0.5", "httpx>=0.27"]
+# `FR-HTTP` (`ADR-015`): la capa que publica `api/` por red. **Nunca en las obligatorias**: el motor, el
+# CLI y el banco de pruebas corren sin ellas, y `engine/` no las ve jamas. `pip install -e ".[http]"`.
+http = ["starlette>=0.37", "uvicorn>=0.30"]
 
 [tool.setuptools]
 packages = [
@@ -33,6 +36,7 @@ packages = [
     "generator.documentos",
     "api",
     "api.comandos",
+    "api.http",
     "api.lecturas",
 ]
 

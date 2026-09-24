@@ -37,7 +37,9 @@ MITECO → `spec/*.yaml` activa → `docs/00` → `docs/02` → `docs/03`/`docs/
 Marcas: `NUEVO` (diseño aprobado, sin implementar) · `PARCIAL` · `EXISTE` (implementada en `front/`). Se
 actualizan **en la misma sesión** en que cambia el código (`CLAUDE.md` §3). `EXISTE` significa lo que dice
 `ADR-014` §4: la pantalla cumple sus criterios de aceptación contra el contrato con un transporte de
-pruebas, **no** que se abra en un navegador contra datos reales (eso es `FR-HTTP`).
+pruebas, **no** que se abra en un navegador contra datos reales. Desde `FR-HTTP` (24/09/2026, `ADR-015`)
+`api/` se publica por red (`python servidor_desarrollo.py --desarrollo`), pero sigue faltando el
+empaquetador que monte las superficies: `GAP-HTTP-03`.
 
 ## Cómo se añade una pantalla nueva
 

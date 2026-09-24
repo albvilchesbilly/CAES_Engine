@@ -6,9 +6,11 @@ el cliente de `api/`** (`compartido/api/`, contrato C18 de `ADR-012` §3) y la p
 **`workspace/`**, con las dos pantallas de `T-REV` (`FR1.c`): la **cola de revisión** y la **vista de
 revisión**, que es donde se mide el valor del producto. `externo/` y `consola/` llegan con sus pantallas.
 
-**Las pantallas no se abren en un navegador, y es una decisión** (`ADR-014` §4): no existe capa HTTP en el
-repositorio, así que `FR1` entrega pantallas verificadas contra el contrato con un transporte de pruebas.
-`GAP-HTTP-01` es un entregable propio.
+**Las pantallas todavía no se abren en un navegador.** `FR1` las entregó verificadas contra el contrato con
+un transporte de pruebas (`ADR-014` §4), y desde `FR-HTTP` (24/09/2026, `ADR-015`) el contrato **sí se
+publica por red**: `python servidor_desarrollo.py --desarrollo` levanta `api/` en local contra los casos
+sintéticos. Lo que falta ya no es el servidor, sino el empaquetador y la página que monten las superficies
+—este paquete se consume como código fuente—: `GAP-HTTP-03`, que entra por `FR2`.
 
 React con TypeScript (C1, aprobado por Billy el 19/09/2026). Node 22 y npm 10.
 
@@ -82,9 +84,12 @@ Path(RUTA_GENERADA).write_text(typescript(), encoding='utf-8')"
 pruebas de Python se pone rojo; en cuanto se regenera, `npm run typecheck` señala cada sitio del front que
 usaba un bloque que ya no existe.
 
-**La capa HTTP todavía no existe.** `api/` es hoy un contrato en proceso de Python, y `transporteHttp`
-describe el sobre que se espera (`POST /lecturas/{capacidad}`, `/comandos/{capacidad}`, `/documentos`) para
-que el día que se escriba el servidor se lea de un sitio y no se invente otra vez.
+**La capa HTTP ya existe** (`api/http/`, `ADR-015`), y se escribió leyendo el sobre de `transporte.ts`, que
+sigue siendo la fuente de su forma: `POST /lecturas/{capacidad}`, `/comandos/{capacidad}` y `/documentos`.
+Un test del banco de Python compara las rutas que sirve el servidor con las que este fichero declara, así
+que añadir una en un sitio y no en el otro se ve enseguida. Dos cosas que el sobre no resuelve están
+anotadas en `ADR-015` §7.1: `/documentos` no lleva la capacidad (el servidor la deriva de la matriz) y el
+contenido de una subida (`CAP-02`) no cabe en JSON (`GAP-HTTP-02`).
 
 ## Lo que este paquete no hace, por diseño
 
